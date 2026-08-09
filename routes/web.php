@@ -34,7 +34,14 @@ Route::get('/informacion', function () {
 // Área protegida de empleados
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        $user = auth()->user();
+
+        return view('dashboard', [
+            'guard' => 'web',
+            'nombre' => $user->name,
+            'rolEtiqueta' => $user->rol,
+            'avatarUrl' => $user->avatar ? asset('images/avatars/'.$user->avatar) : null,
+        ]);
     })->name('dashboard');
 });
 

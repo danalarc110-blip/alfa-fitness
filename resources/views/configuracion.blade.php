@@ -42,25 +42,7 @@
 
     <div class="min-h-screen flex">
 
-        {{-- ===================== SIDEBAR ===================== --}}
-        <aside class="hidden md:flex relative flex-col w-[210px] shrink-0 bg-black border-r border-white/10 px-6 pt-6 pb-8 overflow-hidden">
-            <div class="relative z-10">
-                <div class="mb-9">
-                    <img src="{{ asset('images/logo-sidebar.png') }}" alt="Alpha Fitness" class="w-32 object-contain -ml-1">
-                </div>
-
-                <a href="{{ $guard === 'web' ? route('dashboard') : route('cliente.dashboard') }}"
-                    class="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors">
-                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    Volver al inicio
-                </a>
-            </div>
-
-            {{-- Marca de agua decorativa --}}
-            <svg viewBox="0 0 100 100" class="absolute -bottom-6 -left-10 w-56 h-56 text-white/5 pointer-events-none">
-                <path fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" d="M50,6 L94,90 L6,90 Z M50,36 L74,84 L26,84 Z" />
-            </svg>
-        </aside>
+        @include('partials.sidebar', ['active' => 'configuracion'])
 
         {{-- ===================== CONTENIDO ===================== --}}
         <div class="flex-1 flex flex-col min-w-0">
