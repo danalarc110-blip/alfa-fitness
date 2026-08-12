@@ -38,5 +38,8 @@ class DatabaseSeeder extends Seeder
                 'password' => bcrypt('secretaria123'),
             ]
         );
+
+        // Catálogo de ejercicios
+        $this->call(EjercicioSeeder::class);
     }
 }

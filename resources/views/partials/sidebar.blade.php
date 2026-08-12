@@ -1,10 +1,11 @@
 @php
     $inicioRoute = ($guard ?? 'web') === 'web' ? route('dashboard') : route('cliente.dashboard');
     $logoutRoute = ($guard ?? 'web') === 'web' ? route('logout') : route('cliente.logout');
+    $salirRoute = ($guard ?? 'web') === 'web' ? route('salir') : route('cliente.salir');
 
     $navItems = [
         ['key' => 'inicio', 'label' => 'Inicio', 'href' => $inicioRoute, 'icon' => 'home'],
-        ['key' => 'entrenamientos', 'label' => 'Entrenamientos', 'href' => '#', 'icon' => 'dumbbell'],
+        ['key' => 'entrenamientos', 'label' => 'Entrenamientos', 'href' => route('entrenamientos.index'), 'icon' => 'dumbbell'],
         ['key' => 'ejercicios', 'label' => 'Ejercicios', 'href' => '#', 'icon' => 'activity'],
         ['key' => 'progreso', 'label' => 'Progreso', 'href' => '#', 'icon' => 'trending-up'],
         ['key' => 'calendario', 'label' => 'Calendario', 'href' => '#', 'icon' => 'calendar'],
@@ -59,10 +60,17 @@
                 <p class="text-[11px] text-gray-500 truncate">{{ $rolEtiqueta ?? '' }}</p>
             </div>
         </div>
+        <form method="POST" action="{{ $salirRoute }}">
+            @csrf
+            <button type="submit" title="Sales del panel, pero tu sesión sigue activa" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+                Salir
+            </button>
+        </form>
         <form method="POST" action="{{ $logoutRoute }}">
             @csrf
-            <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
-                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+            <button type="submit" title="Cierra tu sesión por completo" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><path d="M12 2v10"/></svg>
                 Cerrar sesión
             </button>
         </form>
