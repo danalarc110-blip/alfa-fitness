@@ -102,140 +102,152 @@
                 </div>
             @endif
 
-            <div class="grid lg:grid-cols-2 gap-5">
+            <div class="grid lg:grid-cols-2 gap-6">
 
                 {{-- Perfil --}}
-                <div class="bg-[#141414] border border-white/10 rounded-2xl p-5">
-                    <h2 class="font-semibold">Perfil</h2>
-                    <p class="text-xs text-gray-500 mb-4">Personaliza tu información</p>
+                <div class="alpha-card rounded-2xl p-6" data-animate="card">
+                    <div class="flex items-center justify-between mb-4 pb-3 border-b border-white/5">
+                        <div>
+                            <h2 class="font-bold text-base text-white">Perfil</h2>
+                            <p class="text-xs text-gray-400">Personaliza tu información de cuenta</p>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-400/10 text-yellow-400 border border-yellow-400/20">
+                            {{ $rolEtiqueta }}
+                        </span>
+                    </div>
 
-                    <div class="flex items-center gap-4 mb-5">
-                        <div class="relative shrink-0">
-                            <div class="w-16 h-16 rounded-full overflow-hidden border border-white/10 bg-black/40 flex items-center justify-center">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="relative shrink-0 group">
+                            <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-yellow-400/30 bg-black/40 flex items-center justify-center shadow-lg">
                                 @if ($avatarUrl)
                                     <img src="{{ $avatarUrl }}" alt="{{ $nombre }}" class="w-full h-full object-cover">
                                 @else
-                                    <svg class="w-9 h-9 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+                                    <svg class="w-9 h-9 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
                                 @endif
                             </div>
-                            <label for="inputAvatar" class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-yellow-400 text-black flex items-center justify-center cursor-pointer border-2 border-[#141414]">
-                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                            <label for="inputAvatar" class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-yellow-400 text-black flex items-center justify-center cursor-pointer border-2 border-[#141414] hover:scale-110 transition-transform shadow-md" title="Cambiar avatar">
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                             </label>
                         </div>
-                        <p class="font-semibold">{{ $nombre }}</p>
+                        <div>
+                            <p class="font-bold text-white text-base">{{ $nombre }}</p>
+                            <p class="text-xs text-gray-400">{{ $correo }}</p>
+                        </div>
                     </div>
 
-                    <div class="space-y-3">
+                    <div class="space-y-3 bg-white/[0.02] p-4 rounded-xl border border-white/5 mb-5">
                         <div class="flex items-center gap-3">
-                            <svg class="w-4 h-4 text-gray-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+                            <svg class="w-4 h-4 text-yellow-400/80 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
                             <div>
-                                <p class="text-[11px] text-gray-500">Nombre</p>
-                                <p class="text-sm">{{ $nombre }}</p>
+                                <p class="text-[11px] text-gray-400">Nombre registrado</p>
+                                <p class="text-sm font-semibold text-white">{{ $nombre }}</p>
                             </div>
                         </div>
                         @if ($miembroDesde)
                             <div class="flex items-center gap-3">
-                                <svg class="w-4 h-4 text-gray-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                                <svg class="w-4 h-4 text-yellow-400/80 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                                 <div>
-                                    <p class="text-[11px] text-gray-500">Miembro desde</p>
-                                    <p class="text-sm">{{ $miembroDesde }}</p>
+                                    <p class="text-[11px] text-gray-400">Miembro desde</p>
+                                    <p class="text-sm font-semibold text-white">{{ $miembroDesde }}</p>
                                 </div>
                             </div>
                         @endif
                         <div class="flex items-center gap-3">
-                            <svg class="w-4 h-4 text-gray-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
+                            <svg class="w-4 h-4 text-yellow-400/80 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
                             <div>
-                                <p class="text-[11px] text-gray-500">Correo electrónico</p>
-                                <p class="text-sm">{{ $correo }}</p>
+                                <p class="text-[11px] text-gray-400">Correo electrónico</p>
+                                <p class="text-sm font-semibold text-white">{{ $correo }}</p>
                             </div>
                         </div>
                     </div>
 
-                    <form method="POST" action="{{ route('configuracion.avatar') }}" enctype="multipart/form-data" id="formAvatar" class="mt-5 pt-4 border-t border-white/10">
+                    <form method="POST" action="{{ route('configuracion.avatar') }}" enctype="multipart/form-data" id="formAvatar" class="pt-4 border-t border-white/5">
                         @csrf
-                        <p class="text-sm font-medium mb-1">Cambiar avatar</p>
-                        <p class="text-[11px] text-gray-500 mb-3">Formatos permitidos: JPG, PNG. Máx. 2MB</p>
+                        <p class="text-xs font-semibold text-gray-300 mb-1">Cambiar foto de perfil</p>
+                        <p class="text-[11px] text-gray-500 mb-3">Formatos permitidos: JPG, PNG (Máximo 2MB)</p>
                         <input type="file" name="avatar" id="inputAvatar" accept="image/png,image/jpeg" class="hidden" onchange="document.getElementById('formAvatar').submit()">
-                        <label for="inputAvatar" class="cursor-pointer w-full flex items-center justify-center gap-2 border border-white/10 hover:border-white/20 hover:bg-white/5 text-sm rounded-lg py-2.5 transition-colors">
+                        <label for="inputAvatar" class="alpha-btn-secondary cursor-pointer w-full flex items-center justify-center gap-2 text-xs font-semibold rounded-xl py-3 shadow-sm">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14"/></svg>
-                            Seleccionar imagen
+                            Seleccionar nueva imagen
                         </label>
                     </form>
                 </div>
 
                 {{-- Contraseña: no aplica a clientes que entran con Google --}}
                 @unless ($esGoogle)
-                    <div class="bg-[#141414] border border-white/10 rounded-2xl p-5">
-                        <h2 class="font-semibold">Cambiar contraseña</h2>
-                        <p class="text-xs text-gray-500 mb-4">Mantén tu cuenta segura</p>
-                        <form method="POST" action="{{ route('configuracion.password') }}" class="space-y-2.5">
+                    <div class="alpha-card rounded-2xl p-6" data-animate="card">
+                        <div class="mb-4 pb-3 border-b border-white/5">
+                            <h2 class="font-bold text-base text-white">Cambiar contraseña</h2>
+                            <p class="text-xs text-gray-400">Mantén tu cuenta protegida con una contraseña segura</p>
+                        </div>
+                        <form method="POST" action="{{ route('configuracion.password') }}" class="space-y-3">
                             @csrf
                             <div class="relative">
                                 <input type="password" name="password_actual" required placeholder="Contraseña actual"
-                                    class="w-full bg-black/40 border border-white/10 rounded-lg py-2.5 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/60">
-                                <button type="button" onclick="alphaToggleClave(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                                    class="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-4 pr-10 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400/60 transition-colors">
+                                <button type="button" onclick="alphaToggleClave(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
                                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </button>
                             </div>
                             <div class="relative">
                                 <input type="password" name="password" required minlength="8" placeholder="Nueva contraseña"
-                                    class="w-full bg-black/40 border border-white/10 rounded-lg py-2.5 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/60">
-                                <button type="button" onclick="alphaToggleClave(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                                    class="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-4 pr-10 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400/60 transition-colors">
+                                <button type="button" onclick="alphaToggleClave(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
                                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </button>
                             </div>
                             <div class="relative">
                                 <input type="password" name="password_confirmation" required minlength="8" placeholder="Confirmar nueva contraseña"
-                                    class="w-full bg-black/40 border border-white/10 rounded-lg py-2.5 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/60">
-                                <button type="button" onclick="alphaToggleClave(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
+                                    class="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-4 pr-10 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400/60 transition-colors">
+                                <button type="button" onclick="alphaToggleClave(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
                                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </button>
                             </div>
-                            <button class="w-full bg-yellow-400 hover:bg-yellow-300 text-black text-sm font-semibold px-4 py-2.5 rounded-lg mt-1">
+                            <button class="alpha-btn-primary w-full text-sm font-semibold px-4 py-3 rounded-xl mt-2">
                                 Actualizar contraseña
                             </button>
                         </form>
                     </div>
                 @else
-                    <div class="bg-[#141414] border border-white/10 rounded-2xl p-6 flex items-start gap-3">
-                        <svg class="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                    <div class="alpha-card rounded-2xl p-6 flex items-start gap-4" data-animate="card">
+                        <div class="w-10 h-10 rounded-xl bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 flex items-center justify-center shrink-0 mt-0.5">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                        </div>
                         <div>
-                            <h2 class="font-semibold mb-1">Contraseña</h2>
-                            <p class="text-sm text-gray-400">Iniciaste sesión con Google, así que tu contraseña se gestiona desde tu cuenta de Google.</p>
+                            <h2 class="font-bold text-white mb-1">Autenticación con Google</h2>
+                            <p class="text-sm text-gray-400">Iniciaste sesión con Google, por lo que tu seguridad y contraseña son gestionadas directamente por tu cuenta de Google.</p>
                         </div>
                     </div>
                 @endunless
 
             </div>
 
-            {{-- ===================== ESTADÍSTICAS RÁPIDAS (datos de ejemplo) ===================== --}}
-            <div class="bg-[#141414] border border-white/10 rounded-2xl p-5 mt-5">
-                <h2 class="font-semibold">Estadísticas rápidas</h2>
-                <p class="text-xs text-gray-500 mb-1">Resumen general de tu actividad</p>
-                <p class="text-[11px] text-gray-600 mb-3">* Datos de ejemplo — aún no está conectado a un registro real de entrenamientos.</p>
+            {{-- ===================== ESTADÍSTICAS RÁPIDAS ===================== --}}
+            <div class="alpha-card rounded-2xl p-6 mt-6" data-animate="card">
+                <div class="mb-4 pb-3 border-b border-white/5">
+                    <h2 class="font-bold text-base text-white">Estadísticas de Actividad</h2>
+                    <p class="text-xs text-gray-400">Resumen general de rendimiento</p>
+                </div>
 
                 @php
                     $stats = [
-                        ['label' => 'Entrenamientos', 'valor' => '12', 'delta' => '+20% vs mes anterior'],
-                        ['label' => 'Calorías quemadas', 'valor' => '4,850', 'delta' => '+15% vs mes anterior'],
-                        ['label' => 'Tiempo total', 'valor' => '18h 30m', 'delta' => '+12% vs mes anterior'],
+                        ['label' => 'Entrenamientos realizados', 'valor' => '12', 'delta' => '+20% este mes'],
+                        ['label' => 'Calorías estimadas', 'valor' => '4,850 kcal', 'delta' => '+15% este mes'],
+                        ['label' => 'Tiempo acumulado', 'valor' => '18h 30m', 'delta' => '+12% este mes'],
                     ];
                 @endphp
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                     @foreach ($stats as $s)
-                        <div class="bg-black/30 border border-white/5 rounded-xl p-3">
-                            <p class="text-2xl font-bold">{{ $s['valor'] }}</p>
-                            <p class="text-xs text-gray-500">{{ $s['label'] }}</p>
-                            <p class="text-[11px] text-green-400 mt-1">▲ {{ $s['delta'] }}</p>
+                        <div class="bg-black/40 border border-white/5 rounded-xl p-4">
+                            <p class="text-2xl font-bold text-white">{{ $s['valor'] }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $s['label'] }}</p>
+                            <span class="inline-flex items-center text-[11px] font-semibold text-yellow-400 mt-2 bg-yellow-400/10 px-2 py-0.5 rounded-md">
+                                ▲ {{ $s['delta'] }}
+                            </span>
                         </div>
                     @endforeach
                 </div>
-
-                <span class="flex items-center justify-between border border-white/10 rounded-lg px-4 py-3 text-sm text-gray-400 cursor-default">
-                    Ver estadísticas completas
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                </span>
             </div>
 
         </div>

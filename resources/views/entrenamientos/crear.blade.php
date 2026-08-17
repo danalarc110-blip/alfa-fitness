@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Alpha Fitness') }} - {{ $rutina->nombre }}</title>
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
+
+    <script>
+        if (localStorage.getItem('alphaTema') === 'light') {
+            document.documentElement.classList.add('light');
+        }
+    </script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased bg-black text-white min-h-screen">
@@ -14,31 +24,40 @@
     <div class="flex-1 flex flex-col min-w-0 px-6 sm:px-10 py-8">
 
         {{-- CABECERA --}}
-        <div class="flex items-start justify-between gap-4 mb-6">
+        <div class="flex items-start justify-between gap-4 mb-6 pb-6 border-b border-white/5" data-animate="header">
             <div class="min-w-0 flex-1">
                 <input id="campo-nombre" value="{{ $rutina->nombre }}"
-                    class="bg-transparent text-2xl font-bold outline-none border-b border-transparent focus:border-yellow-400/50 w-full max-w-md truncate">
-                <div class="flex flex-wrap items-center gap-2 mt-2 text-xs text-gray-500">
+                    class="bg-transparent text-2xl font-bold text-white outline-none border-b-2 border-transparent focus:border-yellow-400 w-full max-w-md truncate transition-colors duration-200">
+                <div class="flex flex-wrap items-center gap-2.5 mt-3 text-xs text-gray-400">
                     <input id="campo-objetivo" value="{{ $rutina->objetivo }}"
                         placeholder="Objetivo"
-                        class="bg-[#141414] border border-white/10 rounded-lg px-2.5 py-1.5 outline-none focus:border-yellow-400/50 w-44">
-                    <select id="campo-nivel" class="bg-[#141414] border border-white/10 rounded-lg px-2.5 py-1.5 outline-none focus:border-yellow-400/50">
+                        class="bg-[#141414] border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-yellow-400/50 w-44 transition-colors">
+                    <select id="campo-nivel" class="bg-[#141414] border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-yellow-400/50 transition-colors">
                         @foreach (['Principiante', 'Intermedio', 'Avanzado'] as $n)
                             <option value="{{ $n }}" @selected($rutina->nivel === $n)>{{ $n }}</option>
                         @endforeach
                     </select>
-                    <label class="flex items-center gap-1.5">
-                        <span>días/semana</span>
+                    <label class="flex items-center gap-2 bg-[#141414] border border-white/10 rounded-xl px-3 py-1.5">
+                        <span class="text-gray-400 text-xs">días/sem:</span>
                         <input id="campo-dias" type="number" min="1" max="7" value="{{ $rutina->dias_por_semana }}"
-                            class="bg-[#141414] border border-white/10 rounded-lg px-2 py-1.5 outline-none focus:border-yellow-400/50 w-14 text-center">
+                            class="bg-transparent text-white font-semibold outline-none w-10 text-center">
                     </label>
-                    <span id="estado-guardado" class="text-green-500 text-[11px]"></span>
+                    <span id="estado-guardado" class="inline-flex items-center gap-1 text-yellow-400 text-xs font-semibold px-2 py-1 rounded-md bg-yellow-400/10 border border-yellow-400/20 transition-opacity duration-300 opacity-0">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        Guardado
+                    </span>
                 </div>
             </div>
-            <a href="{{ route('entrenamientos.index') }}"
-                class="shrink-0 text-xs text-gray-500 hover:text-white border border-white/10 rounded-lg px-3 py-2">
-                ← Volver
-            </a>
+            <div class="flex items-center gap-3 shrink-0">
+                <button type="button" onclick="alphaToggleTema()" title="Cambiar tema"
+                    class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-yellow-400 transition-all duration-150 active:scale-95 shadow-sm">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                </button>
+                <a href="{{ route('entrenamientos.index') }}"
+                    class="alpha-btn-secondary text-xs font-semibold rounded-xl px-4 py-2.5 inline-flex items-center gap-1.5">
+                    ← Volver a rutinas
+                </a>
+            </div>
         </div>
 
         <div class="flex flex-col lg:flex-row gap-6 min-w-0">
@@ -47,24 +66,32 @@
             <div class="flex-1 min-w-0">
                 <div id="tabs-dias" class="flex flex-wrap items-center gap-2 mb-4"></div>
                 <div id="paneles-dias"></div>
-                <p id="sin-dias" class="hidden text-sm text-gray-600">Sin días. Crea uno para empezar.</p>
+                <div id="sin-dias" class="hidden alpha-card rounded-2xl p-8 text-center">
+                    <p class="text-sm text-gray-400 mb-2">Esta rutina aún no tiene días configurados.</p>
+                    <p class="text-xs text-yellow-400 font-semibold">Haz clic en "+ Día" para comenzar.</p>
+                </div>
             </div>
 
             {{-- COLUMNA DERECHA: CATALOGO --}}
-            <div class="w-full lg:w-[320px] shrink-0">
-                <div class="bg-[#141414] border border-white/10 rounded-2xl p-4 lg:sticky lg:top-8">
-                    <h3 class="font-semibold text-sm mb-3">Catálogo</h3>
-                    <input id="catalogo-buscar" type="text" placeholder="Buscar ejercicio..."
-                        class="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-yellow-400/50 mb-2">
+            <div class="w-full lg:w-[340px] shrink-0">
+                <div class="alpha-card rounded-2xl p-5 lg:sticky lg:top-8 shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-sm text-white">Catálogo de Ejercicios</h3>
+                        <span class="text-[11px] text-gray-500 font-medium">Buscador</span>
+                    </div>
+                    <input id="catalogo-buscar" type="text" placeholder="Buscar por nombre o músculo..."
+                        class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-yellow-400/60 mb-2.5 transition-colors">
                     <select id="catalogo-grupo"
-                        class="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-yellow-400/50 mb-3">
-                        <option value="Todos">Todos los grupos</option>
+                        class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-gray-300 outline-none focus:border-yellow-400/60 mb-3 transition-colors">
+                        <option value="Todos">Todos los grupos musculares</option>
                         @foreach ($gruposMusculares as $g)
                             <option value="{{ $g }}">{{ $g }}</option>
                         @endforeach
                     </select>
-                    <p class="text-[11px] text-gray-600 mb-2">Click en <strong class="text-yellow-400">+</strong> para añadir al día activo. Click en la imagen para ver músculos.</p>
-                    <div id="catalogo-resultados" class="flex flex-col gap-2 max-h-[68vh] overflow-y-auto pr-0.5"></div>
+                    <p class="text-[11px] text-gray-500 mb-3 bg-white/[0.02] p-2 rounded-lg border border-white/5">
+                        Tip: Haz clic en <strong class="text-yellow-400">+</strong> para añadir al día activo o en la imagen para ver músculos implicados.
+                    </p>
+                    <div id="catalogo-resultados" class="flex flex-col gap-2 max-h-[64vh] overflow-y-auto pr-1 custom-scroll"></div>
                 </div>
             </div>
         </div>
@@ -100,9 +127,15 @@
 
     function marcarGuardado() {
         const el = document.getElementById('estado-guardado');
-        el.textContent = '✓ Guardado';
-        clearTimeout(marcarGuardado._t);
-        marcarGuardado._t = setTimeout(() => (el.textContent = ''), 1800);
+        if (el) {
+            el.classList.remove('opacity-0');
+            el.classList.add('opacity-100');
+            clearTimeout(marcarGuardado._t);
+            marcarGuardado._t = setTimeout(() => {
+                el.classList.remove('opacity-100');
+                el.classList.add('opacity-0');
+            }, 1800);
+        }
     }
 
     function h(s) {
@@ -111,12 +144,12 @@
     }
 
     function miniImg(url, tiene, cls) {
-        if (!tiene) return `<div class="${cls} flex items-center justify-center bg-white/5 rounded-lg text-gray-600 shrink-0">
+        if (!tiene) return `<div class="${cls} flex items-center justify-center bg-white/5 rounded-xl text-gray-600 shrink-0 border border-white/5">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
               <polyline points="21 15 16 10 5 21"/>
             </svg></div>`;
-        return `<img src="${h(url)}" class="${cls} object-cover rounded-lg shrink-0" loading="lazy">`;
+        return `<img src="${h(url)}" class="${cls} object-cover rounded-xl shrink-0 border border-white/10 hover:border-yellow-400/50 transition-colors shadow-sm" loading="lazy">`;
     }
 
     /* ---- render ---- */
@@ -129,14 +162,14 @@
 
         tabs.innerHTML = DIAS.map(d => `
             <button data-tab="${d.id}"
-                class="tab-dia px-3.5 py-2 rounded-lg text-sm font-medium border transition-colors
+                class="tab-dia px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 active:scale-95
                        ${d.id === diaActivoId
-                           ? 'bg-yellow-400 text-black border-yellow-400'
-                           : 'bg-[#141414] text-gray-300 border-white/10 hover:border-white/30'}">
+                           ? 'bg-yellow-400 text-black border-yellow-400 shadow-md shadow-yellow-400/20'
+                           : 'bg-[#141414] text-gray-300 border-white/10 hover:border-white/30 hover:bg-white/5'}">
                 ${h(d.titulo)}
             </button>`).join('') +
             `<button id="btn-add-dia"
-                class="px-3.5 py-2 rounded-lg text-sm border border-dashed border-white/20 text-gray-400 hover:text-yellow-400 hover:border-yellow-400/50 transition-colors">
+                class="px-4 py-2 rounded-xl text-sm font-semibold border border-dashed border-white/20 text-gray-400 hover:text-yellow-400 hover:border-yellow-400/50 hover:bg-yellow-400/5 transition-all duration-200 active:scale-95">
                 + Día
             </button>`;
 
@@ -163,70 +196,73 @@
     function renderPanel(d) {
         const oculto = d.id === diaActivoId ? '' : 'hidden';
         return `
-        <div data-panel="${d.id}" class="${oculto} bg-[#141414] border border-white/10 rounded-2xl p-5 mb-4">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="font-semibold text-sm text-gray-300">${h(d.titulo)} · ${d.ejercicios.length} ejercicio${d.ejercicios.length !== 1 ? 's' : ''}</h2>
-                <button data-del-dia="${d.id}" class="text-xs text-gray-600 hover:text-red-400">Eliminar día</button>
+        <div data-panel="${d.id}" class="${oculto} alpha-card rounded-2xl p-6 mb-4 shadow-xl">
+            <div class="flex items-center justify-between mb-5 pb-3 border-b border-white/5">
+                <div class="flex items-center gap-2">
+                    <h2 class="font-bold text-base text-white">${h(d.titulo)}</h2>
+                    <span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-yellow-400/10 text-yellow-400 border border-yellow-400/20">${d.ejercicios.length} ejercicio${d.ejercicios.length !== 1 ? 's' : ''}</span>
+                </div>
+                <button data-del-dia="${d.id}" class="text-xs font-semibold text-gray-500 hover:text-red-400 transition-colors px-2.5 py-1 rounded-lg hover:bg-red-500/10">Eliminar día</button>
             </div>
             ${d.ejercicios.length
                 ? `<div class="overflow-x-auto">
                     <table class="w-full text-sm min-w-[560px]">
                         <thead>
-                            <tr class="text-left text-[11px] uppercase tracking-wide text-gray-600 border-b border-white/10">
-                                <th class="py-2 pr-3 font-medium">Ejercicio</th>
-                                <th class="py-2 px-2 font-medium w-20 text-center">Series</th>
-                                <th class="py-2 px-2 font-medium w-24 text-center">Reps</th>
-                                <th class="py-2 px-2 font-medium w-28 text-center">Peso (kg)</th>
-                                <th class="py-2 px-2 font-medium w-28 text-center">Descanso (s)</th>
-                                <th class="py-2 pl-2 w-6"></th>
+                            <tr class="text-left text-[11px] uppercase tracking-wider text-gray-500 border-b border-white/10 pb-2">
+                                <th class="py-2.5 pr-3 font-semibold">Ejercicio</th>
+                                <th class="py-2.5 px-2 font-semibold w-20 text-center">Series</th>
+                                <th class="py-2.5 px-2 font-semibold w-24 text-center">Reps</th>
+                                <th class="py-2.5 px-2 font-semibold w-28 text-center">Peso (kg)</th>
+                                <th class="py-2.5 px-2 font-semibold w-28 text-center">Descanso (s)</th>
+                                <th class="py-2.5 pl-2 w-8"></th>
                             </tr>
                         </thead>
                         <tbody>${d.ejercicios.map(re => renderFila(re)).join('')}</tbody>
                     </table>
                    </div>`
-                : `<p class="text-xs text-gray-600">Sin ejercicios. Añade desde el catálogo →</p>`}
+                : `<div class="p-8 text-center"><p class="text-xs text-gray-500">Sin ejercicios todavía en este día. Añade ejercicios desde el catálogo de la derecha →</p></div>`}
         </div>`;
     }
 
     function renderFila(re) {
         const ej = re.ejercicio;
         return `
-        <tr class="border-b border-white/5 last:border-0" data-fila="${re.id}">
-            <td class="py-2.5 pr-3">
-                <div class="flex items-center gap-2.5">
+        <tr class="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors" data-fila="${re.id}">
+            <td class="py-3 pr-3">
+                <div class="flex items-center gap-3">
                     <div data-toggle data-a="${h(ej.imagen_url)}" data-b="${h(ej.imagen_musculos_url)}"
                          data-ta="${ej.tiene_imagen ? 1 : 0}" data-tb="${ej.tiene_imagen_musculos ? 1 : 0}"
-                         data-m="a" title="Click: ver músculos" class="cursor-pointer w-10 h-10">
+                         data-m="a" title="Click: ver músculos" class="cursor-pointer w-10 h-10 shrink-0">
                         ${miniImg(ej.imagen_url, ej.tiene_imagen, 'w-10 h-10')}
                     </div>
                     <div class="min-w-0">
-                        <p class="truncate">${h(ej.nombre)}</p>
-                        <p class="text-[11px] text-gray-600">${h(ej.grupo_muscular)}</p>
+                        <p class="font-semibold text-white truncate text-sm">${h(ej.nombre)}</p>
+                        <p class="text-[11px] text-gray-400">${h(ej.grupo_muscular)}</p>
                     </div>
                 </div>
             </td>
-            <td class="py-2.5 px-2">
+            <td class="py-3 px-2">
                 <input type="number" min="1" max="20" value="${re.series}"
                     data-id="${re.id}" data-campo="series"
-                    class="campo-ej w-full bg-black border border-white/10 rounded-lg px-2 py-1.5 text-center outline-none focus:border-yellow-400/50">
+                    class="campo-ej w-full bg-black/60 border border-white/10 rounded-xl px-2 py-1.5 text-center text-white outline-none focus:border-yellow-400/60 font-semibold text-sm transition-colors">
             </td>
-            <td class="py-2.5 px-2">
+            <td class="py-3 px-2">
                 <input type="text" value="${h(re.repeticiones)}"
                     data-id="${re.id}" data-campo="repeticiones"
-                    class="campo-ej w-full bg-black border border-white/10 rounded-lg px-2 py-1.5 text-center outline-none focus:border-yellow-400/50">
+                    class="campo-ej w-full bg-black/60 border border-white/10 rounded-xl px-2 py-1.5 text-center text-white outline-none focus:border-yellow-400/60 font-semibold text-sm transition-colors">
             </td>
-            <td class="py-2.5 px-2">
+            <td class="py-3 px-2">
                 <input type="number" min="0" step="0.5" value="${re.peso ?? ''}" placeholder="—"
                     data-id="${re.id}" data-campo="peso"
-                    class="campo-ej w-full bg-black border border-white/10 rounded-lg px-2 py-1.5 text-center outline-none focus:border-yellow-400/50">
+                    class="campo-ej w-full bg-black/60 border border-white/10 rounded-xl px-2 py-1.5 text-center text-white outline-none focus:border-yellow-400/60 font-semibold text-sm transition-colors">
             </td>
-            <td class="py-2.5 px-2">
+            <td class="py-3 px-2">
                 <input type="number" min="0" step="5" value="${re.descanso_segundos}"
                     data-id="${re.id}" data-campo="descanso_segundos"
-                    class="campo-ej w-full bg-black border border-white/10 rounded-lg px-2 py-1.5 text-center outline-none focus:border-yellow-400/50">
+                    class="campo-ej w-full bg-black/60 border border-white/10 rounded-xl px-2 py-1.5 text-center text-white outline-none focus:border-yellow-400/60 font-semibold text-sm transition-colors">
             </td>
-            <td class="py-2.5 pl-2 text-right">
-                <button data-del-ej="${re.id}" class="text-gray-600 hover:text-red-400">✕</button>
+            <td class="py-3 pl-2 text-right">
+                <button data-del-ej="${re.id}" title="Eliminar ejercicio" class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-all duration-150 active:scale-90">✕</button>
             </td>
         </tr>`;
     }

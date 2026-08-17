@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'Alpha Fitness') }} - Iniciar sesión</title>
+    <title>{{ config('app.name', 'Alpha Fitness') }} - Iniciar Sesión</title>
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
@@ -11,422 +11,592 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
-        @keyframes fondoZoom {
-            0%   { transform: scale(1.08); }
-            100% { transform: scale(1); }
+        /* =========================================================
+           Animaciones de fondo y efectos luminosos
+           ========================================================= */
+        @keyframes zoomFondo {
+            0%, 100% { transform: scale(1.04); }
+            50%      { transform: scale(1.08); }
         }
-        @keyframes tarjetaEntrada {
-            0%   { opacity: 0; transform: translateY(24px) scale(.97); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes campoEntrada {
-            0%   { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes brilloIcono {
-            0%, 100% { filter: drop-shadow(0 0 0 rgba(250,204,21,0)); }
-            50%      { filter: drop-shadow(0 0 10px rgba(250,204,21,.55)); }
-        }
-        .anim-fondo { animation: fondoZoom 12s ease-out forwards; }
-        .anim-tarjeta { animation: tarjetaEntrada .55s cubic-bezier(.22,1,.36,1) both; }
-        .anim-icono { animation: brilloIcono 3s ease-in-out infinite; }
-        .anim-campo { opacity: 0; animation: campoEntrada .45s ease-out forwards; }
-        .anim-campo:nth-child(1) { animation-delay: .08s; }
-        .anim-campo:nth-child(2) { animation-delay: .16s; }
-        .anim-campo:nth-child(3) { animation-delay: .24s; }
-        .anim-campo:nth-child(4) { animation-delay: .32s; }
 
-        .form-panel {
-            transition: opacity .28s ease, transform .28s ease;
+        @keyframes floatLuz {
+            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+            50%      { transform: translate(15px, -15px) scale(1.1); opacity: 0.5; }
         }
-        .form-panel.form-oculto {
-            opacity: 0;
-            transform: translateX(12px);
-            position: absolute;
-            pointer-events: none;
+
+        @keyframes shineBoton {
+            0%   { transform: translateX(-150%) rotate(25deg); }
+            100% { transform: translateX(250%) rotate(25deg); }
         }
-        .form-panel.form-visible {
-            opacity: 1;
-            transform: translateX(0);
+
+        .anim-fondo {
+            animation: zoomFondo 20s ease-in-out infinite;
+        }
+
+        .luz-ambiental {
+            animation: floatLuz 8s ease-in-out infinite;
+        }
+
+        /* Tarjeta principal con cristal ahumado y relieve */
+        .card-login-alpha {
+            background: rgba(18, 18, 18, 0.94);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 35px -5px rgba(250, 204, 21, 0.12);
+        }
+
+        /* Selector de rol con pastilla animada */
+        .switch-container {
+            background: rgba(0, 0, 0, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             position: relative;
         }
 
-        .tab-btn { transition: color .25s ease, border-color .25s ease; }
-        .tab-indicador {
-            transition: transform .3s cubic-bezier(.22,1,.36,1);
+        .switch-slider {
+            position: absolute;
+            top: 4px;
+            bottom: 4px;
+            width: calc(50% - 4px);
+            background: linear-gradient(135deg, rgba(250, 204, 21, 0.18) 0%, rgba(250, 204, 21, 0.05) 100%);
+            border: 1px solid rgba(250, 204, 21, 0.45);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(250, 204, 21, 0.15);
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.35, 1);
+            pointer-events: none;
         }
 
-        .btn-anim {
-            transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
+        .switch-slider.pos-usuarios {
+            transform: translateX(0);
         }
-        .btn-anim:hover { transform: translateY(-1px) scale(1.015); }
-        .btn-anim:active { transform: translateY(0) scale(.98); }
 
-        input.campo-anim {
-            transition: box-shadow .2s ease, border-color .2s ease, transform .15s ease;
+        .switch-slider.pos-clientes {
+            transform: translateX(100%);
         }
-        input.campo-anim:focus { transform: translateY(-1px); }
 
-        #panelInfoGimnasio .modal-caja {
-            animation: tarjetaEntrada .3s cubic-bezier(.22,1,.36,1) both;
+        /* Inputs estilizados */
+        .input-group {
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .input-group:focus-within {
+            border-color: rgba(250, 204, 21, 0.6);
+            background: rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.18);
+            transform: translateY(-1px);
+        }
+
+        .input-group:focus-within .input-icon {
+            color: #facc15;
+            transform: scale(1.08);
+        }
+
+        .input-icon {
+            transition: all 0.2s ease;
+        }
+
+        /* Botón de acción con efecto de brillo */
+        .btn-alpha-submit {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #facc15 0%, #eab308 100%);
+            color: #000;
+            font-weight: 700;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 18px -2px rgba(250, 204, 21, 0.4);
+        }
+
+        .btn-alpha-submit:hover {
+            transform: translateY(-1.5px) scale(1.01);
+            box-shadow: 0 8px 25px -2px rgba(250, 204, 21, 0.55);
+        }
+
+        .btn-alpha-submit:active {
+            transform: translateY(0.5px) scale(0.98);
+        }
+
+        .btn-alpha-submit::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 40%;
+            height: 200%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+            transform: rotate(25deg);
+            opacity: 0;
+        }
+
+        .btn-alpha-submit:hover::after {
+            opacity: 1;
+            animation: shineBoton 0.85s ease-in-out forwards;
         }
     </style>
 </head>
-<body class="font-sans antialiased">
+<body class="font-sans antialiased text-white bg-black selection:bg-yellow-400 selection:text-black">
 
-    <div class="relative min-h-screen flex items-center justify-center overflow-hidden bg-black">
+    <div class="relative min-h-screen flex items-center justify-center overflow-hidden p-4 sm:p-6">
 
-        {{-- Fondo del gimnasio --}}
+        {{-- Fotografía del gimnasio de fondo --}}
         <div
-            class="absolute inset-0 bg-cover bg-center anim-fondo"
+            class="absolute inset-0 bg-cover bg-center anim-fondo filter brightness-75 scale-105"
             style="background-image: url('{{ asset('images/gym-bg.png') }}');"
         ></div>
-        <div class="absolute inset-0 bg-black/70"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/85 to-black/65"></div>
 
-        {{-- Tarjeta de login --}}
-        <div class="relative z-10 w-full max-w-md mx-4 my-10">
-            <div class="anim-tarjeta bg-[#141414]/95 border border-white/10 rounded-2xl shadow-2xl px-8 py-10">
+        {{-- Luces ambientales --}}
+        <div class="absolute -top-24 -left-24 w-96 h-96 bg-yellow-500/15 rounded-full blur-3xl pointer-events-none luz-ambiental"></div>
+        <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none luz-ambiental" style="animation-delay: -4s;"></div>
 
-                {{-- Icono + encabezado --}}
+        {{-- Tarjeta de Login --}}
+        <div class="relative z-10 w-full max-w-[430px] my-6">
+            <div class="card-login-alpha rounded-3xl p-7 sm:p-9 relative overflow-hidden">
+                
+                {{-- Encabezado y Logo --}}
                 <div class="flex flex-col items-center text-center mb-6">
-                    <svg class="anim-icono w-9 h-9 text-yellow-400 mb-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4 9v6M2 10v4M20 9v6M22 10v4M7 12h10M6 8v8M18 8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <h1 class="text-2xl font-bold text-white">Bienvenido</h1>
-                    <p class="text-gray-400 text-sm mt-1">Inicia sesión para continuar</p>
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-yellow-500/20 to-yellow-400/5 border border-yellow-400/30 flex items-center justify-center mb-3 shadow-lg shadow-yellow-400/10">
+                        <svg class="w-8 h-8 text-yellow-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 9v6M2 10v4M20 9v6M22 10v4M7 12h10M6 8v8M18 8v8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                        Alpha <span class="text-yellow-400">Fitness</span>
+                    </h1>
+                    <p id="portal-subtitulo" class="text-xs sm:text-sm text-gray-400 mt-1">
+                        Acceso para trabajadores, entrenadores y administración
+                    </p>
                 </div>
 
-                {{-- Mensajes de error --}}
+                {{-- Mensajes de error / status --}}
                 @if ($errors->any())
-                    <div class="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-                        {{ $errors->first() }}
+                    <div class="mb-5 rounded-2xl border border-red-500/30 bg-red-500/15 p-3.5 text-xs sm:text-sm text-red-300 flex items-start gap-2.5 shadow-lg backdrop-blur-sm">
+                        <svg class="w-5 h-5 text-red-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <div class="flex-1 font-medium">{{ $errors->first() }}</div>
                     </div>
                 @endif
 
                 @if (session('status'))
-                    <div class="mb-4 rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400">
-                        {{ session('status') }}
+                    <div class="mb-5 rounded-2xl border border-green-500/30 bg-green-500/15 p-3.5 text-xs sm:text-sm text-green-300 flex items-start gap-2.5 shadow-lg backdrop-blur-sm">
+                        <svg class="w-5 h-5 text-green-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        <div class="flex-1 font-medium">{{ session('status') }}</div>
                     </div>
                 @endif
 
-                {{-- Tabs Usuario / Cliente --}}
-                <div class="flex mb-6 border-b border-white/10">
-                    <button type="button" data-tab="usuario"
-                        class="tab-btn flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-gray-400 border-b-2 border-transparent -mb-px">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zM4 22a8 8 0 1116 0H4z"/></svg>
-                        Usuario
+                {{-- Selector de Rol: Usuarios vs Clientes --}}
+                <div class="switch-container p-1 rounded-2xl flex items-center mb-6 relative">
+                    <div id="switch-slider" class="switch-slider pos-usuarios"></div>
+
+                    <button type="button" id="tab-btn-usuarios"
+                        class="flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold text-yellow-400 relative z-10 flex items-center justify-center gap-2 transition-colors duration-200">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <span>Usuarios</span>
                     </button>
-                    <button type="button" data-tab="cliente"
-                        class="tab-btn flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-yellow-400 border-b-2 border-yellow-400 -mb-px">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zM8 11c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-                        Cliente
+
+                    <button type="button" id="tab-btn-clientes"
+                        class="flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold text-gray-400 relative z-10 flex items-center justify-center gap-2 transition-colors duration-200">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <span>Clientes</span>
                     </button>
                 </div>
 
-                {{-- Formulario USUARIO (empleados) --}}
-                <form id="form-usuario" method="POST" action="{{ route('login.submit') }}" class="form-panel form-oculto space-y-4">
-                    @csrf
+                {{-- ========================================================================= --}}
+                {{-- 1. SECCIÓN USUARIOS (Trabajadores: Entrenadores, Administración, Recepción) --}}
+                {{-- ========================================================================= --}}
+                <div id="seccion-usuarios" class="space-y-4">
+                    <form id="form-usuario" method="POST" action="{{ route('login.submit') }}" class="space-y-4">
+                        @csrf
 
-                    <div>
-                        <div class="relative">
-                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zM4 22a8 8 0 1116 0H4z"/></svg>
-                            <input
-                                type="email"
-                                name="email"
-                                value="{{ old('email') }}"
-                                placeholder="Usuario o correo electrónico"
-                                required
-                                autofocus
-                                class="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/60 focus:border-yellow-400/60"
-                            >
+                        <div class="flex items-center justify-between px-1">
+                            <span class="text-[11px] font-semibold uppercase tracking-wider text-yellow-400/90 flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
+                                Acceso Empleados / Staff
+                            </span>
+                            <span class="text-[11px] text-gray-500">Entrenadores & Admin</span>
                         </div>
-                    </div>
 
-                    <div>
-                        <div class="relative">
-                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17a2 2 0 002-2 2 2 0 00-2-2 2 2 0 00-2 2 2 2 0 002 2zm6-9a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V10a2 2 0 012-2h1V6a5 5 0 0110 0v2h1zm-6-5a3 3 0 00-3 3v2h6V6a3 3 0 00-3-3z"/></svg>
-                            <input
-                                id="password"
-                                type="password"
-                                name="password"
-                                placeholder="Contraseña"
-                                required
-                                class="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-11 pr-11 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/60 focus:border-yellow-400/60"
-                            >
-                            <button type="button" id="togglePassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                        {{-- Correo / Usuario --}}
+                        <div>
+                            <div class="input-group rounded-2xl flex items-center px-4 py-3">
+                                <svg class="input-icon w-5 h-5 text-gray-500 shrink-0 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                                </svg>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value="{{ old('email') }}"
+                                    placeholder="Correo de empleado o usuario"
+                                    required
+                                    autofocus
+                                    class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none"
+                                >
+                            </div>
+                        </div>
+
+                        {{-- Contraseña --}}
+                        <div>
+                            <div class="input-group rounded-2xl flex items-center px-4 py-3">
+                                <svg class="input-icon w-5 h-5 text-gray-500 shrink-0 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                </svg>
+                                <input
+                                    id="password"
+                                    type="password"
+                                    name="password"
+                                    placeholder="Contraseña"
+                                    required
+                                    class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none pr-2"
+                                >
+                                <button type="button" id="togglePassword" class="text-gray-500 hover:text-yellow-400 transition-colors p-1" title="Ver/ocultar contraseña">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="btn-alpha-submit w-full py-3.5 px-4 rounded-2xl text-sm mt-2 flex items-center justify-center gap-2"
+                        >
+                            <span>Iniciar Sesión como Usuario</span>
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
+                    </form>
+                </div>
+
+                {{-- ========================================================================= --}}
+                {{-- 2. SECCIÓN CLIENTES (Miembros / Atletas) --}}
+                {{-- ========================================================================= --}}
+                <div id="seccion-clientes" class="space-y-4 hidden">
+                    
+                    {{-- 2A. Login Cliente --}}
+                    <form id="form-cliente-login" method="POST" action="{{ route('cliente.login.submit') }}" class="space-y-4 {{ old('nombre') ? 'hidden' : '' }}">
+                        @csrf
+
+                        {{-- Botón Google --}}
+                        <a href="{{ route('cliente.google') }}" class="w-full flex items-center justify-center gap-3 bg-white/[0.05] hover:bg-white/[0.09] border border-white/10 hover:border-white/20 rounded-2xl py-3 px-4 text-sm font-semibold text-white transition-all duration-200 active:scale-95 shadow-sm group">
+                            <svg class="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.63h6.47a5.53 5.53 0 01-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.92l-3.88-3c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.11A12 12 0 0012 24z"/><path fill="#FBBC05" d="M5.27 14.27a7.2 7.2 0 010-4.54v-3.1H1.27a12 12 0 000 10.75l4-3.11z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 001.27 6.63l4 3.1C6.22 6.86 8.87 4.75 12 4.75z"/></svg>
+                            <span>Continuar con Google</span>
+                        </a>
+
+                        <div class="flex items-center gap-3 my-2">
+                            <div class="flex-1 h-px bg-white/10"></div>
+                            <span class="text-[11px] uppercase tracking-wider text-gray-500 font-medium">o con correo</span>
+                            <div class="flex-1 h-px bg-white/10"></div>
+                        </div>
+
+                        {{-- Correo Cliente --}}
+                        <div>
+                            <div class="input-group rounded-2xl flex items-center px-4 py-3">
+                                <svg class="input-icon w-5 h-5 text-gray-500 shrink-0 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                                </svg>
+                                <input
+                                    type="email"
+                                    name="correo"
+                                    placeholder="tu@correo.com"
+                                    class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none"
+                                >
+                            </div>
+                        </div>
+
+                        {{-- Contraseña Cliente --}}
+                        <div>
+                            <div class="input-group rounded-2xl flex items-center px-4 py-3">
+                                <svg class="input-icon w-5 h-5 text-gray-500 shrink-0 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                </svg>
+                                <input
+                                    id="passwordCliente"
+                                    type="password"
+                                    name="password"
+                                    placeholder="Tu contraseña"
+                                    class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none pr-2"
+                                >
+                                <button type="button" id="toggleServiceCliente" class="text-gray-500 hover:text-yellow-400 transition-colors p-1" title="Ver/ocultar contraseña">
+                                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="btn-alpha-submit w-full py-3.5 px-4 rounded-2xl text-sm mt-2 flex items-center justify-center gap-2"
+                        >
+                            <span>Iniciar Sesión como Cliente</span>
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
+
+                        <div class="pt-2 text-center">
+                            <p class="text-xs text-gray-400">
+                                ¿No tienes cuenta?
+                                <button type="button" id="btnMostrarRegistro" class="text-yellow-400 hover:text-yellow-300 font-bold ml-1 transition-colors underline-offset-4 hover:underline">
+                                    Crea una cuenta aquí
+                                </button>
+                            </p>
+                        </div>
+                    </form>
+
+                    {{-- 2B. Registro de Cliente --}}
+                    <form id="form-cliente-registro" method="POST" action="{{ route('cliente.registro') }}" class="space-y-3 {{ old('nombre') ? '' : 'hidden' }}">
+                        @csrf
+
+                        <div class="text-center mb-1">
+                            <h2 class="text-base font-bold text-white">Registro de Nuevo Miembro</h2>
+                            <p class="text-[11px] text-gray-400">Crea tu cuenta para acceder a tus entrenamientos</p>
+                        </div>
+
+                        {{-- Nombre --}}
+                        <div class="input-group rounded-2xl flex items-center px-4 py-2.5">
+                            <svg class="input-icon w-5 h-5 text-gray-500 shrink-0 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            <input type="text" name="nombre" value="{{ old('nombre') }}" placeholder="Nombre completo" required
+                                class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none">
+                        </div>
+
+                        {{-- Correo --}}
+                        <div class="input-group rounded-2xl flex items-center px-4 py-2.5">
+                            <svg class="input-icon w-5 h-5 text-gray-500 shrink-0 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                            <input type="email" name="correo" value="{{ old('correo') }}" placeholder="Correo electrónico" required
+                                class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none">
+                        </div>
+
+                        {{-- Contraseña --}}
+                        <div class="input-group rounded-2xl flex items-center px-4 py-2.5">
+                            <svg class="input-icon w-5 h-5 text-gray-500 shrink-0 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                            <input id="passwordRegistro" type="password" name="password" placeholder="Contraseña (mín. 8 caracteres)" required minlength="8"
+                                class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none pr-2">
+                            <button type="button" id="toggleRegistroPassword" class="text-gray-500 hover:text-yellow-400 transition-colors p-1">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                             </button>
                         </div>
-                    </div>
 
-                    <div class="flex items-center justify-end text-sm pt-1">
-                        <a href="#" class="text-yellow-400 hover:text-yellow-300">¿Olvidaste tu contraseña?</a>
-                    </div>
-
-                    <button
-                        type="submit"
-                        class="btn-anim w-full bg-yellow-400 hover:bg-yellow-300 text-black font-semibold py-3 rounded-xl mt-2"
-                    >
-                        Iniciar sesión
-                    </button>
-
-                    <p class="text-xs text-gray-500 text-center pt-1">Tu sesión se mantendrá iniciada en este dispositivo.</p>
-                </form>
-
-                {{-- Formulario CLIENTE (correo/contraseña propia + Google) --}}
-                <div id="form-cliente" class="form-panel form-visible space-y-4">
-
-                <form id="form-cliente-login" method="POST" action="{{ route('cliente.login.submit') }}" class="space-y-4 {{ old('nombre') ? 'hidden' : '' }}">
-                    @csrf
-
-                    <p class="text-xs text-gray-400 -mt-2 mb-1">
-                        Debes crear una cuenta primero (dale a "Crea una cuenta" abajo). Luego inicia sesión con ese mismo correo y contraseña.
-                    </p>
-
-                    <div>
-                        <div class="relative">
-                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zM4 22a8 8 0 1116 0H4z"/></svg>
-                            <input
-                                type="email"
-                                name="correo"
-                                placeholder="Correo electrónico"
-                                class="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/60 focus:border-yellow-400/60"
-                            >
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="relative">
-                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17a2 2 0 002-2 2 2 0 00-2-2 2 2 0 00-2 2 2 2 0 002 2zm6-9a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V10a2 2 0 012-2h1V6a5 5 0 0110 0v2h1zm-6-5a3 3 0 00-3 3v2h6V6a3 3 0 00-3-3z"/></svg>
-                            <input
-                                id="passwordCliente"
-                                type="password"
-                                name="password"
-                                placeholder="Contraseña"
-                                class="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-11 pr-11 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/60 focus:border-yellow-400/60"
-                            >
-                            <button type="button" id="toggleServiceCliente" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                        {{-- Confirmar Contraseña --}}
+                        <div class="input-group rounded-2xl flex items-center px-4 py-2.5">
+                            <svg class="input-icon w-5 h-5 text-gray-500 shrink-0 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                            <input id="passwordRegistroConfirm" type="password" name="password_confirmation" placeholder="Confirmar contraseña" required minlength="8"
+                                class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none pr-2">
+                            <button type="button" id="toggleRegistroPasswordConfirm" class="text-gray-500 hover:text-yellow-400 transition-colors p-1">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                             </button>
                         </div>
-                    </div>
 
-                    <button
-                        type="submit"
-                        class="btn-anim w-full bg-yellow-400 hover:bg-yellow-300 text-black font-semibold py-3 rounded-xl mt-2"
-                    >
-                        Iniciar sesión
-                    </button>
-                    <p class="text-xs text-gray-500 text-center pt-1">Tu sesión se mantendrá iniciada en este dispositivo.</p>
-
-                    <div class="flex items-center gap-3 my-2">
-                        <div class="flex-1 h-px bg-white/10"></div>
-                        <span class="text-xs text-gray-500">o</span>
-                        <div class="flex-1 h-px bg-white/10"></div>
-                    </div>
-
-                    <a href="{{ route('cliente.google') }}" class="btn-anim w-full flex items-center justify-center gap-2 border border-white/10 rounded-xl py-3 text-sm text-gray-200 hover:border-white/20 hover:bg-white/5">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.63h6.47a5.53 5.53 0 01-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.92l-3.88-3c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.11A12 12 0 0012 24z"/><path fill="#FBBC05" d="M5.27 14.27a7.2 7.2 0 010-4.54v-3.1H1.27a12 12 0 000 10.75l4-3.11z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 001.27 6.63l4 3.1C6.22 6.86 8.87 4.75 12 4.75z"/></svg>
-                        Continuar con Google
-                    </a>
-
-                    <p class="text-xs text-gray-500 text-center pt-2">
-                        ¿No tienes contraseña todavía?
-                        <button type="button" id="btnMostrarRegistro" class="text-yellow-400 hover:text-yellow-300 font-medium">Crea una cuenta</button>
-                    </p>
-                </form>
-
-                {{-- Registro de cliente nuevo (correo + contraseña propia) --}}
-                <form id="form-cliente-registro" method="POST" action="{{ route('cliente.registro') }}" class="space-y-4 {{ old('nombre') ? '' : 'hidden' }}">
-                    @csrf
-
-                    <p class="text-xs text-gray-400 -mt-2 mb-1">Crea tu cuenta con una contraseña propia.</p>
-
-                    <div class="relative">
-                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zM4 22a8 8 0 1116 0H4z"/></svg>
-                        <input type="text" name="nombre" value="{{ old('nombre') }}" placeholder="Nombre completo" required
-                            class="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/60 focus:border-yellow-400/60">
-                    </div>
-
-                    <div class="relative">
-                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 100-10 5 5 0 000 10zM4 22a8 8 0 1116 0H4z"/></svg>
-                        <input type="email" name="correo" value="{{ old('correo') }}" placeholder="Correo electrónico" required
-                            class="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/60 focus:border-yellow-400/60">
-                    </div>
-
-                    <div class="relative">
-                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17a2 2 0 002-2 2 2 0 00-2-2 2 2 0 00-2 2 2 2 0 002 2zm6-9a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V10a2 2 0 012-2h1V6a5 5 0 0110 0v2h1zm-6-5a3 3 0 00-3 3v2h6V6a3 3 0 00-3-3z"/></svg>
-                        <input id="passwordRegistro" type="password" name="password" placeholder="Contraseña (mín. 8 caracteres)" required minlength="8"
-                            class="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-11 pr-11 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/60 focus:border-yellow-400/60">
-                        <button type="button" id="toggleRegistroPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
-                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <button type="submit" class="btn-alpha-submit w-full py-3.5 px-4 rounded-2xl text-sm mt-2 flex items-center justify-center gap-2">
+                            <span>Crear Cuenta</span>
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                         </button>
-                    </div>
 
-                    <div class="relative">
-                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17a2 2 0 002-2 2 2 0 00-2-2 2 2 0 00-2 2 2 2 0 002 2zm6-9a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V10a2 2 0 012-2h1V6a5 5 0 0110 0v2h1zm-6-5a3 3 0 00-3 3v2h6V6a3 3 0 00-3-3z"/></svg>
-                        <input id="passwordRegistroConfirm" type="password" name="password_confirmation" placeholder="Confirmar contraseña" required minlength="8"
-                            class="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-11 pr-11 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/60 focus:border-yellow-400/60">
-                        <button type="button" id="toggleRegistroPasswordConfirm" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300">
-                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
-                        </button>
-                    </div>
-
-                    <button type="submit" class="btn-anim w-full bg-yellow-400 hover:bg-yellow-300 text-black font-semibold py-3 rounded-xl mt-2">
-                        Crear cuenta
-                    </button>
-
-                    <p class="text-xs text-gray-500 text-center pt-1">
-                        ¿Ya tienes cuenta?
-                        <button type="button" id="btnMostrarLogin" class="text-yellow-400 hover:text-yellow-300 font-medium">Inicia sesión</button>
-                    </p>
-                </form>
+                        <div class="pt-2 text-center">
+                            <p class="text-xs text-gray-400">
+                                ¿Ya tienes cuenta?
+                                <button type="button" id="btnMostrarLogin" class="text-yellow-400 hover:text-yellow-300 font-bold ml-1 transition-colors underline-offset-4 hover:underline">
+                                    Inicia sesión aquí
+                                </button>
+                            </p>
+                        </div>
+                    </form>
 
                 </div>
 
-                {{-- Acceso rápido --}}
-                <div class="flex items-center gap-3 my-6">
-                    <div class="flex-1 h-px bg-white/10"></div>
-                    <span class="text-xs text-gray-500">Acceso rápido</span>
-                    <div class="flex-1 h-px bg-white/10"></div>
+                {{-- Botón Información Gimnasio --}}
+                <div class="mt-6 pt-5 border-t border-white/10 flex items-center justify-between">
+                    <span class="text-[11px] text-gray-400 font-medium">¿Dudas sobre el club?</span>
+                    <button type="button" id="btnInfoGimnasio" class="inline-flex items-center gap-1.5 text-xs font-semibold text-yellow-400 hover:text-yellow-300 transition-colors py-1 px-2.5 rounded-lg hover:bg-yellow-400/10">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                        <span>Información y Horarios</span>
+                    </button>
                 </div>
-
-                <button type="button" id="btnInfoGimnasio" class="btn-anim w-full flex items-center justify-center gap-2 border border-white/10 rounded-xl py-3 text-sm text-gray-200 hover:border-white/20 hover:bg-white/5">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                    Información del gimnasio
-                </button>
 
             </div>
         </div>
 
-        {{-- Panel de información del gimnasio (modal) --}}
+        {{-- Modal de Información del Gimnasio --}}
         <div id="panelInfoGimnasio" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4">
-            <div id="panelInfoOverlay" class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+            <div id="panelInfoOverlay" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
 
-            <div class="modal-caja relative w-full max-w-sm bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] border border-white/10 rounded-2xl p-6 shadow-2xl">
-                <button type="button" id="btnCerrarInfo" class="absolute top-4 right-4 text-gray-500 hover:text-gray-300 hover:bg-white/5 rounded-lg p-1 transition-colors">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            <div class="modal-caja relative w-full max-w-md bg-gradient-to-b from-[#1c1c1c] via-[#141414] to-[#0d0d0d] border border-white/15 rounded-3xl p-7 shadow-2xl z-10">
+                <button type="button" id="btnCerrarInfo" class="absolute top-5 right-5 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-2 transition-colors">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
                 </button>
 
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-11 h-11 rounded-xl bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-yellow-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4 9v6M2 10v4M20 9v6M22 10v4M7 12h10M6 8v8M18 8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <div class="flex items-center gap-3.5 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center shadow-md shadow-yellow-400/10">
+                        <svg class="w-6 h-6 text-yellow-400 anim-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 9v6M2 10v4M20 9v6M22 10v4M7 12h10M6 8v8M18 8v8"/>
                         </svg>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-white leading-tight">Alpha Fitness</h2>
-                        <p class="text-xs text-gray-500">Tu mejor versión</p>
+                        <h2 class="text-xl font-bold text-white">Alpha Fitness Club</h2>
+                        <p class="text-xs text-yellow-400/90 font-medium">Instalaciones de clase mundial</p>
                     </div>
                 </div>
 
-                <div class="space-y-4">
-                    <div class="flex gap-3">
-                        <div class="w-9 h-9 shrink-0 rounded-lg bg-white/5 flex items-center justify-center text-yellow-400">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                <div class="space-y-4 text-gray-300 text-sm">
+                    <div class="flex items-start gap-3.5 bg-white/[0.03] p-3.5 rounded-2xl border border-white/5">
+                        <div class="w-9 h-9 rounded-xl bg-yellow-400/10 flex items-center justify-center text-yellow-400 shrink-0">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         </div>
                         <div>
-                            <p class="text-sm font-semibold text-white">Horario</p>
-                            <p class="text-xs text-gray-400 mt-0.5">Lunes a viernes: 5:00 a.m. – 10:00 p.m.<br>Sábados: 6:00 a.m. – 6:00 p.m.</p>
+                            <p class="font-semibold text-white text-xs uppercase tracking-wider">Horario de Apertura</p>
+                            <p class="text-xs text-gray-400 mt-1">Lunes a Viernes: 5:00 a.m. – 10:00 p.m.<br>Sábados y Domingos: 6:00 a.m. – 6:00 p.m.</p>
                         </div>
                     </div>
-                    <div class="flex gap-3">
-                        <div class="w-9 h-9 shrink-0 rounded-lg bg-white/5 flex items-center justify-center text-yellow-400">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+
+                    <div class="flex items-start gap-3.5 bg-white/[0.03] p-3.5 rounded-2xl border border-white/5">
+                        <div class="w-9 h-9 rounded-xl bg-yellow-400/10 flex items-center justify-center text-yellow-400 shrink-0">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                         </div>
                         <div>
-                            <p class="text-sm font-semibold text-white">Ubicación</p>
-                            <p class="text-xs text-gray-400 mt-0.5">Actualiza aquí la dirección real del gimnasio.</p>
+                            <p class="font-semibold text-white text-xs uppercase tracking-wider">Ubicación</p>
+                            <p class="text-xs text-gray-400 mt-1">Área de musculación, peso libre, cross-training, cardio y asesoría personalizada.</p>
                         </div>
                     </div>
-                    <div class="flex gap-3">
-                        <div class="w-9 h-9 shrink-0 rounded-lg bg-white/5 flex items-center justify-center text-yellow-400">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.12.9.34 1.79.65 2.65a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.43-1.22a2 2 0 012.11-.45c.86.31 1.75.53 2.65.65A2 2 0 0122 16.92z"/></svg>
-                        </div>
-                        <div>
-                            <p class="text-sm font-semibold text-white">Contacto</p>
-                            <p class="text-xs text-gray-400 mt-0.5">Actualiza aquí el teléfono o correo de contacto.</p>
-                        </div>
-                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <a href="{{ route('informacion') }}" class="w-full alpha-btn-primary py-3 rounded-xl text-xs font-bold text-center block">
+                        Ver página completa de información →
+                    </a>
                 </div>
             </div>
         </div>
+
     </div>
 
+    {{-- Script de control e interactividad --}}
     <script>
-        // Mostrar / ocultar contraseña
-        const toggleBtn = document.getElementById('togglePassword');
-        const passwordInput = document.getElementById('password');
-        toggleBtn.addEventListener('click', () => {
-            const isHidden = passwordInput.type === 'password';
-            passwordInput.type = isHidden ? 'text' : 'password';
-        });
-
-        // Mismo mostrar / ocultar para el resto de campos de contraseña
-        function activarToggle(botonId, inputId) {
-            const boton = document.getElementById(botonId);
+        // Ver / Ocultar contraseñas
+        function setupPasswordToggle(btnId, inputId) {
+            const btn = document.getElementById(btnId);
             const input = document.getElementById(inputId);
-            if (!boton || !input) return;
-            boton.addEventListener('click', () => {
-                const isHidden = input.type === 'password';
-                input.type = isHidden ? 'text' : 'password';
+            if (!btn || !input) return;
+            btn.addEventListener('click', () => {
+                const isPass = input.type === 'password';
+                input.type = isPass ? 'text' : 'password';
+                btn.classList.toggle('text-yellow-400', isPass);
             });
         }
-        activarToggle('toggleServiceCliente', 'passwordCliente');
-        activarToggle('toggleRegistroPassword', 'passwordRegistro');
-        activarToggle('toggleRegistroPasswordConfirm', 'passwordRegistroConfirm');
+        setupPasswordToggle('togglePassword', 'password');
+        setupPasswordToggle('toggleServiceCliente', 'passwordCliente');
+        setupPasswordToggle('toggleRegistroPassword', 'passwordRegistro');
+        setupPasswordToggle('toggleRegistroPasswordConfirm', 'passwordRegistroConfirm');
 
-        // Tabs Usuario / Cliente: cada uno muestra su propio formulario
-        const tabButtons = document.querySelectorAll('.tab-btn');
-        const formUsuario = document.getElementById('form-usuario');
-        const formCliente = document.getElementById('form-cliente');
-        tabButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                tabButtons.forEach(b => {
-                    b.classList.remove('text-yellow-400', 'border-yellow-400');
-                    b.classList.add('text-gray-400', 'border-transparent');
-                });
-                btn.classList.remove('text-gray-400', 'border-transparent');
-                btn.classList.add('text-yellow-400', 'border-yellow-400');
+        // Alternar entre pestaña Usuarios y Clientes
+        const btnTabUsuarios = document.getElementById('tab-btn-usuarios');
+        const btnTabClientes = document.getElementById('tab-btn-clientes');
+        const switchSlider = document.getElementById('switch-slider');
+        const seccionUsuarios = document.getElementById('seccion-usuarios');
+        const seccionClientes = document.getElementById('seccion-clientes');
+        const subtitulo = document.getElementById('portal-subtitulo');
 
-                if (btn.dataset.tab === 'cliente') {
-                    formUsuario.classList.remove('form-visible');
-                    formUsuario.classList.add('form-oculto');
-                    formCliente.classList.remove('form-oculto');
-                    formCliente.classList.add('form-visible');
-                } else {
-                    formCliente.classList.remove('form-visible');
-                    formCliente.classList.add('form-oculto');
-                    formUsuario.classList.remove('form-oculto');
-                    formUsuario.classList.add('form-visible');
+        function activarPestana(tipo) {
+            if (tipo === 'usuarios') {
+                switchSlider.classList.remove('pos-clientes');
+                switchSlider.classList.add('pos-usuarios');
+
+                btnTabUsuarios.classList.add('text-yellow-400');
+                btnTabUsuarios.classList.remove('text-gray-400');
+                btnTabClientes.classList.add('text-gray-400');
+                btnTabClientes.classList.remove('text-yellow-400');
+
+                subtitulo.textContent = 'Acceso para trabajadores, entrenadores y administración';
+
+                seccionClientes.classList.add('hidden');
+                seccionUsuarios.classList.remove('hidden');
+
+                if (window.gsap) {
+                    gsap.fromTo(seccionUsuarios, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.28, ease: 'power2.out' });
                 }
-            });
-        });
-        // Cliente: alternar entre iniciar sesión y crear cuenta
+            } else {
+                switchSlider.classList.remove('pos-usuarios');
+                switchSlider.classList.add('pos-clientes');
+
+                btnTabClientes.classList.add('text-yellow-400');
+                btnTabClientes.classList.remove('text-gray-400');
+                btnTabUsuarios.classList.add('text-gray-400');
+                btnTabUsuarios.classList.remove('text-yellow-400');
+
+                subtitulo.textContent = 'Acceso a planes y entrenamientos para miembros';
+
+                seccionUsuarios.classList.add('hidden');
+                seccionClientes.classList.remove('hidden');
+
+                if (window.gsap) {
+                    gsap.fromTo(seccionClientes, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.28, ease: 'power2.out' });
+                }
+            }
+        }
+
+        btnTabUsuarios.addEventListener('click', () => activarPestana('usuarios'));
+        btnTabClientes.addEventListener('click', () => activarPestana('clientes'));
+
+        // Alternar Login Cliente / Registro Cliente
         const btnMostrarRegistro = document.getElementById('btnMostrarRegistro');
         const btnMostrarLogin = document.getElementById('btnMostrarLogin');
         const formClienteLogin = document.getElementById('form-cliente-login');
         const formClienteRegistro = document.getElementById('form-cliente-registro');
-        btnMostrarRegistro.addEventListener('click', () => {
-            formClienteLogin.classList.add('hidden');
-            formClienteRegistro.classList.remove('hidden');
-        });
-        btnMostrarLogin.addEventListener('click', () => {
-            formClienteRegistro.classList.add('hidden');
-            formClienteLogin.classList.remove('hidden');
-        });
 
-        // Panel de información del gimnasio
-        const panelInfo = document.getElementById('panelInfoGimnasio');
-        document.getElementById('btnInfoGimnasio').addEventListener('click', () => {
-            panelInfo.classList.remove('hidden');
-        });
-        document.getElementById('btnCerrarInfo').addEventListener('click', () => {
-            panelInfo.classList.add('hidden');
-        });
-        document.getElementById('panelInfoOverlay').addEventListener('click', () => {
-            panelInfo.classList.add('hidden');
-        });
+        if (btnMostrarRegistro && btnMostrarLogin) {
+            btnMostrarRegistro.addEventListener('click', () => {
+                formClienteLogin.classList.add('hidden');
+                formClienteRegistro.classList.remove('hidden');
+                if (window.gsap) {
+                    gsap.fromTo(formClienteRegistro, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.28, ease: 'power2.out' });
+                }
+            });
+
+            btnMostrarLogin.addEventListener('click', () => {
+                formClienteRegistro.classList.add('hidden');
+                formClienteLogin.classList.remove('hidden');
+                if (window.gsap) {
+                    gsap.fromTo(formClienteLogin, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.28, ease: 'power2.out' });
+                }
+            });
+        }
+
+        // Modal de Información
+        const modalInfo = document.getElementById('panelInfoGimnasio');
+        const btnOpenInfo = document.getElementById('btnInfoGimnasio');
+        const btnCloseInfo = document.getElementById('btnCerrarInfo');
+        const overlayInfo = document.getElementById('panelInfoOverlay');
+
+        if (btnOpenInfo) {
+            btnOpenInfo.addEventListener('click', () => {
+                if (window.alphaAnimateModalOpen) {
+                    window.alphaAnimateModalOpen('#panelInfoGimnasio');
+                } else {
+                    modalInfo.classList.remove('hidden');
+                }
+            });
+        }
+
+        if (btnCloseInfo) {
+            btnCloseInfo.addEventListener('click', () => {
+                if (window.alphaAnimateModalClose) {
+                    window.alphaAnimateModalClose('#panelInfoGimnasio');
+                } else {
+                    modalInfo.classList.add('hidden');
+                }
+            });
+        }
+
+        if (overlayInfo) {
+            overlayInfo.addEventListener('click', () => {
+                if (window.alphaAnimateModalClose) {
+                    window.alphaAnimateModalClose('#panelInfoGimnasio');
+                } else {
+                    modalInfo.classList.add('hidden');
+                }
+            });
+        }
     </script>
 </body>
 </html>

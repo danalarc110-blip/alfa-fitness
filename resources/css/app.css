@@ -9,3 +9,324 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* =========================================================
+   Alpha Fitness - Custom Design System & Theme Engine
+   ========================================================= */
+
+:root {
+    --alpha-gold: #facc15;
+    --alpha-gold-hover: #eab308;
+    --alpha-gold-glow: rgba(250, 204, 21, 0.25);
+    --alpha-bg-dark: #0a0a0a;
+    --alpha-card-dark: #141414;
+    --alpha-border-dark: rgba(255, 255, 255, 0.08);
+
+    /* Light Mode Warm Tones */
+    --alpha-bg-light: #f7f6f2;
+    --alpha-card-light: #ffffff;
+    --alpha-card-subtle-light: #f0eee9;
+    --alpha-text-primary-light: #1c1917;
+    --alpha-text-secondary-light: #57534e;
+    --alpha-text-muted-light: #78716c;
+    --alpha-border-light: #e5e2db;
+}
+
+/* Base custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(250, 204, 21, 0.4);
+}
+
+html.light ::-webkit-scrollbar-thumb {
+    background: #d6d3cb;
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+    background: #eab308;
+}
+
+/* Smooth Focus Rings */
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.35);
+}
+
+/* Alpha Glassmorphism & Card Surfaces */
+.alpha-card {
+    background: rgba(20, 20, 20, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.alpha-card:hover {
+    border-color: rgba(250, 204, 21, 0.3);
+    box-shadow: 0 8px 30px -8px rgba(0, 0, 0, 0.6), 0 0 15px -3px var(--alpha-gold-glow);
+}
+
+/* Interactive subtle gold glow */
+.alpha-glow {
+    box-shadow: 0 0 20px -2px var(--alpha-gold-glow);
+}
+
+/* Button & Badge Animations */
+.alpha-btn-primary {
+    background-color: var(--alpha-gold);
+    color: #000;
+    font-weight: 600;
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background-color 0.2s ease;
+    box-shadow: 0 2px 10px -2px rgba(250, 204, 21, 0.3);
+}
+
+.alpha-btn-primary:hover {
+    background-color: var(--alpha-gold-hover);
+    transform: translateY(-1.5px) scale(1.015);
+    box-shadow: 0 6px 20px -3px rgba(250, 204, 21, 0.45);
+}
+
+.alpha-btn-primary:active {
+    transform: translateY(0.5px) scale(0.98);
+}
+
+/* Secondary Button */
+.alpha-btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.alpha-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.alpha-btn-secondary:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* Sidebar navigation item animation */
+.nav-item-active {
+    background: linear-gradient(90deg, rgba(250, 204, 21, 0.15) 0%, rgba(250, 204, 21, 0.03) 100%);
+    border-left: 3px solid var(--alpha-gold);
+    color: var(--alpha-gold);
+    box-shadow: inset 0 0 12px -3px rgba(250, 204, 21, 0.1);
+}
+
+/* Subtle Shimmer for Badges */
+@keyframes alphaShimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.shimmer-badge {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0%, rgba(250, 204, 21, 0.12) 50%, rgba(255, 255, 255, 0.03) 100%);
+    background-size: 200% 100%;
+    animation: alphaShimmer 4s infinite linear;
+}
+
+/* Keyframes */
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(250, 204, 21, 0);
+    }
+}
+
+.pulse-gold {
+    animation: pulseGlow 2.5s infinite;
+}
+
+/* =========================================================
+   LIGHT MODE (Modo Claro Cálido - Descanso Visual)
+   ========================================================= */
+
+html.light {
+    color-scheme: light;
+}
+
+html.light body,
+html.light .bg-black {
+    background-color: var(--alpha-bg-light) !important;
+    color: var(--alpha-text-primary-light) !important;
+}
+
+/* Sidebar & Header en Modo Claro */
+html.light aside {
+    background-color: #ffffff !important;
+    border-color: var(--alpha-border-light) !important;
+}
+
+html.light header {
+    border-color: var(--alpha-border-light) !important;
+}
+
+/* Tarjetas y Contenedores */
+html.light .alpha-card,
+html.light .bg-\[\#141414\],
+html.light .bg-\[\#1a1a1a\] {
+    background: var(--alpha-card-light) !important;
+    border-color: var(--alpha-border-light) !important;
+    box-shadow: 0 4px 18px -4px rgba(28, 25, 23, 0.06) !important;
+}
+
+html.light .alpha-card:hover {
+    border-color: rgba(202, 138, 4, 0.4) !important;
+    box-shadow: 0 10px 25px -4px rgba(28, 25, 23, 0.09) !important;
+}
+
+/* Tarjetas secundarias y cajas */
+html.light .bg-black\/40,
+html.light .bg-black\/30,
+html.light .bg-black\/50,
+html.light .bg-black\/60,
+html.light .bg-white\/\[0\.02\],
+html.light .bg-white\/\[0\.03\],
+html.light .bg-white\/5 {
+    background-color: var(--alpha-card-subtle-light) !important;
+    border-color: var(--alpha-border-light) !important;
+}
+
+html.light .bg-white\/10 {
+    background-color: #e6e3dc !important;
+}
+
+/* Textos adaptados para máximo contraste y descanso visual */
+html.light .text-white {
+    color: var(--alpha-text-primary-light) !important;
+}
+
+html.light .text-gray-200,
+html.light .text-gray-300 {
+    color: var(--alpha-text-secondary-light) !important;
+}
+
+html.light .text-gray-400 {
+    color: var(--alpha-text-muted-light) !important;
+}
+
+html.light .text-gray-500,
+html.light .text-gray-600 {
+    color: #8c827a !important;
+}
+
+/* Bordes */
+html.light .border-white\/10,
+html.light .border-white\/5,
+html.light .border-white\/15,
+html.light .border-white\/20 {
+    border-color: var(--alpha-border-light) !important;
+}
+
+/* Inputs y Selects */
+html.light input,
+html.light select,
+html.light textarea,
+html.light .input-group,
+html.light .campo-ej {
+    background-color: #ffffff !important;
+    border-color: #d7d3cb !important;
+    color: #1c1917 !important;
+}
+
+html.light input::placeholder,
+html.light select::placeholder {
+    color: #a8a29e !important;
+}
+
+html.light input:focus,
+html.light select:focus,
+html.light textarea:focus,
+html.light .input-group:focus-within {
+    border-color: #ca8a04 !important;
+    box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.15) !important;
+    background-color: #ffffff !important;
+}
+
+/* Botones en modo claro */
+html.light .alpha-btn-primary,
+html.light .btn-alpha-submit {
+    background: linear-gradient(135deg, #facc15 0%, #eab308 100%) !important;
+    color: #1c1917 !important;
+    box-shadow: 0 4px 14px -2px rgba(202, 138, 4, 0.3) !important;
+}
+
+html.light .alpha-btn-secondary {
+    background: #ebe8e1 !important;
+    border-color: #dcd7ce !important;
+    color: #1c1917 !important;
+}
+
+html.light .alpha-btn-secondary:hover {
+    background: #dfdbd1 !important;
+    border-color: #cac5ba !important;
+    color: #000000 !important;
+}
+
+/* Navegación lateral activa */
+html.light .nav-item-active {
+    background: rgba(202, 138, 4, 0.12) !important;
+    border-left: 3px solid #ca8a04 !important;
+    color: #854d0e !important;
+}
+
+html.light aside nav a:not(.nav-item-active) {
+    color: #57534e !important;
+}
+
+html.light aside nav a:not(.nav-item-active):hover {
+    background-color: #f0eee9 !important;
+    color: #1c1917 !important;
+}
+
+/* Badges e Iconos dorados en modo claro */
+html.light .text-yellow-400 {
+    color: #ca8a04 !important;
+}
+
+html.light .bg-yellow-400\/10 {
+    background-color: rgba(202, 138, 4, 0.12) !important;
+    color: #854d0e !important;
+    border-color: rgba(202, 138, 4, 0.25) !important;
+}
+
+html.light .shimmer-badge {
+    background: linear-gradient(90deg, rgba(202, 138, 4, 0.05) 0%, rgba(202, 138, 4, 0.18) 50%, rgba(202, 138, 4, 0.05) 100%) !important;
+    background-size: 200% 100%;
+}
+
+/* Modales en modo claro */
+html.light .modal-caja {
+    background: #ffffff !important;
+    border-color: var(--alpha-border-light) !important;
+    box-shadow: 0 25px 60px -15px rgba(28, 25, 23, 0.2) !important;
+}
+
+/* Tablas en entrenamientos */
+html.light table th {
+    color: #78716c !important;
+    border-color: var(--alpha-border-light) !important;
+}
+
+html.light table tr {
+    border-color: var(--alpha-border-light) !important;
+}
+
+html.light table tr:hover {
+    background-color: rgba(0, 0, 0, 0.02) !important;
+}

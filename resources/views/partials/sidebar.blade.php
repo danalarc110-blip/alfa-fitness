@@ -26,50 +26,61 @@
     ];
 @endphp
 
-<aside class="hidden md:flex flex-col w-[220px] shrink-0 bg-black border-r border-white/10 px-4 pt-6 pb-5">
+<aside class="hidden md:flex flex-col w-[230px] shrink-0 bg-black/95 backdrop-blur-md border-r border-white/10 px-4 pt-6 pb-5 select-none" data-animate="sidebar">
 
-    <div class="mb-8 px-2">
-        <img src="{{ asset('images/logo-sidebar.png') }}" alt="Alpha Fitness" class="w-32 object-contain -ml-1">
+    <div class="mb-8 px-2 flex items-center justify-between">
+        <img src="{{ asset('images/logo-sidebar.png') }}" alt="Alpha Fitness" class="w-32 object-contain -ml-1 hover:scale-105 transition-transform duration-300">
     </div>
 
-    <nav class="flex-1 flex flex-col gap-1">
+    <nav class="flex-1 flex flex-col gap-1.5">
         @foreach ($navItems as $item)
             @php $isActive = ($active ?? '') === $item['key']; @endphp
             <a href="{{ $item['href'] }}"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors
+                class="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
                     {{ $isActive
-                        ? 'bg-yellow-400/10 text-yellow-400 font-semibold border-l-2 border-yellow-400'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5 border-l-2 border-transparent' }}">
-                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $icons[$item['icon']] !!}</svg>
-                {{ $item['label'] }}
+                        ? 'nav-item-active shadow-sm'
+                        : 'text-gray-400 hover:text-white hover:bg-white/[0.06] hover:translate-x-1' }}">
+                <svg class="w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110 {{ $isActive ? 'text-yellow-400' : 'text-gray-400 group-hover:text-yellow-400' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $icons[$item['icon']] !!}</svg>
+                <span>{{ $item['label'] }}</span>
             </a>
         @endforeach
     </nav>
 
     <div class="mt-4 pt-4 border-t border-white/10">
-        <div class="flex items-center gap-3 px-2 mb-3">
-            <div class="w-9 h-9 rounded-full overflow-hidden bg-white/10 flex items-center justify-center shrink-0">
+        {{-- Selector rápido de Modo Claro / Oscuro --}}
+        <div class="px-2 mb-3">
+            <button type="button" onclick="alphaToggleTema()" class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold bg-white/[0.04] hover:bg-white/[0.08] text-gray-400 hover:text-yellow-400 border border-white/5 transition-all duration-150">
+                <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                    <span id="label-tema-sidebar">Cambiar Tema</span>
+                </span>
+                <span class="text-[10px] uppercase font-bold text-yellow-400/80">Claro / Oscuro</span>
+            </button>
+        </div>
+
+        <div class="flex items-center gap-3 px-2 mb-3 bg-white/[0.03] p-2 rounded-xl border border-white/5">
+            <div class="w-9 h-9 rounded-full overflow-hidden bg-white/10 flex items-center justify-center shrink-0 border border-yellow-400/20 shadow-inner">
                 @if ($avatarUrl ?? null)
                     <img src="{{ $avatarUrl }}" alt="{{ $nombre }}" class="w-full h-full object-cover">
                 @else
-                    <svg class="w-5 h-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
+                    <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"/></svg>
                 @endif
             </div>
             <div class="leading-tight min-w-0">
-                <p class="text-sm font-semibold truncate">{{ $nombre ?? '' }}</p>
-                <p class="text-[11px] text-gray-500 truncate">{{ $rolEtiqueta ?? '' }}</p>
+                <p class="text-sm font-semibold truncate text-white">{{ $nombre ?? '' }}</p>
+                <span class="inline-block text-[10px] uppercase tracking-wider font-semibold text-yellow-400/90 truncate">{{ $rolEtiqueta ?? '' }}</span>
             </div>
         </div>
         <form method="POST" action="{{ $salirRoute }}">
             @csrf
-            <button type="submit" title="Sales del panel, pero tu sesión sigue activa" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+            <button type="submit" title="Sales del panel, pero tu sesión sigue activa" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-150 active:scale-95">
                 <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
                 Salir
             </button>
         </form>
         <form method="POST" action="{{ $logoutRoute }}">
             @csrf
-            <button type="submit" title="Cierra tu sesión por completo" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+            <button type="submit" title="Cierra tu sesión por completo" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-400/80 hover:text-red-400 hover:bg-red-500/10 transition-all duration-150 active:scale-95">
                 <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><path d="M12 2v10"/></svg>
                 Cerrar sesión
             </button>
