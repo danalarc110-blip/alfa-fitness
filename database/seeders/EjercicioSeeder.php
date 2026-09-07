@@ -10,25 +10,83 @@ class EjercicioSeeder extends Seeder
     public function run(): void
     {
         $ejercicios = [
-            // Ejercicio con imagenes ya puestas en public/images/ejercicios
-            ['nombre' => 'Press de banca', 'grupo_muscular' => 'Pecho', 'subgrupo' => null,
-                'imagen' => 'press banca.png', 'imagen_musculos' => 'press banca musculos que entrena.png'],
-
-            // Resto: sin imagen todavia. Ruta queda lista por convencion:
-            // public/images/ejercicios/{nombre en minuscula}.png
-            // public/images/ejercicios/{nombre en minuscula} musculos que entrena.png
-            ['nombre' => 'Press inclinado con mancuernas', 'grupo_muscular' => 'Pecho', 'subgrupo' => 'Pecho superior',
-                'imagen' => 'press de anca inclinado_mancuernas.png',
-                'imagen_musculos' => 'musculos entrenados press de anca inclinado_mancuernas.png'],
-            ['nombre' => 'Aperturas en máquina',           'grupo_muscular' => 'Pecho', 'subgrupo' => null],
-            ['nombre' => 'Press plano con mancuernas',     'grupo_muscular' => 'Pecho', 'subgrupo' => null],
-            ['nombre' => 'Cruces en polea',                'grupo_muscular' => 'Pecho', 'subgrupo' => null],
-            ['nombre' => 'Press declinado',                'grupo_muscular' => 'Pecho', 'subgrupo' => 'Pecho inferior'],
-            ['nombre' => 'Pullover en polea',               'grupo_muscular' => 'Pecho', 'subgrupo' => null],
-            ['nombre' => 'Flexiones',                       'grupo_muscular' => 'Pecho', 'subgrupo' => null],
-            ['nombre' => 'Fondos en paralelas',             'grupo_muscular' => 'Triceps', 'subgrupo' => null],
-            ['nombre' => 'Extensión de tríceps en polea',   'grupo_muscular' => 'Triceps', 'subgrupo' => null],
-            ['nombre' => 'Press francés',                   'grupo_muscular' => 'Triceps', 'subgrupo' => null],
+            [
+                'nombre' => 'Press de banca',
+                'grupo_muscular' => 'Pecho',
+                'subgrupo' => 'Pecho medio',
+                'imagen' => 'press banca.png',
+                'imagen_musculos' => 'press banca musculos que entrena.png',
+            ],
+            [
+                'nombre' => 'Press inclinado con mancuernas',
+                'grupo_muscular' => 'Pecho',
+                'subgrupo' => 'Pecho superior',
+                'imagen' => 'press de banca inclinado con mancuernas.png',
+                'imagen_musculos' => 'musculos entrenados press de anca inclinado_mancuernas.png',
+            ],
+            [
+                'nombre' => 'Aperturas en máquina',
+                'grupo_muscular' => 'Pecho',
+                'subgrupo' => 'Pecho medio',
+                'imagen' => 'aperturas en máquina.png',
+                'imagen_musculos' => 'aperturas en máquina musculos que entrena.png',
+            ],
+            [
+                'nombre' => 'Press plano con mancuernas',
+                'grupo_muscular' => 'Pecho',
+                'subgrupo' => 'Pecho medio',
+                'imagen' => 'press plano con mancuernas.png',
+                'imagen_musculos' => 'press plano con mancuernas musculos que entrena.png',
+            ],
+            [
+                'nombre' => 'Cruces en polea',
+                'grupo_muscular' => 'Pecho',
+                'subgrupo' => 'Aislamiento',
+                'imagen' => 'Cruces en polea.jpg',
+                'imagen_musculos' => 'cruces en polea musculos que entrena.png',
+            ],
+            [
+                'nombre' => 'Press declinado',
+                'grupo_muscular' => 'Pecho',
+                'subgrupo' => 'Pecho inferior',
+                'imagen' => 'Press declinado.jpg',
+                'imagen_musculos' => 'press declinado musculos que entrena.png',
+            ],
+            [
+                'nombre' => 'Pullover en polea',
+                'grupo_muscular' => 'Pecho',
+                'subgrupo' => 'Expansión torácica',
+                'imagen' => 'Pullover en polea.jpg',
+                'imagen_musculos' => 'pullover en polea musculos que entrena.png',
+            ],
+            [
+                'nombre' => 'Flexiones',
+                'grupo_muscular' => 'Pecho',
+                'subgrupo' => 'Calistenia',
+                'imagen' => 'Flexiones.jpg',
+                'imagen_musculos' => 'flexiones musculos que entrena.png',
+            ],
+            [
+                'nombre' => 'Fondos en paralelas',
+                'grupo_muscular' => 'Triceps',
+                'subgrupo' => 'Fuerza funcional',
+                'imagen' => 'Fondos en paralelas.jpg',
+                'imagen_musculos' => 'fondos en paralelas musculos que entrena.png',
+            ],
+            [
+                'nombre' => 'Extensión de tríceps en polea',
+                'grupo_muscular' => 'Triceps',
+                'subgrupo' => 'Aislamiento tríceps',
+                'imagen' => 'Extensión de tríceps en polea.jpg',
+                'imagen_musculos' => 'extensión de tríceps en polea musculos que entrena.png',
+            ],
+            [
+                'nombre' => 'Press francés',
+                'grupo_muscular' => 'Triceps',
+                'subgrupo' => 'Cabeza larga',
+                'imagen' => 'Press francés.jpg',
+                'imagen_musculos' => 'press francés musculos que entrena.png',
+            ],
         ];
 
         foreach ($ejercicios as $e) {
@@ -37,8 +95,8 @@ class EjercicioSeeder extends Seeder
                 [
                     'grupo_muscular' => $e['grupo_muscular'],
                     'subgrupo' => $e['subgrupo'],
-                    'imagen' => $e['imagen'] ?? mb_strtolower($e['nombre']).'.png',
-                    'imagen_musculos' => $e['imagen_musculos'] ?? mb_strtolower($e['nombre']).' musculos que entrena.png',
+                    'imagen' => $e['imagen'],
+                    'imagen_musculos' => $e['imagen_musculos'],
                     'activo' => true,
                 ]
             );

@@ -18,20 +18,20 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased bg-black text-white min-h-screen">
-<div class="min-h-screen flex">
+<div class="min-h-screen flex flex-col md:flex-row">
     @include('partials.sidebar', ['active' => 'entrenamientos'])
 
-    <div class="flex-1 flex flex-col min-w-0 px-6 sm:px-10 py-8">
+    <div class="flex-1 flex flex-col min-w-0 px-4 sm:px-6 md:px-10 py-5 sm:py-8">
 
         {{-- CABECERA --}}
-        <div class="flex items-start justify-between gap-4 mb-6 pb-6 border-b border-white/5" data-animate="header">
+        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 pb-6 border-b border-white/5" data-animate="header">
             <div class="min-w-0 flex-1">
                 <input id="campo-nombre" value="{{ $rutina->nombre }}"
-                    class="bg-transparent text-2xl font-bold text-white outline-none border-b-2 border-transparent focus:border-yellow-400 w-full max-w-md truncate transition-colors duration-200">
-                <div class="flex flex-wrap items-center gap-2.5 mt-3 text-xs text-gray-400">
+                    class="bg-transparent text-xl sm:text-2xl font-bold text-white outline-none border-b-2 border-transparent focus:border-yellow-400 w-full max-w-md truncate transition-colors duration-200">
+                <div class="flex flex-wrap items-center gap-2 sm:gap-2.5 mt-3 text-xs text-gray-400">
                     <input id="campo-objetivo" value="{{ $rutina->objetivo }}"
                         placeholder="Objetivo"
-                        class="bg-[#141414] border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-yellow-400/50 w-44 transition-colors">
+                        class="bg-[#141414] border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-yellow-400/50 w-full sm:w-44 transition-colors">
                     <select id="campo-nivel" class="bg-[#141414] border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-yellow-400/50 transition-colors">
                         @foreach (['Principiante', 'Intermedio', 'Avanzado'] as $n)
                             <option value="{{ $n }}" @selected($rutina->nivel === $n)>{{ $n }}</option>
@@ -48,9 +48,9 @@
                     </span>
                 </div>
             </div>
-            <div class="flex items-center gap-3 shrink-0">
+            <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-3 shrink-0">
                 <button type="button" onclick="alphaToggleTema()" title="Cambiar tema"
-                    class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-yellow-400 transition-all duration-150 active:scale-95 shadow-sm">
+                    class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-yellow-400 transition-all duration-150 active:scale-95 shadow-sm">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
                 </button>
                 <a href="{{ route('entrenamientos.index') }}"
@@ -64,7 +64,7 @@
 
             {{-- COLUMNA IZQUIERDA: DIAS --}}
             <div class="flex-1 min-w-0">
-                <div id="tabs-dias" class="flex flex-wrap items-center gap-2 mb-4"></div>
+                <div id="tabs-dias" class="flex items-center gap-2 mb-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar"></div>
                 <div id="paneles-dias"></div>
                 <div id="sin-dias" class="hidden alpha-card rounded-2xl p-8 text-center">
                     <p class="text-sm text-gray-400 mb-2">Esta rutina aún no tiene días configurados.</p>
@@ -89,7 +89,7 @@
                         @endforeach
                     </select>
                     <p class="text-[11px] text-gray-500 mb-3 bg-white/[0.02] p-2 rounded-lg border border-white/5">
-                        Tip: Haz clic en <strong class="text-yellow-400">+</strong> para añadir al día activo o en la imagen para ver músculos implicados.
+                        Tip: Haz clic en <strong class="text-yellow-400">+</strong> para añadir el ejercicio al día activo de tu rutina.
                     </p>
                     <div id="catalogo-resultados" class="flex flex-col gap-2 max-h-[64vh] overflow-y-auto pr-1 custom-scroll"></div>
                 </div>
@@ -162,14 +162,14 @@
 
         tabs.innerHTML = DIAS.map(d => `
             <button data-tab="${d.id}"
-                class="tab-dia px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 active:scale-95
+                class="tab-dia shrink-0 px-4 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 active:scale-95
                        ${d.id === diaActivoId
                            ? 'bg-yellow-400 text-black border-yellow-400 shadow-md shadow-yellow-400/20'
                            : 'bg-[#141414] text-gray-300 border-white/10 hover:border-white/30 hover:bg-white/5'}">
                 ${h(d.titulo)}
             </button>`).join('') +
             `<button id="btn-add-dia"
-                class="px-4 py-2 rounded-xl text-sm font-semibold border border-dashed border-white/20 text-gray-400 hover:text-yellow-400 hover:border-yellow-400/50 hover:bg-yellow-400/5 transition-all duration-200 active:scale-95">
+                class="shrink-0 px-4 py-2 rounded-xl text-sm font-semibold border border-dashed border-white/20 text-gray-400 hover:text-yellow-400 hover:border-yellow-400/50 hover:bg-yellow-400/5 transition-all duration-200 active:scale-95">
                 + Día
             </button>`;
 
@@ -230,9 +230,7 @@
         <tr class="border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors" data-fila="${re.id}">
             <td class="py-3 pr-3">
                 <div class="flex items-center gap-3">
-                    <div data-toggle data-a="${h(ej.imagen_url)}" data-b="${h(ej.imagen_musculos_url)}"
-                         data-ta="${ej.tiene_imagen ? 1 : 0}" data-tb="${ej.tiene_imagen_musculos ? 1 : 0}"
-                         data-m="a" title="Click: ver músculos" class="cursor-pointer w-10 h-10 shrink-0">
+                    <div class="w-10 h-10 shrink-0">
                         ${miniImg(ej.imagen_url, ej.tiene_imagen, 'w-10 h-10')}
                     </div>
                     <div class="min-w-0">
@@ -247,7 +245,7 @@
                     class="campo-ej w-full bg-black/60 border border-white/10 rounded-xl px-2 py-1.5 text-center text-white outline-none focus:border-yellow-400/60 font-semibold text-sm transition-colors">
             </td>
             <td class="py-3 px-2">
-                <input type="text" value="${h(re.repeticiones)}"
+                <input type="number" min="1" max="100" value="${parseInt(re.repeticiones, 10) || 10}"
                     data-id="${re.id}" data-campo="repeticiones"
                     class="campo-ej w-full bg-black/60 border border-white/10 rounded-xl px-2 py-1.5 text-center text-white outline-none focus:border-yellow-400/60 font-semibold text-sm transition-colors">
             </td>
@@ -321,6 +319,16 @@
         const campo = input.dataset.campo;
         let valor   = input.value;
         if (campo === 'peso' && valor === '') valor = null;
+
+        // Mantener sincronizado el estado local en memoria para cuando se cambie de pestaña
+        for (const d of DIAS) {
+            const ej = d.ejercicios.find(re => re.id === id);
+            if (ej) {
+                ej[campo] = valor;
+                break;
+            }
+        }
+
         api(URLS.actualizarEjercicio(id), 'PUT', { [campo]: valor }).then(marcarGuardado);
     }
 
@@ -357,21 +365,17 @@
         }
         cont.innerHTML = items.map(ej => `
             <div class="flex items-center gap-2 bg-black border border-white/10 rounded-xl p-2">
-                <div data-toggle data-a="${h(ej.imagen_url)}" data-b="${h(ej.imagen_musculos_url)}"
-                     data-ta="${ej.tiene_imagen ? 1 : 0}" data-tb="${ej.tiene_imagen_musculos ? 1 : 0}"
-                     data-m="a" title="Click: ver músculos" class="cursor-pointer w-11 h-11">
+                <div class="w-11 h-11 shrink-0">
                     ${miniImg(ej.imagen_url, ej.tiene_imagen, 'w-11 h-11')}
                 </div>
                 <div class="min-w-0 flex-1">
-                    <p class="text-sm truncate">${h(ej.nombre)}</p>
-                    <p class="text-[11px] text-gray-600">${h(ej.grupo_muscular)}${ej.subgrupo ? ' · ' + h(ej.subgrupo) : ''}</p>
+                    <p class="text-sm truncate font-semibold text-white">${h(ej.nombre)}</p>
+                    <p class="text-[11px] text-gray-500">${h(ej.grupo_muscular)}${ej.subgrupo ? ' · ' + h(ej.subgrupo) : ''}</p>
                 </div>
                 <button data-add="${ej.id}"
-                    class="shrink-0 w-7 h-7 rounded-lg bg-yellow-400 text-black font-bold text-lg leading-none hover:bg-yellow-300 transition-colors">+</button>
+                    class="shrink-0 w-7 h-7 rounded-lg bg-yellow-400 text-black font-bold text-lg leading-none hover:bg-yellow-300 transition-colors flex items-center justify-center">+</button>
             </div>`).join('');
 
-        cont.querySelectorAll('[data-toggle]').forEach(el =>
-            el.addEventListener('click', () => toggleImg(el)));
         cont.querySelectorAll('[data-add]').forEach(b =>
             b.addEventListener('click', () => agregarEjercicio(+b.dataset.add)));
     }

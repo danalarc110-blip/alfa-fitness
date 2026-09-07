@@ -48,7 +48,7 @@ class RutinaController extends Controller
             'guard' => $guard,
             'nombre' => $this->nombreActual($guard, $user),
             'rolEtiqueta' => $guard === 'web' ? $user->rol : 'Miembro',
-            'avatarUrl' => $user->avatar ? asset('images/avatars/'.$user->avatar) : null,
+            'avatarUrl' => $user->avatar_url,
             'rutinas' => $rutinas,
         ]);
     }
@@ -123,7 +123,7 @@ class RutinaController extends Controller
             'guard'            => $guard,
             'nombre'           => $this->nombreActual($guard, $user),
             'rolEtiqueta'      => $guard === 'web' ? $user->rol : 'Miembro',
-            'avatarUrl'        => $user->avatar ? asset('images/avatars/'.$user->avatar) : null,
+            'avatarUrl'        => $user->avatar_url,
             'rutina'           => $rutina,
             'ejercicios'       => $ejercicios,
             'diasJson'         => $diasJson,
@@ -144,7 +144,7 @@ class RutinaController extends Controller
     /**
      * Guarda los datos generales de la rutina (nombre, objetivo, nivel, días/semana).
      */
-    public function actualizar(Request $request, Rutina $rutina): RedirectResponse
+    public function actualizar(Request $request, Rutina $rutina): JsonResponse|RedirectResponse
     {
         $this->autorizarPropietario($rutina);
 
@@ -156,6 +156,10 @@ class RutinaController extends Controller
         ]);
 
         $rutina->update($data);
+
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true, 'rutina' => $rutina]);
+        }
 
         return back()->with('status', 'Rutina actualizada.');
     }
@@ -181,7 +185,7 @@ class RutinaController extends Controller
 
         $dia = $rutina->dias()->create([
             'orden' => $orden,
-            'titulo' => 'Día '.$orden,
+            'titulo' => 'Día ' . $orden,
             'duracion_estimada_min' => 45,
             'duracion_estimada_max' => 60,
         ]);
@@ -230,11 +234,11 @@ class RutinaController extends Controller
         $grupo = $request->string('grupo')->toString();
 
         $ejercicios = Ejercicio::where('activo', true)
-            ->when($q, fn ($query) => $query->where('nombre', 'like', "%{$q}%"))
-            ->when($grupo && $grupo !== 'Todos', fn ($query) => $query->where('grupo_muscular', $grupo))
+            ->when($q, fn($query) => $query->where('nombre', 'like', "%{$q}%"))
+            ->when($grupo && $grupo !== 'Todos', fn($query) => $query->where('grupo_muscular', $grupo))
             ->orderBy('nombre')
             ->get()
-            ->map(fn (Ejercicio $e) => [
+            ->map(fn(Ejercicio $e) => [
                 'id' => $e->id,
                 'nombre' => $e->nombre,
                 'grupo_muscular' => $e->grupo_muscular,

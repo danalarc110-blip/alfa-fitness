@@ -17,35 +17,33 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased bg-black text-white min-h-screen">
-    <div class="min-h-screen flex">
+    <div class="min-h-screen flex flex-col md:flex-row">
         @include('partials.sidebar', ['active' => 'entrenamientos'])
 
-        <div class="flex-1 flex flex-col min-w-0 px-6 sm:px-10 py-8">
-            <header class="flex items-center justify-between gap-4 flex-wrap mb-8 pb-6 border-b border-white/5" data-animate="header">
+        <div class="flex-1 flex flex-col min-w-0 px-4 sm:px-6 md:px-10 py-6 sm:py-8">
+            <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-white mb-1">Entrenamientos</h1>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white mb-1">Entrenamientos</h1>
                     <p class="text-gray-400 text-xs">Gestiona, crea y visualiza tus planes de entrenamiento</p>
                 </div>
 
-                <div class="flex items-center gap-3">
+                <div class="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
                     <button type="button" onclick="alphaToggleTema()" title="Cambiar tema"
-                        class="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-yellow-400 transition-all duration-150 active:scale-95 shadow-sm">
+                        class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-yellow-400 transition-all duration-150 active:scale-95 shadow-sm">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
                     </button>
 
-                    <form method="POST" action="{{ route('entrenamientos.crear') }}">
+                    <form method="POST" action="{{ route('entrenamientos.crear') }}" class="flex-1 sm:flex-initial">
                         @csrf
-                        <button class="alpha-btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center gap-2">
+                        <button class="alpha-btn-primary w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-2">
                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                             Crear nueva rutina
                         </button>
                     </form>
                 </div>
             </header>
-                </form>
-            </header>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                 @forelse ($rutinas as $rutina)
                     <a href="{{ route('entrenamientos.editar', $rutina) }}"
                         class="alpha-card alpha-card-interactive group rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between"

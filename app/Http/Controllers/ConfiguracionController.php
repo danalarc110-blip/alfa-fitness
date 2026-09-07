@@ -35,7 +35,7 @@ class ConfiguracionController extends Controller
             'esGoogle' => $guard === 'cliente' && ! empty($user->google_id),
             'rolEtiqueta' => $guard === 'web' ? $user->rol : 'Miembro',
             'miembroDesde' => $this->miembroDesde($user),
-            'avatarUrl' => $user->avatar ? asset('images/avatars/'.$user->avatar) : null,
+            'avatarUrl' => $user->avatar_url,
         ]);
     }
 
@@ -129,9 +129,11 @@ class ConfiguracionController extends Controller
             mkdir($carpeta, 0755, true);
         }
 
-        // Borra el avatar anterior para no dejar archivos huérfanos
-        if ($user->avatar && file_exists($carpeta.'/'.$user->avatar)) {
-            @unlink($carpeta.'/'.$user->avatar);
+        // Borra el avatar anterior para no dejar archivos huérfanos (solo si es un archivo local)
+        if ($user->avatar && ! filter_var($user->avatar, FILTER_VALIDATE_URL) && ! str_starts_with($user->avatar, 'http')) {
+            if (file_exists($carpeta.'/'.$user->avatar)) {
+                @unlink($carpeta.'/'.$user->avatar);
+            }
         }
 
         $archivo = $request->file('avatar');

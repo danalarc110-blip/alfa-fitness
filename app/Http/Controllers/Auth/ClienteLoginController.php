@@ -64,9 +64,9 @@ class ClienteLoginController extends Controller
             'password.required' => 'La contraseña es obligatoria.',
         ]);
 
-        if (! Auth::guard('cliente')->attempt($credentials, true)) {
+        if (! Auth::guard('cliente')->attempt(array_merge($credentials, ['activo' => true]), true)) {
             throw ValidationException::withMessages([
-                'correo' => 'Las credenciales no coinciden con nuestros registros.',
+                'correo' => 'Las credenciales no coinciden con nuestros registros o la cuenta está inactiva.',
             ]);
         }
 
@@ -119,24 +119,39 @@ class ClienteLoginController extends Controller
     /**
      * Google regresa aquí después de que el cliente autoriza el acceso.
      */
-    public function handleGoogleCallback(): RedirectResponse
+    public function handleGoogleCallback(Request $request): RedirectResponse
     {
         $googleUser = Socialite::driver('google')->user();
 
         // Si ya existe un cliente con ese correo (registrado antes con
-        // contraseña propia), le vinculamos el google_id en vez de duplicar.
-        $cliente = Cliente::where('correo', $googleUser->getEmail())->first()
-            ?? new Cliente();
+        // contraseña propia), le vinculamos el google_id sin sobreescribir sus datos personalizados.
+        $cliente = Cliente::where('correo', $googleUser->getEmail())->first();
 
-        $cliente->fill([
-            'nombre' => $googleUser->getName(),
-            'correo' => $googleUser->getEmail(),
-            'google_id' => $googleUser->getId(),
-            'avatar' => $googleUser->getAvatar(),
-            'activo' => true,
-        ])->save();
+        if ($cliente) {
+            if (! $cliente->activo) {
+                return redirect()->route('login')->withErrors([
+                    'correo' => 'Tu cuenta ha sido desactivada. Comunícate con recepción.',
+                ]);
+            }
+
+            $datosActualizar = ['google_id' => $googleUser->getId()];
+            if (empty($cliente->avatar)) {
+                $datosActualizar['avatar'] = $googleUser->getAvatar();
+            }
+            $cliente->update($datosActualizar);
+        } else {
+            $cliente = Cliente::create([
+                'nombre'    => $googleUser->getName() ?: 'Cliente Google',
+                'correo'    => $googleUser->getEmail(),
+                'google_id' => $googleUser->getId(),
+                'avatar'    => $googleUser->getAvatar(),
+                'activo'    => true,
+            ]);
+        }
 
         Auth::guard('cliente')->login($cliente, true);
+
+        $request->session()->regenerate();
 
         return redirect()->intended(route('cliente.dashboard'));
     }

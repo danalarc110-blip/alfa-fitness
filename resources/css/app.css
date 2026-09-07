@@ -22,14 +22,15 @@
     --alpha-card-dark: #141414;
     --alpha-border-dark: rgba(255, 255, 255, 0.08);
 
-    /* Light Mode Warm Tones */
-    --alpha-bg-light: #f7f6f2;
+    /* Light Mode — Minimalist Aesthetic Monochrome (Black & White) */
+    --alpha-bg-light: #f1f2f4;
     --alpha-card-light: #ffffff;
-    --alpha-card-subtle-light: #f0eee9;
-    --alpha-text-primary-light: #1c1917;
-    --alpha-text-secondary-light: #57534e;
-    --alpha-text-muted-light: #78716c;
-    --alpha-border-light: #e5e2db;
+    --alpha-card-subtle-light: #f8f9fa;
+    --alpha-text-primary-light: #09090b;
+    --alpha-text-secondary-light: #3f3f46;
+    --alpha-text-muted-light: #52525b;
+    --alpha-border-light: #cbd5e1; /* Líneas bien visibles y definidas */
+    --alpha-border-strong-light: #94a3b8;
 }
 
 /* Base custom scrollbar */
@@ -49,10 +50,10 @@
 }
 
 html.light ::-webkit-scrollbar-thumb {
-    background: #d6d3cb;
+    background: #cbd5e1;
 }
 html.light ::-webkit-scrollbar-thumb:hover {
-    background: #eab308;
+    background: #94a3b8;
 }
 
 /* Smooth Focus Rings */
@@ -61,13 +62,13 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
     box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.35);
 }
 
-/* Alpha Glassmorphism & Card Surfaces */
+/* Alpha Glassmorphism & Card Surfaces (Dark Mode) */
 .alpha-card {
     background: rgba(20, 20, 20, 0.85);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .alpha-card:hover {
@@ -80,23 +81,23 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
     box-shadow: 0 0 20px -2px var(--alpha-gold-glow);
 }
 
-/* Button & Badge Animations */
+/* Button & Badge Animations (Dark Mode) */
 .alpha-btn-primary {
     background-color: var(--alpha-gold);
     color: #000;
     font-weight: 600;
-    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background-color 0.2s ease;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
     box-shadow: 0 2px 10px -2px rgba(250, 204, 21, 0.3);
 }
 
 .alpha-btn-primary:hover {
     background-color: var(--alpha-gold-hover);
-    transform: translateY(-1.5px) scale(1.015);
-    box-shadow: 0 6px 20px -3px rgba(250, 204, 21, 0.45);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px -3px rgba(250, 204, 21, 0.4);
 }
 
 .alpha-btn-primary:active {
-    transform: translateY(0.5px) scale(0.98);
+    transform: translateY(0) scale(0.98);
 }
 
 /* Secondary Button */
@@ -104,7 +105,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: #e5e7eb;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
 }
 
 .alpha-btn-secondary:hover {
@@ -118,7 +119,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
     transform: translateY(0) scale(0.98);
 }
 
-/* Sidebar navigation item animation */
+/* Sidebar navigation item animation (Dark Mode) */
 .nav-item-active {
     background: linear-gradient(90deg, rgba(250, 204, 21, 0.15) 0%, rgba(250, 204, 21, 0.03) 100%);
     border-left: 3px solid var(--alpha-gold);
@@ -138,22 +139,79 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
     animation: alphaShimmer 4s infinite linear;
 }
 
-/* Keyframes */
-@keyframes pulseGlow {
-    0%, 100% {
-        box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.4);
-    }
-    50% {
-        box-shadow: 0 0 0 8px rgba(250, 204, 21, 0);
-    }
+/* =========================================================
+   Mobile Hamburger & Responsive Drawer
+   ========================================================= */
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
-.pulse-gold {
-    animation: pulseGlow 2.5s infinite;
+/* Hamburger 3-bar morph animation */
+.alpha-hamburger-btn {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.alpha-hamburger-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(250, 204, 21, 0.3);
+}
+
+.alpha-hamburger-btn:active {
+    transform: scale(0.95);
+}
+
+.alpha-hamburger-btn span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background-color: #facc15;
+    border-radius: 4px;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, background-color 0.2s ease;
+    transform-origin: center;
+}
+
+.alpha-hamburger-btn.is-active span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.alpha-hamburger-btn.is-active span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+
+.alpha-hamburger-btn.is-active span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Mobile Drawer Smooth Slide & Backdrop */
+#alpha-mobile-backdrop {
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#alpha-mobile-drawer {
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
 }
 
 /* =========================================================
-   LIGHT MODE (Modo Claro Cálido - Descanso Visual)
+   LIGHT MODE — MONOCROMÁTICO ESTÉTICO CON LÍNEAS Y SOMBRAS DEFINIDAS
    ========================================================= */
 
 html.light {
@@ -166,47 +224,67 @@ html.light .bg-black {
     color: var(--alpha-text-primary-light) !important;
 }
 
-/* Sidebar & Header en Modo Claro */
-html.light aside {
+/* Sidebar, Mobile Header & Drawer en Modo Claro */
+html.light aside,
+html.light #alpha-mobile-drawer {
     background-color: #ffffff !important;
     border-color: var(--alpha-border-light) !important;
+    box-shadow: 4px 0 24px -2px rgba(0, 0, 0, 0.07) !important;
+}
+
+html.light #alpha-mobile-header {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border-color: var(--alpha-border-light) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light .alpha-hamburger-btn {
+    background: #f1f5f9 !important;
+    border-color: var(--alpha-border-light) !important;
+}
+
+html.light .alpha-hamburger-btn span {
+    background-color: #09090b !important;
 }
 
 html.light header {
+    background-color: transparent !important;
     border-color: var(--alpha-border-light) !important;
 }
 
-/* Tarjetas y Contenedores */
+/* Tarjetas y Superficies Principales (Sombreado y bordes más marcados) */
 html.light .alpha-card,
 html.light .bg-\[\#141414\],
 html.light .bg-\[\#1a1a1a\] {
-    background: var(--alpha-card-light) !important;
-    border-color: var(--alpha-border-light) !important;
-    box-shadow: 0 4px 18px -4px rgba(28, 25, 23, 0.06) !important;
+    background: #ffffff !important;
+    border: 1px solid var(--alpha-border-light) !important;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.05) !important;
 }
 
 html.light .alpha-card:hover {
-    border-color: rgba(202, 138, 4, 0.4) !important;
-    box-shadow: 0 10px 25px -4px rgba(28, 25, 23, 0.09) !important;
+    border-color: var(--alpha-border-strong-light) !important;
+    box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.06) !important;
 }
 
-/* Tarjetas secundarias y cajas */
-html.light .bg-black\/40,
+/* Tarjetas secundarias y contenedores internos */
 html.light .bg-black\/30,
+html.light .bg-black\/40,
 html.light .bg-black\/50,
 html.light .bg-black\/60,
 html.light .bg-white\/\[0\.02\],
 html.light .bg-white\/\[0\.03\],
+html.light .bg-white\/\[0\.04\],
 html.light .bg-white\/5 {
     background-color: var(--alpha-card-subtle-light) !important;
-    border-color: var(--alpha-border-light) !important;
+    border: 1px solid var(--alpha-border-light) !important;
 }
 
 html.light .bg-white\/10 {
-    background-color: #e6e3dc !important;
+    background-color: #e2e8f0 !important;
+    border-color: var(--alpha-border-light) !important;
 }
 
-/* Textos adaptados para máximo contraste y descanso visual */
+/* Tipografía Monocromática de Alto Contraste */
 html.light .text-white {
     color: var(--alpha-text-primary-light) !important;
 }
@@ -222,111 +300,203 @@ html.light .text-gray-400 {
 
 html.light .text-gray-500,
 html.light .text-gray-600 {
-    color: #8c827a !important;
+    color: #64748b !important;
 }
 
-/* Bordes */
-html.light .border-white\/10,
+/* TODAS LAS LÍNEAS / BORDES MÁS FUERTES Y VISIBLES */
 html.light .border-white\/5,
+html.light .border-white\/10,
 html.light .border-white\/15,
-html.light .border-white\/20 {
+html.light .border-white\/20,
+html.light .border-white\/30,
+html.light [class*="border-white"],
+html.light .border-b,
+html.light .border-t,
+html.light .border-r,
+html.light .border-l {
     border-color: var(--alpha-border-light) !important;
 }
 
-/* Inputs y Selects */
+/* Inputs, Selects y Textareas */
 html.light input,
 html.light select,
 html.light textarea,
 html.light .input-group,
 html.light .campo-ej {
     background-color: #ffffff !important;
-    border-color: #d7d3cb !important;
-    color: #1c1917 !important;
+    border: 1.5px solid var(--alpha-border-light) !important;
+    color: var(--alpha-text-primary-light) !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
 }
 
 html.light input::placeholder,
-html.light select::placeholder {
-    color: #a8a29e !important;
+html.light select::placeholder,
+html.light textarea::placeholder {
+    color: #94a3b8 !important;
 }
 
 html.light input:focus,
 html.light select:focus,
 html.light textarea:focus,
+html.light .campo-ej:focus,
 html.light .input-group:focus-within {
-    border-color: #ca8a04 !important;
-    box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.15) !important;
+    border-color: #09090b !important;
+    box-shadow: 0 0 0 3px rgba(9, 9, 11, 0.15) !important;
     background-color: #ffffff !important;
 }
 
-/* Botones en modo claro */
+/* BOTONES EN MODO CLARO (Sólidos, Nítidos y con Buen Sombreado) */
 html.light .alpha-btn-primary,
 html.light .btn-alpha-submit {
-    background: linear-gradient(135deg, #facc15 0%, #eab308 100%) !important;
-    color: #1c1917 !important;
-    box-shadow: 0 4px 14px -2px rgba(202, 138, 4, 0.3) !important;
+    background: #09090b !important;
+    color: #ffffff !important;
+    border: 1px solid #09090b !important;
+    box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.25) !important;
+}
+
+html.light .alpha-btn-primary:hover,
+html.light .btn-alpha-submit:hover {
+    background: #27272a !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 18px -2px rgba(0, 0, 0, 0.3) !important;
 }
 
 html.light .alpha-btn-secondary {
-    background: #ebe8e1 !important;
-    border-color: #dcd7ce !important;
-    color: #1c1917 !important;
+    background: #ffffff !important;
+    border: 1.5px solid var(--alpha-border-light) !important;
+    color: var(--alpha-text-primary-light) !important;
+    box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.06) !important;
 }
 
 html.light .alpha-btn-secondary:hover {
-    background: #dfdbd1 !important;
-    border-color: #cac5ba !important;
+    background: #f1f5f9 !important;
+    border-color: #64748b !important;
     color: #000000 !important;
 }
 
-/* Navegación lateral activa */
+/* Navegación lateral en Modo Claro */
 html.light .nav-item-active {
-    background: rgba(202, 138, 4, 0.12) !important;
-    border-left: 3px solid #ca8a04 !important;
-    color: #854d0e !important;
+    background: #09090b !important;
+    border-left: 3px solid #09090b !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.25) !important;
+}
+
+html.light .nav-item-active svg {
+    color: #ffffff !important;
 }
 
 html.light aside nav a:not(.nav-item-active) {
-    color: #57534e !important;
+    color: #334155 !important;
 }
 
 html.light aside nav a:not(.nav-item-active):hover {
-    background-color: #f0eee9 !important;
-    color: #1c1917 !important;
+    background-color: #f1f5f9 !important;
+    color: #09090b !important;
 }
 
-/* Badges e Iconos dorados en modo claro */
-html.light .text-yellow-400 {
-    color: #ca8a04 !important;
+html.light aside nav a:not(.nav-item-active):hover svg {
+    color: #09090b !important;
 }
 
-html.light .bg-yellow-400\/10 {
-    background-color: rgba(202, 138, 4, 0.12) !important;
-    color: #854d0e !important;
-    border-color: rgba(202, 138, 4, 0.25) !important;
+/* TODAS LAS LETRAS O ELEMENTOS AMARILLOS -> NEGRO EN MODO CLARO */
+html.light [class*="text-yellow"],
+html.light [class*="text-amber"],
+html.light .text-yellow-400,
+html.light .text-yellow-300,
+html.light .text-yellow-500 {
+    color: #09090b !important;
+}
+
+html.light [class*="hover:text-yellow"]:hover,
+html.light [class*="hover:text-yellow-300"]:hover,
+html.light [class*="hover:text-yellow-400"]:hover,
+html.light .group:hover [class*="group-hover:text-yellow-400"],
+html.light [class*="group-hover:text-yellow-400"],
+html.light [class*="group-hover:text-yellow"] {
+    color: #09090b !important;
+}
+
+html.light [class*="focus:border-yellow"] {
+    border-color: #09090b !important;
+}
+
+html.light [class*="bg-yellow-400\/10"],
+html.light [class*="bg-yellow-400\/20"],
+html.light [class*="bg-yellow-400\/5"] {
+    background-color: #f1f5f9 !important;
+    color: #09090b !important;
+    border: 1px solid var(--alpha-border-light) !important;
+}
+
+html.light [class*="border-yellow-400"] {
+    border-color: #09090b !important;
+}
+
+html.light .bg-yellow-400 {
+    background-color: #09090b !important;
+    color: #ffffff !important;
+}
+
+html.light .hover\:bg-yellow-300:hover {
+    background-color: #27272a !important;
+    color: #ffffff !important;
 }
 
 html.light .shimmer-badge {
-    background: linear-gradient(90deg, rgba(202, 138, 4, 0.05) 0%, rgba(202, 138, 4, 0.18) 50%, rgba(202, 138, 4, 0.05) 100%) !important;
-    background-size: 200% 100%;
+    background: #f1f5f9 !important;
+    color: #09090b !important;
+    border: 1px solid var(--alpha-border-light) !important;
+}
+
+/* Píldoras de botones activos / pestañas */
+html.light [data-tab].bg-yellow-400,
+html.light a.bg-yellow-400 {
+    background-color: #09090b !important;
+    color: #ffffff !important;
+    border-color: #09090b !important;
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Estrellas y calificaciones en modo claro */
+html.light .star-btn.text-yellow-400,
+html.light .star-rating .text-yellow-400 {
+    color: #09090b !important;
+}
+
+html.light .star-btn.text-gray-600,
+html.light .star-rating .text-gray-600 {
+    color: #cbd5e1 !important;
+}
+
+html.light .star-btn:hover {
+    color: #09090b !important;
+}
+
+/* Tablas en modo claro con líneas bien marcadas */
+html.light table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+html.light table th {
+    color: #475569 !important;
+    border-bottom: 2px solid var(--alpha-border-light) !important;
+    font-weight: 700 !important;
+}
+
+html.light table tr,
+html.light table td {
+    border-bottom: 1px solid var(--alpha-border-light) !important;
+}
+
+html.light table tr:hover {
+    background-color: #f8fafc !important;
 }
 
 /* Modales en modo claro */
 html.light .modal-caja {
     background: #ffffff !important;
-    border-color: var(--alpha-border-light) !important;
-    box-shadow: 0 25px 60px -15px rgba(28, 25, 23, 0.2) !important;
-}
-
-/* Tablas en entrenamientos */
-html.light table th {
-    color: #78716c !important;
-    border-color: var(--alpha-border-light) !important;
-}
-
-html.light table tr {
-    border-color: var(--alpha-border-light) !important;
-}
-
-html.light table tr:hover {
-    background-color: rgba(0, 0, 0, 0.02) !important;
+    border: 1px solid var(--alpha-border-light) !important;
+    box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.25) !important;
 }

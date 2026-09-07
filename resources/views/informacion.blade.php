@@ -12,26 +12,26 @@
 </head>
 <body class="font-sans antialiased bg-black text-white min-h-screen">
 
-    <div class="max-w-2xl mx-auto px-6 py-16">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
 
-        <a href="{{ route('login') }}" class="alpha-btn-secondary inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold mb-8">
+        <a href="{{ route('login') }}" class="alpha-btn-secondary inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold mb-6 sm:mb-8">
             &larr; Volver al inicio
         </a>
 
         <div class="flex items-center gap-3 mb-2" data-animate="header">
-            <div class="w-12 h-12 rounded-2xl bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 flex items-center justify-center anim-icono">
-                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 flex items-center justify-center anim-icono shrink-0">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M4 9v6M2 10v4M20 9v6M22 10v4M7 12h10M6 8v8M18 8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </div>
             <div>
-                <h1 class="text-3xl font-bold text-white tracking-tight">Alpha Fitness</h1>
+                <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Alpha Fitness</h1>
                 <p class="text-xs text-yellow-400/90 font-medium">Tu mejor versión comienza aquí</p>
             </div>
         </div>
 
-        <div class="space-y-4 text-gray-200 mt-8">
-            <div class="alpha-card rounded-2xl p-6 relative overflow-hidden" data-animate="card">
+        <div class="space-y-4 text-gray-200 mt-6 sm:mt-8">
+            <div class="alpha-card rounded-2xl p-5 sm:p-6 relative overflow-hidden" data-animate="card">
                 <div class="flex items-center gap-3 mb-2">
                     <div class="w-8 h-8 rounded-lg bg-yellow-400/10 flex items-center justify-center text-yellow-400">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>

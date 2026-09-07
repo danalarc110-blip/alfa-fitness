@@ -1,10 +1,17 @@
 <?php
 
-use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\Auth\ClienteLoginController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\EjercicioController;
+use App\Http\Controllers\EstadisticasController;
+use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\ProgresoController;
+use App\Http\Controllers\RankingController;
 use App\Http\Controllers\RutinaController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 // Página raíz: redirige al login
 Route::get('/', function () {
@@ -35,13 +42,13 @@ Route::get('/informacion', function () {
 // Área protegida de empleados
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
-        $user = auth()->user();
+        $user = Auth::user();
 
         return view('dashboard', [
             'guard' => 'web',
             'nombre' => $user->name,
             'rolEtiqueta' => $user->rol,
-            'avatarUrl' => $user->avatar ? asset('images/avatars/'.$user->avatar) : null,
+            'avatarUrl' => $user->avatar_url,
         ]);
     })->name('dashboard');
 });
@@ -55,7 +62,7 @@ Route::middleware('auth:cliente')->group(function () {
             'guard' => 'cliente',
             'nombre' => $cliente->nombre,
             'rolEtiqueta' => 'Miembro',
-            'avatarUrl' => $cliente->avatar ? asset('images/avatars/'.$cliente->avatar) : null,
+            'avatarUrl' => $cliente->avatar_url,
         ]);
     })->name('cliente.dashboard');
 });
@@ -67,12 +74,38 @@ Route::middleware('auth:web,cliente')->group(function () {
     Route::post('/configuracion/password', [ConfiguracionController::class, 'actualizarPassword'])->name('configuracion.password');
     Route::post('/configuracion/personalizacion', [ConfiguracionController::class, 'actualizarPersonalizacion'])->name('configuracion.personalizacion');
     Route::post('/configuracion/avatar', [ConfiguracionController::class, 'actualizarAvatar'])->name('configuracion.avatar');
+
+    Route::view('/membresias', 'modulos.placeholder', [
+        'active' => 'membresias',
+        'titulo' => 'Membresías',
+    ])->name('membresias.index');
+
+    Route::get('/asistencia', [AsistenciaController::class, 'index'])->name('asistencia.index');
+    Route::post('/asistencia', [AsistenciaController::class, 'store'])->name('asistencia.store');
+    Route::post('/asistencia/salida', [AsistenciaController::class, 'salida'])->name('asistencia.salida');
+
+    Route::view('/entrenadores', 'modulos.placeholder', [
+        'active' => 'entrenadores',
+        'titulo' => 'Entrenadores',
+    ])->name('entrenadores.index');
+
+    Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
+    Route::post('/productos', [ProductoController::class, 'store'])->name('productos.store');
+    Route::put('/productos/{producto}', [ProductoController::class, 'update'])->name('productos.update');
+
+    Route::get('/progreso', [ProgresoController::class, 'index'])->name('progreso.index');
+    Route::post('/progreso', [ProgresoController::class, 'store'])->name('progreso.store');
+    Route::delete('/progreso/{personalRecord}', [ProgresoController::class, 'destroy'])->name('progreso.destroy');
+
+    Route::get('/rankings', [RankingController::class, 'index'])->name('rankings.index');
+    Route::get('/estadisticas', [EstadisticasController::class, 'index'])->name('estadisticas.index');
 });
 
 // Entrenamientos (empleados o clientes, cualquiera que esté logueado)
 Route::middleware('auth:web,cliente')->prefix('entrenamientos')->name('entrenamientos.')->group(function () {
     Route::get('/', [RutinaController::class, 'index'])->name('index');
     Route::post('/crear', [RutinaController::class, 'crear'])->name('crear');
+    Route::get('/catalogo/buscar', [RutinaController::class, 'buscarEjercicios'])->name('catalogo.buscar');
     Route::get('/{rutina}', [RutinaController::class, 'editar'])->name('editar');
     Route::put('/{rutina}', [RutinaController::class, 'actualizar'])->name('actualizar');
     Route::delete('/{rutina}', [RutinaController::class, 'eliminar'])->name('eliminar');
@@ -83,11 +116,16 @@ Route::middleware('auth:web,cliente')->prefix('entrenamientos')->name('entrenami
     Route::delete('/dias/{dia}', [RutinaController::class, 'eliminarDia'])->name('dias.eliminar');
 
     // Catálogo de ejercicios (buscador panel derecho)
-    Route::get('/catalogo/buscar', [RutinaController::class, 'buscarEjercicios'])->name('catalogo.buscar');
 
     // Ejercicios dentro de un día
     Route::post('/dias/{dia}/ejercicios', [RutinaController::class, 'agregarEjercicio'])->name('ejercicios.crear');
     Route::put('/dias/{dia}/ejercicios/orden', [RutinaController::class, 'reordenarEjercicios'])->name('ejercicios.reordenar');
     Route::put('/ejercicios/{rutinaEjercicio}', [RutinaController::class, 'actualizarEjercicio'])->name('ejercicios.actualizar');
     Route::delete('/ejercicios/{rutinaEjercicio}', [RutinaController::class, 'eliminarEjercicio'])->name('ejercicios.eliminar');
+});
+
+// Ejercicios (módulo de populares de la semana y calificaciones en estrellas)
+Route::middleware('auth:web,cliente')->prefix('ejercicios')->name('ejercicios.')->group(function () {
+    Route::get('/', [EjercicioController::class, 'index'])->name('index');
+    Route::post('/{ejercicio}/calificar', [EjercicioController::class, 'calificar'])->name('calificar');
 });

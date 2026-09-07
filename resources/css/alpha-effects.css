@@ -1,0 +1,292 @@
+/* =========================================================
+   Alpha Fitness — Enhanced Visual Effects & Micro-interactions
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   1. GLOW DINÁMICO EN TARJETAS (usa variables CSS del JS)
+   --------------------------------------------------------- */
+.alpha-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.alpha-card::before {
+    content: '';
+    position: absolute;
+    top: var(--glow-y, 50%);
+    left: var(--glow-x, 50%);
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(250, 204, 21, 0.15) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.alpha-card.card-glow-active::before {
+    opacity: 1;
+}
+
+.alpha-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* ---------------------------------------------------------
+   2. GRADIENT ORBS (FONDOS AMBIENTALES)
+   --------------------------------------------------------- */
+.gradient-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.gradient-orb.gold {
+    background: radial-gradient(circle, rgba(250, 204, 21, 0.2) 0%, transparent 70%);
+}
+
+.gradient-orb.purple {
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 70%);
+}
+
+.gradient-orb.blue {
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+}
+
+
+/* ---------------------------------------------------------
+   3. BORDER GLOW ANIMADO
+   --------------------------------------------------------- */
+@keyframes borderGlow {
+    0%, 100% { border-color: rgba(250, 204, 21, 0.2); box-shadow: 0 0 15px -3px rgba(250, 204, 21, 0.1); }
+    50% { border-color: rgba(250, 204, 21, 0.5); box-shadow: 0 0 25px -3px rgba(250, 204, 21, 0.25); }
+}
+
+.border-glow {
+    animation: borderGlow 3s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------
+   4. SKELETON LOADING
+   --------------------------------------------------------- */
+@keyframes skeletonShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton {
+    border-radius: 12px;
+    min-height: 20px;
+}
+
+/* ---------------------------------------------------------
+   5. TEXT SHIMMER (TÍTULOS DORADOS)
+   --------------------------------------------------------- */
+@keyframes textShimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+}
+
+.text-shimmer {
+    background: linear-gradient(90deg, #facc15 0%, #fff 25%, #facc15 50%, #fff 75%, #facc15 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: textShimmer 4s linear infinite;
+}
+
+/* ---------------------------------------------------------
+   6. MAGNETIC BUTTON BASE
+   --------------------------------------------------------- */
+[data-magnetic] {
+    transition: transform 0.1s ease;
+}
+
+/* ---------------------------------------------------------
+   7. PAGE TRANSITIONS
+   --------------------------------------------------------- */
+.page-transition-enter {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+}
+
+.page-transition-enter-active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---------------------------------------------------------
+   8. HOVER LIFT ENLACE
+   --------------------------------------------------------- */
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------------------------------------------------------
+   9. EFECTO DE FOCO DORADO EN INPUTS
+   --------------------------------------------------------- */
+input:focus, select:focus, textarea:focus, .input-group:focus-within {
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.2), 0 0 20px -5px rgba(250, 204, 21, 0.15);
+}
+
+/* ---------------------------------------------------------
+   10. SCROLLBAR PERSONALIZADA (MEJORADA)
+   --------------------------------------------------------- */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(250, 204, 21, 0.2);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(250, 204, 21, 0.4);
+}
+
+html.light ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+html.light ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* ---------------------------------------------------------
+   11. EFECTO DE VIDRO ROTO (GLASS EXTREME)
+   --------------------------------------------------------- */
+.glass-extreme {
+    background: rgba(20, 20, 20, 0.4);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 
+        0 8px 32px 0 rgba(0, 0, 0, 0.37),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+html.light .glass-extreme {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* ---------------------------------------------------------
+   12. ANIMACIÓN DE PULSO PARA NOTIFICACIONES
+   --------------------------------------------------------- */
+@keyframes notificationPulse {
+    0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(250, 204, 21, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+}
+
+.notification-pulse {
+    animation: notificationPulse 2s infinite;
+}
+
+/* ---------------------------------------------------------
+   13. EFECTO DE "BREATHING" PARA ELEMENTOS DESTACADOS
+   --------------------------------------------------------- */
+@keyframes breathe {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.03); opacity: 0.9; }
+}
+
+.breathing {
+    animation: breathe 4s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------
+   14. GRID DE FONDO SUTIL
+   --------------------------------------------------------- */
+.grid-bg {
+    background-image: 
+        linear-gradient(rgba(250, 204, 21, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(250, 204, 21, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+html.light .grid-bg {
+    background-image: 
+        linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+}
+
+/* ---------------------------------------------------------
+   15. EFECTO DE "SCANLINE" SUTIL (ESTÉTICA RETRO-FUTURISTA)
+   --------------------------------------------------------- */
+.scanlines::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.03) 2px,
+        rgba(0, 0, 0, 0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 10;
+    border-radius: inherit;
+}
+
+/* ---------------------------------------------------------
+   16. EFECTO DE DESTELLO EN BORDES (PARA BOTONES PRIMARIOS)
+   --------------------------------------------------------- */
+@keyframes borderFlash {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
+
+.btn-flash {
+    background: linear-gradient(90deg, #facc15, #fff, #facc15, #fff, #facc15);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: borderFlash 3s linear infinite;
+}
+
+/* ---------------------------------------------------------
+   17. EFECTO DE "MORPHING" PARA AVATARES
+   --------------------------------------------------------- */
+.avatar-morph {
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.avatar-morph:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 0 30px -5px rgba(250, 204, 21, 0.4);
+}
+
+/* ---------------------------------------------------------
+   18. EFECTO DE CARGA PROGRESIVA EN BARRAS
+   --------------------------------------------------------- */
+@keyframes progressLoad {
+    0% { width: 0; }
+    100% { width: var(--progress-width, 100%); }
+}
+
+.progress-animated {
+    animation: progressLoad 1.5s ease-out forwards;
+}

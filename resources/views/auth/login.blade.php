@@ -295,6 +295,7 @@
                                 <input
                                     type="email"
                                     name="correo"
+                                    value="{{ old('correo') }}"
                                     placeholder="tu@correo.com"
                                     class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none"
                                 >
@@ -597,6 +598,10 @@
                 }
             });
         }
+
+        @if ($errors->has('correo') || $errors->has('nombre') || old('correo') || old('nombre'))
+            activarPestana('clientes');
+        @endif
     </script>
 </body>
 </html>

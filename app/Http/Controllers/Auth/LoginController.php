@@ -44,9 +44,9 @@ class LoginController extends Controller
             'password.required' => 'La contraseña es obligatoria.',
         ]);
 
-        if (! Auth::attempt($credentials, true)) {
+        if (! Auth::attempt(array_merge($credentials, ['activo' => true]), true)) {
             throw ValidationException::withMessages([
-                'email' => 'Las credenciales no coinciden con nuestros registros.',
+                'email' => 'Las credenciales no coinciden con nuestros registros o la cuenta está inactiva.',
             ]);
         }
 
