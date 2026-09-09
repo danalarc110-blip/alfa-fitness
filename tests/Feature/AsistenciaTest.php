@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Asistencia;
 use App\Models\Cliente;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -11,82 +12,33 @@ class AsistenciaTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_secretary_can_register_client_entry_and_exit(): void
+    public function test_only_secretary_can_register_entry_and_exit_and_both_operators_are_audited(): void
     {
-        $empleado = User::create([
-            'name' => 'Secretaria Demo',
-            'email' => 'secretaria@example.com',
-            'password' => 'password',
-            'rol' => 'Recepcionista',
-            'activo' => true,
-        ]);
+        $secretaria = User::factory()->create(['rol' => 'Secretaria']);
+        $otra = User::factory()->create(['rol' => 'Secretaria']);
+        $cliente = Cliente::create(['nombre' => 'Cliente Demo', 'correo' => 'cliente@example.com', 'password' => 'Password!123', 'activo' => true]);
 
-        $cliente = Cliente::create([
-            'nombre' => 'Cliente Demo',
-            'correo' => 'cliente@example.com',
-            'password' => 'password',
-            'activo' => true,
-        ]);
-
-        $this->actingAs($empleado)
-            ->get(route('asistencia.index'))
-            ->assertOk()
-            ->assertSee('Asistencia')
-            ->assertSee('Cliente Demo');
-
-        $this->actingAs($empleado)
-            ->post(route('asistencia.store'), [
-                'cliente_id' => $cliente->id,
-            ])
-            ->assertRedirect();
-
-        $this->assertDatabaseHas('asistencias', [
-            'cliente_id' => $cliente->id,
-            'registrado_por' => $empleado->id,
-            'tipo_acceso' => 'entrada',
-            'fecha_salida' => null,
-        ]);
-
-        $this->actingAs($empleado)
-            ->post(route('asistencia.salida'), [
-                'cliente_id' => $cliente->id,
-            ])
-            ->assertRedirect();
-
-        $this->assertDatabaseMissing('asistencias', [
-            'cliente_id' => $cliente->id,
-            'fecha_salida' => null,
-        ]);
+        $this->actingAs($secretaria)->get(route('asistencia.index'))->assertOk()->assertSee('Cliente Demo');
+        $this->actingAs($secretaria)->post(route('asistencia.store'), ['cliente_id' => $cliente->id])->assertSessionHasNoErrors();
+        $this->actingAs($secretaria)->post(route('asistencia.store'), ['cliente_id' => $cliente->id])->assertSessionHasErrors('cliente_id');
+        $this->actingAs($otra)->post(route('asistencia.salida'), ['cliente_id' => $cliente->id])->assertSessionHasNoErrors();
+        $visita = Asistencia::firstOrFail();
+        $this->assertSame($secretaria->id, $visita->registrado_por);
+        $this->assertSame($otra->id, $visita->salida_registrada_por);
+        $this->actingAs($otra)->post(route('asistencia.salida'), ['cliente_id' => $cliente->id])->assertSessionHasErrors('cliente_id');
+        $this->actingAs($otra)->post(route('asistencia.store'), ['cliente_id' => $cliente->id])->assertSessionHasNoErrors();
+        $this->assertDatabaseCount('asistencias', 2);
     }
 
-    public function test_client_can_view_attendance_module_during_development(): void
+    public function test_client_admin_and_trainer_cannot_view_or_mutate_attendance(): void
     {
-        $cliente = Cliente::create([
-            'nombre' => 'Cliente Demo',
-            'correo' => 'cliente@example.com',
-            'password' => 'password',
-            'activo' => true,
-        ]);
-
-        $this->actingAs($cliente, 'cliente')
-            ->get(route('asistencia.index'))
-            ->assertOk()
-            ->assertSee('Asistencia');
-    }
-
-    public function test_non_secretary_employee_can_view_attendance_module_during_development(): void
-    {
-        $empleado = User::create([
-            'name' => 'Entrenador Demo',
-            'email' => 'entrenador@example.com',
-            'password' => 'password',
-            'rol' => 'Entrenador',
-            'activo' => true,
-        ]);
-
-        $this->actingAs($empleado)
-            ->get(route('asistencia.index'))
-            ->assertOk()
-            ->assertSee('Asistencia');
+        $cliente = Cliente::create(['nombre' => 'Cliente', 'correo' => 'c@example.com', 'password' => 'Password!123', 'activo' => true]);
+        foreach ([[$cliente, 'cliente'], [User::factory()->create(['rol' => 'Administrador']), 'web'], [User::factory()->create(['rol' => 'Entrenador']), 'web']] as [$actor, $guard]) {
+            $this->actingAs($actor, $guard);
+            $this->get(route('asistencia.index'))->assertForbidden();
+            $this->post(route('asistencia.store'), ['cliente_id' => $cliente->id])->assertForbidden();
+            $this->post(route('asistencia.salida'), ['cliente_id' => $cliente->id])->assertForbidden();
+        }
+        $this->assertDatabaseCount('asistencias', 0);
     }
 }

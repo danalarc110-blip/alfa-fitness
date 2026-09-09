@@ -13,19 +13,7 @@ class EjercicioController extends Controller
     /**
      * Identifica al usuario autenticado (sea de la guardia web o cliente).
      */
-    private function actual(): array
-    {
-        if (Auth::guard('web')->check()) {
-            return ['guard' => 'web', 'user' => Auth::guard('web')->user()];
-        }
 
-        return ['guard' => 'cliente', 'user' => Auth::guard('cliente')->user()];
-    }
-
-    private function nombreActual($guard, $user): string
-    {
-        return $guard === 'web' ? $user->name : $user->nombre;
-    }
 
     /**
      * Muestra la vista principal de Ejercicios Populares de la Semana.
@@ -43,27 +31,24 @@ class EjercicioController extends Controller
             ->when($q, fn ($query) => $query->where('nombre', 'like', "%{$q}%"))
             ->when($grupo && $grupo !== 'Todos', fn ($query) => $query->where('grupo_muscular', $grupo));
 
-        $ejercicios = $ejerciciosQuery->get();
+        $ejercicios = $ejerciciosQuery->orderByDesc('promedio_estrellas')->orderByDesc('conteo_votos')->orderBy('nombre')->paginate(18)->withQueryString();
         $misVotos = EjercicioCalificacion::where('user_type', $guard)
             ->where('user_id', $user->id)
             ->whereIn('ejercicio_id', $ejercicios->pluck('id'))
             ->get()
             ->keyBy('ejercicio_id');
 
-        $ejercicios = $ejercicios->map(function (Ejercicio $ej) use ($misVotos) {
+        $ejercicios->through(function (Ejercicio $ej) use ($misVotos) {
             $miVoto = $misVotos->get($ej->id);
 
             $ej->mi_calificacion = $miVoto ? $miVoto->estrellas : 0;
-            $ej->promedio_estrellas = $ej->promedio_estrellas ? round((float) $ej->promedio_estrellas, 1) : 5.0;
+            $ej->promedio_estrellas = $ej->promedio_estrellas ? round((float) $ej->promedio_estrellas, 1) : 0.0;
             $ej->conteo_votos = (int) $ej->conteo_votos;
 
             return $ej;
         });
 
-        // Ordenar por popularidad (promedio de estrellas y conteo de votos)
-        $ejercicios = $ejercicios->sortByDesc(fn ($e) => ($e->promedio_estrellas * 100) + $e->conteo_votos)->values();
-
-        $gruposMusculares = Ejercicio::where('activo', true)->pluck('grupo_muscular')->unique()->values();
+        $gruposMusculares = Ejercicio::where('activo', true)->distinct()->orderBy('grupo_muscular')->pluck('grupo_muscular');
 
         return view('ejercicios.index', [
             'guard' => $guard,

@@ -50,6 +50,16 @@ class Cliente extends Authenticatable
         return $this->hasMany(Asistencia::class);
     }
 
+    public function membresias(): HasMany
+    {
+        return $this->hasMany(Membresia::class);
+    }
+
+    public function solicitudesMembresia(): HasMany
+    {
+        return $this->hasMany(SolicitudMembresia::class);
+    }
+
     /**
      * Obtiene la URL completa del avatar (sea URL externa de Google o archivo local).
      */

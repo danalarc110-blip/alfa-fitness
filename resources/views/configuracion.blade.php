@@ -160,23 +160,23 @@
                         <form method="POST" action="{{ route('configuracion.password') }}" class="space-y-3">
                             @csrf
                             <div class="relative">
-                                <input type="password" name="password_actual" required placeholder="Contraseña actual"
+                                <input type="password" name="password_actual" aria-label="Contraseña actual" autocomplete="current-password" required placeholder="Contraseña actual"
                                     class="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-4 pr-10 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400/60 transition-colors">
-                                <button type="button" onclick="alphaToggleClave(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
+                                <button type="button" onclick="alphaToggleClave(this)" aria-label="Mostrar u ocultar contraseña" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
                                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </button>
                             </div>
                             <div class="relative">
-                                <input type="password" name="password" required minlength="8" placeholder="Nueva contraseña"
+                                <input type="password" name="password" aria-label="Nueva contraseña" autocomplete="new-password" required minlength="8" placeholder="Nueva contraseña"
                                     class="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-4 pr-10 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400/60 transition-colors">
-                                <button type="button" onclick="alphaToggleClave(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
+                                <button type="button" onclick="alphaToggleClave(this)" aria-label="Mostrar u ocultar contraseña" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
                                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </button>
                             </div>
                             <div class="relative">
-                                <input type="password" name="password_confirmation" required minlength="8" placeholder="Confirmar nueva contraseña"
+                                <input type="password" name="password_confirmation" aria-label="Confirmar nueva contraseña" autocomplete="new-password" required minlength="8" placeholder="Confirmar nueva contraseña"
                                     class="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-4 pr-10 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400/60 transition-colors">
-                                <button type="button" onclick="alphaToggleClave(this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
+                                <button type="button" onclick="alphaToggleClave(this)" aria-label="Mostrar u ocultar contraseña" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors">
                                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </button>
                             </div>
@@ -199,33 +199,7 @@
 
             </div>
 
-            {{-- ===================== ESTADÍSTICAS RÁPIDAS ===================== --}}
-            <div class="alpha-card rounded-2xl p-6 mt-6" data-animate="card">
-                <div class="mb-4 pb-3 border-b border-white/5">
-                    <h2 class="font-bold text-base text-white">Estadísticas de Actividad</h2>
-                    <p class="text-xs text-gray-400">Resumen general de rendimiento</p>
-                </div>
-
-                @php
-                    $stats = [
-                        ['label' => 'Entrenamientos realizados', 'valor' => '12', 'delta' => '+20% este mes'],
-                        ['label' => 'Calorías estimadas', 'valor' => '4,850 kcal', 'delta' => '+15% este mes'],
-                        ['label' => 'Tiempo acumulado', 'valor' => '18h 30m', 'delta' => '+12% este mes'],
-                    ];
-                @endphp
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                    @foreach ($stats as $s)
-                        <div class="bg-black/40 border border-white/5 rounded-xl p-4">
-                            <p class="text-2xl font-bold text-white">{{ $s['valor'] }}</p>
-                            <p class="text-xs text-gray-400 mt-0.5">{{ $s['label'] }}</p>
-                            <span class="inline-flex items-center text-[11px] font-semibold text-yellow-400 mt-2 bg-yellow-400/10 px-2 py-0.5 rounded-md">
-                                ▲ {{ $s['delta'] }}
-                            </span>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
+            <p class="text-sm text-gray-400 mt-6">Consulta tu actividad real en el panel de inicio.</p>
 
         </div>
     </div>

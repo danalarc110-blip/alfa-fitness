@@ -3,8 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Cliente;
-use App\Models\Ejercicio;
-use App\Models\PersonalRecord;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -12,32 +11,10 @@ class PrEstadisticasTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_cliente_can_view_pr_statistics(): void
+    public function test_legacy_pr_statistics_is_integrated_into_private_progress(): void
     {
-        $cliente = Cliente::create([
-            'nombre' => 'Cliente Demo',
-            'correo' => 'cliente@example.com',
-            'password' => 'password',
-            'activo' => true,
-        ]);
-
-        $ejercicio = Ejercicio::create([
-            'nombre' => 'Sentadilla',
-            'grupo_muscular' => 'Piernas',
-            'activo' => true,
-        ]);
-
-        PersonalRecord::create([
-            'cliente_id' => $cliente->id,
-            'ejercicio_id' => $ejercicio->id,
-            'peso_kg' => 100,
-            'repeticiones' => 3,
-        ]);
-
-        $this->actingAs($cliente, 'cliente')
-            ->get(route('estadisticas.index'))
-            ->assertOk()
-            ->assertSee('PR / Estadísticas')
-            ->assertSee('Sentadilla');
+        $cliente = Cliente::create(['nombre' => 'Cliente', 'correo' => 'cliente@example.com', 'password' => 'Password!123', 'activo' => true]);
+        $this->actingAs($cliente, 'cliente')->get(route('estadisticas.index'))->assertRedirect(route('progreso.index'));
+        foreach (['Administrador', 'Secretaria', 'Entrenador'] as $rol) $this->actingAs(User::factory()->create(['rol' => $rol]))->get(route('estadisticas.index'))->assertForbidden();
     }
 }

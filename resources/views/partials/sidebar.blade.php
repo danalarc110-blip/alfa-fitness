@@ -1,5 +1,5 @@
 @php
-    $guardActual = $guard ?? (auth('cliente')->check() ? 'cliente' : 'web');
+    $guardActual = $guard ?? (auth('web')->check() ? 'web' : 'cliente');
     $userActual = $guardActual === 'cliente' ? auth('cliente')->user() : auth()->user();
     $nombreActual = $nombre ?? ($userActual ? ($guardActual === 'cliente' ? $userActual->nombre : $userActual->name) : 'Usuario');
     $rolActual = $rolEtiqueta ?? ($userActual ? ($guardActual === 'cliente' ? 'Miembro' : ($userActual->rol ?? 'Usuario')) : 'Miembro');
@@ -22,10 +22,12 @@
         ['key' => 'entrenadores', 'label' => 'Entrenadores', 'href' => route('entrenadores.index'), 'icon' => 'users'],
         ['key' => 'productos', 'label' => 'Productos', 'href' => route('productos.index'), 'icon' => 'package'],
         ['key' => 'progreso', 'label' => 'Progreso', 'href' => route('progreso.index'), 'icon' => 'trending-up'],
-        ['key' => 'rankings', 'label' => 'Rankings', 'href' => route('rankings.index'), 'icon' => 'trophy'],
-        ['key' => 'estadisticas', 'label' => 'PR / Estadísticas', 'href' => route('estadisticas.index'), 'icon' => 'bar-chart'],
         ['key' => 'configuracion', 'label' => 'Configuración', 'href' => route('configuracion'), 'icon' => 'settings'],
     ];
+
+    $navItems[] = ['key' => 'cuentas', 'label' => 'Cuentas', 'href' => route('cuentas.index'), 'icon' => 'users'];
+    $permisosNav = ['cuentas' => 'clientes', 'asistencia' => 'asistencia', 'membresias' => 'membresias', 'progreso' => 'progreso', 'estadisticas' => 'progreso'];
+    $navItems = array_filter($navItems, fn ($item) => !isset($permisosNav[$item['key']]) || \App\Support\Acceso::permite($userActual, $permisosNav[$item['key']]));
 
     $icons = [
         'home' => '<path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
@@ -108,7 +110,7 @@
         <div class="flex flex-col gap-1">
             @foreach ($navItems as $item)
                 @php $isActive = ($active ?? '') === $item['key']; @endphp
-                <a href="{{ $item['href'] }}"
+                <a href="{{ $item['href'] }}" @if($isActive) aria-current="page" @endif
                     onclick="alphaCloseMobileMenu()"
                     class="mobile-nav-link group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
                         {{ $isActive
@@ -163,7 +165,7 @@
     <nav class="flex-1 flex flex-col gap-1.5">
         @foreach ($navItems as $item)
             @php $isActive = ($active ?? '') === $item['key']; @endphp
-            <a href="{{ $item['href'] }}"
+            <a href="{{ $item['href'] }}" @if($isActive) aria-current="page" @endif
                 class="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
                     {{ $isActive
                         ? 'nav-item-active shadow-sm'
@@ -229,7 +231,9 @@
         drawer.classList.remove('-translate-x-full');
         drawer.classList.add('translate-x-0');
 
-        if (btn) btn.classList.add('is-active');
+        if (btn) { btn.classList.add('is-active'); btn.setAttribute('aria-expanded', 'true'); }
+        drawer.inert = false;
+        drawer.querySelector('button, a')?.focus();
         document.body.style.overflow = 'hidden';
     }
 
@@ -245,7 +249,10 @@
         drawer.classList.remove('translate-x-0');
         drawer.classList.add('-translate-x-full');
 
-        if (btn) btn.classList.remove('is-active');
+        const wasOpen = btn?.classList.contains('is-active');
+        if (btn) { btn.classList.remove('is-active'); btn.setAttribute('aria-expanded', 'false'); }
+        drawer.inert = true;
+        if (wasOpen) btn?.focus();
         document.body.style.overflow = '';
     }
 
@@ -262,7 +269,17 @@
     // Cerrar menú con la tecla Escape o al cambiar a pantalla de escritorio
     window.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') alphaCloseMobileMenu();
+        const drawer = document.getElementById('alpha-mobile-drawer');
+        if (e.key === 'Tab' && drawer?.classList.contains('translate-x-0')) {
+            const items = drawer.querySelectorAll('a[href], button:not([disabled])');
+            const first = items[0], last = items[items.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+        }
     });
+    document.getElementById('alpha-mobile-drawer').inert = true;
+    document.getElementById('alpha-hamburger-btn').setAttribute('aria-expanded', 'false');
+    document.getElementById('alpha-hamburger-btn').setAttribute('aria-controls', 'alpha-mobile-drawer');
 
     window.addEventListener('resize', function() {
         if (window.innerWidth >= 768) {

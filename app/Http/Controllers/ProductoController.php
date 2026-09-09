@@ -3,82 +3,60 @@
 namespace App\Http\Controllers;
 
 use App\Models\Producto;
-use Illuminate\Http\RedirectResponse;
+use App\Services\ImagenSegura;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\Gate;
 
 class ProductoController extends Controller
 {
-    private function actual(): array
-    {
-        if (Auth::guard('web')->check()) {
-            return ['guard' => 'web', 'user' => Auth::guard('web')->user()];
-        }
-
-        return ['guard' => 'cliente', 'user' => Auth::guard('cliente')->user()];
-    }
-
-    private function nombreActual(string $guard, $user): string
-    {
-        return $guard === 'web' ? $user->name : $user->nombre;
-    }
-
-    public function index(Request $request): View
+    public function index(Request $request)
     {
         ['guard' => $guard, 'user' => $user] = $this->actual();
-
-        $busqueda = $request->string('q')->toString();
+        $busqueda = mb_substr($request->string('q')->toString(), 0, 100);
         $productos = Producto::query()
-            ->when($busqueda, fn ($query) => $query->where(function ($subquery) use ($busqueda) {
-                $subquery
-                    ->where('nombre', 'like', "%{$busqueda}%")
-                    ->orWhere('categoria', 'like', "%{$busqueda}%");
-            }))
-            ->orderBy('orden')
-            ->orderBy('nombre')
-            ->get();
-
-        return view('productos.index', [
-            'guard' => $guard,
-            'nombre' => $this->nombreActual($guard, $user),
-            'rolEtiqueta' => $guard === 'web' ? $user->rol : 'Miembro',
-            'avatarUrl' => $user->avatar_url,
-            'productos' => $productos,
-            'busqueda' => $busqueda,
-        ]);
+            ->when(! Gate::allows('inventario'), fn ($q) => $q->where('activo', true))
+            ->when($busqueda, fn ($q) => $q->where(fn ($s) => $s->where('nombre', 'like', "%{$busqueda}%")->orWhere('categoria', 'like', "%{$busqueda}%")))
+            ->orderBy('orden')->orderBy('nombre')->paginate(16)->withQueryString();
+        return view('productos.index', ['guard' => $guard, 'nombre' => $this->nombreActual($guard, $user), 'rolEtiqueta' => $guard === 'web' ? $user->rol : 'Miembro', 'avatarUrl' => $user->avatar_url, 'productos' => $productos, 'busqueda' => $busqueda]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        abort_unless(Auth::guard('web')->check(), 403);
-
-        $data = $request->validate([
-            'nombre' => ['required', 'string', 'max:255'],
-            'precio' => ['required', 'numeric', 'min:0', 'max:999999'],
-            'categoria' => ['nullable', 'string', 'max:100'],
-            'stock' => ['required', 'integer', 'min:0', 'max:999999'],
-        ]);
-
-        Producto::create($data + ['activo' => true]);
-
+        Gate::authorize('inventario');
+        $data = $request->validate($this->reglas());
+        $producto = Producto::create($data + ['activo' => true]);
+        if ($request->hasFile('imagen')) $producto->update(['imagen' => app(ImagenSegura::class)->guardar($request->file('imagen'), 'productos', 'producto_'.$producto->id)]);
         return back()->with('status', 'Producto creado.');
     }
 
-    public function update(Request $request, Producto $producto): RedirectResponse
+    public function update(Request $request, Producto $producto)
     {
-        abort_unless(Auth::guard('web')->check(), 403);
-
-        $data = $request->validate([
-            'stock' => ['required', 'integer', 'min:0', 'max:999999'],
-            'activo' => ['nullable', 'boolean'],
-        ]);
-
-        $producto->update([
-            'stock' => $data['stock'],
-            'activo' => $request->boolean('activo'),
-        ]);
-
+        Gate::authorize('inventario');
+        $data = $request->validate($this->reglas(true));
+        $anterior = $producto->imagen;
+        $nuevo = $request->hasFile('imagen') ? app(ImagenSegura::class)->guardar($request->file('imagen'), 'productos', 'producto_'.$producto->id) : null;
+        try {
+            $producto->update([
+                'nombre' => $data['nombre'], 'precio' => $data['precio'], 'categoria' => $data['categoria'] ?? null,
+                'stock' => $data['stock'], 'activo' => $request->boolean('activo'),
+                'imagen' => $nuevo ?: ($request->boolean('eliminar_imagen') ? null : $anterior),
+            ]);
+        } catch (\Throwable $e) {
+            if ($nuevo) app(ImagenSegura::class)->eliminar($nuevo, 'productos', 'producto_'.$producto->id);
+            throw $e;
+        }
+        if ($nuevo || $request->boolean('eliminar_imagen')) app(ImagenSegura::class)->eliminar($anterior, 'productos', 'producto_'.$producto->id);
         return back()->with('status', 'Producto actualizado.');
+    }
+
+    private function reglas(bool $actualizar = false): array
+    {
+        return [
+            'nombre' => ['required', 'string', 'max:255'], 'precio' => ['required', 'numeric', 'min:0', 'max:999999'],
+            'categoria' => ['nullable', 'string', 'max:100'], 'stock' => ['required', 'integer', 'min:0', 'max:999999'],
+            'activo' => [$actualizar ? 'nullable' : 'prohibited', 'boolean'],
+            'imagen' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=5000,max_height=5000'],
+            'eliminar_imagen' => [$actualizar ? 'nullable' : 'prohibited', 'boolean'],
+        ];
     }
 }

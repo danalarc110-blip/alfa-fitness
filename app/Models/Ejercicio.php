@@ -12,8 +12,6 @@ class Ejercicio extends Model
         'imagen_musculos_url',
         'tiene_imagen',
         'tiene_imagen_musculos',
-        'calificacion_promedio',
-        'total_calificaciones',
     ];
 
     protected $fillable = [
@@ -157,7 +155,7 @@ class Ejercicio extends Model
             ? $this->calificaciones->avg('estrellas')
             : $this->calificaciones()->avg('estrellas');
 
-        return $promedio ? round((float) $promedio, 1) : 5.0; // Valor predeterminado de popularidad 5.0
+        return $promedio ? round((float) $promedio, 1) : 0.0; // Valor predeterminado de popularidad 5.0
     }
 
     /**

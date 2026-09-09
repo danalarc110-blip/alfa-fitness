@@ -10,19 +10,7 @@ use Illuminate\View\View;
 
 class EstadisticasController extends Controller
 {
-    private function actual(): array
-    {
-        if (Auth::guard('web')->check()) {
-            return ['guard' => 'web', 'user' => Auth::guard('web')->user()];
-        }
 
-        return ['guard' => 'cliente', 'user' => Auth::guard('cliente')->user()];
-    }
-
-    private function nombreActual(string $guard, $user): string
-    {
-        return $guard === 'web' ? $user->name : $user->nombre;
-    }
 
     public function index(Request $request): View
     {
@@ -37,7 +25,7 @@ class EstadisticasController extends Controller
             : collect();
 
         $records = PersonalRecord::with(['cliente', 'ejercicio'])
-            ->when($clienteId, fn ($query) => $query->where('cliente_id', $clienteId))
+            ->where('cliente_id', $clienteId)
             ->oldest()
             ->get();
 

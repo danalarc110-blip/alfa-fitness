@@ -1,27 +1,7 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'Alpha Fitness') }} - Entrenamientos</title>
-
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
-
-    <script>
-        if (localStorage.getItem('alphaTema') === 'light') {
-            document.documentElement.classList.add('light');
-        }
-    </script>
-
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="font-sans antialiased bg-black text-white min-h-screen">
-    <div class="min-h-screen flex flex-col md:flex-row">
-        @include('partials.sidebar', ['active' => 'entrenamientos'])
-
-        <div class="flex-1 flex flex-col min-w-0 px-4 sm:px-6 md:px-10 py-6 sm:py-8">
-            <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
+@extends('layouts.app', ['active' => 'entrenamientos'])
+@section('title', 'Entrenamientos')
+@section('page-header')
+<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white mb-1">Entrenamientos</h1>
                     <p class="text-gray-400 text-xs">Gestiona, crea y visualiza tus planes de entrenamiento</p>
@@ -42,8 +22,9 @@
                     </form>
                 </div>
             </header>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+@endsection
+@section('content')
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                 @forelse ($rutinas as $rutina)
                     <a href="{{ route('entrenamientos.editar', $rutina) }}"
                         class="alpha-card alpha-card-interactive group rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between"
@@ -88,7 +69,4 @@
                     </div>
                 @endforelse
             </div>
-        </div>
-    </div>
-</body>
-</html>
+@endsection

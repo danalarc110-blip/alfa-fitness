@@ -1,27 +1,7 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'Alpha Fitness') }} - Productos</title>
-
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
-
-    <script>
-        if (localStorage.getItem('alphaTema') === 'light') {
-            document.documentElement.classList.add('light');
-        }
-    </script>
-
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="font-sans antialiased bg-black text-white min-h-screen">
-    <div class="min-h-screen flex flex-col md:flex-row">
-        @include('partials.sidebar', ['active' => 'productos'])
-
-        <main class="flex-1 flex flex-col min-w-0 px-4 sm:px-6 md:px-10 py-6 sm:py-8">
-            <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
+@extends('layouts.app', ['active' => 'productos'])
+@section('title', 'Productos')
+@section('page-header')
+<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Productos</h1>
                     <p class="text-gray-400 text-xs mt-1">Catálogo base para stock y futuras ventas/consumos.</p>
@@ -32,20 +12,9 @@
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
                 </button>
             </header>
-
-            @if (session('status'))
-                <div class="mb-5 rounded-xl border border-yellow-400/20 bg-yellow-400/10 px-4 py-3 text-sm font-semibold text-yellow-300">
-                    {{ session('status') }}
-                </div>
-            @endif
-
-            @if ($errors->any())
-                <div class="mb-5 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                    {{ $errors->first() }}
-                </div>
-            @endif
-
-            <section class="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-5">
+@endsection
+@section('content')
+<section class="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-5">
                 <aside class="space-y-5">
                     <form method="GET" action="{{ route('productos.index') }}" class="alpha-card rounded-2xl p-5 sm:p-6" data-animate="card">
                         <label class="block">
@@ -59,8 +28,8 @@
                         </button>
                     </form>
 
-                    @if ($guard === 'web')
-                        <form method="POST" action="{{ route('productos.store') }}" class="alpha-card rounded-2xl p-5 sm:p-6" data-animate="card">
+                    @if (\Illuminate\Support\Facades\Gate::allows('inventario'))
+                        <form method="POST" action="{{ route('productos.store') }}" enctype="multipart/form-data" class="alpha-card rounded-2xl p-5 sm:p-6" data-animate="card">
                             @csrf
                             <h2 class="text-base font-bold text-white mb-4">Nuevo producto</h2>
 
@@ -70,6 +39,9 @@
                                     <input type="text" name="nombre" value="{{ old('nombre') }}" required
                                         class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-yellow-400/60">
                                 </label>
+
+                                <label class="block"><span class="block text-xs font-semibold text-gray-400 mb-1.5">Imagen (JPG, PNG o WebP, max. 2 MB)</span><input type="file" name="imagen" accept="image/jpeg,image/png,image/webp" data-image-preview="producto-nuevo-preview"></label>
+                                <img id="producto-nuevo-preview" class="hidden w-full h-36 object-cover rounded-xl" alt="Vista previa">
 
                                 <div class="grid grid-cols-2 gap-3">
                                     <label class="block">
@@ -102,7 +74,7 @@
                 <section class="alpha-card rounded-2xl p-5 sm:p-6 min-w-0" data-animate="card">
                     <div class="flex items-center justify-between gap-3 mb-4">
                         <h2 class="text-base font-bold text-white">Catálogo</h2>
-                        <span class="text-xs font-semibold text-gray-500">{{ $productos->count() }} productos</span>
+                        <span class="text-xs font-semibold text-gray-500">{{ $productos->total() }} productos</span>
                     </div>
 
                     @if ($productos->isNotEmpty())
@@ -127,13 +99,16 @@
                                                 <span class="shrink-0 text-sm font-bold text-yellow-400">{{ $producto->precio_formateado }}</span>
                                             </div>
 
-                                            @if ($guard === 'web')
-                                                <form method="POST" action="{{ route('productos.update', $producto) }}" class="mt-4 flex items-center gap-3">
+                                            @if (\Illuminate\Support\Facades\Gate::allows('inventario'))
+                                                <form method="POST" action="{{ route('productos.update', $producto) }}" enctype="multipart/form-data" class="alpha-form mt-4 grid grid-cols-2 gap-3">
                                                     @csrf
                                                     @method('PUT')
 
-                                                    <label class="flex-1">
-                                                        <span class="sr-only">Stock</span>
+                                                    <label>Nombre<input name="nombre" value="{{ $producto->nombre }}" required></label>
+                                                    <label>Precio<input type="number" name="precio" min="0" step="0.01" value="{{ $producto->precio }}" required></label>
+                                                    <label>Categoria<input name="categoria" value="{{ $producto->categoria }}"></label>
+                                                    <label>
+                                                        <span>Stock</span>
                                                         <input type="number" name="stock" min="0" value="{{ $producto->stock }}"
                                                             class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-yellow-400/60">
                                                     </label>
@@ -143,9 +118,10 @@
                                                         Activo
                                                     </label>
 
-                                                    <button type="submit" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-yellow-400 hover:text-black border border-white/10 text-gray-300 transition-colors" title="Actualizar">
-                                                        <svg class="w-4 h-4 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-                                                    </button>
+                                                    <label class="col-span-2">Cambiar imagen<input type="file" name="imagen" accept="image/jpeg,image/png,image/webp" data-image-preview="producto-{{ $producto->id }}-preview"></label>
+                                                    <img id="producto-{{ $producto->id }}-preview" class="hidden col-span-2 w-full h-32 object-cover rounded-xl" alt="Vista previa">
+                                                    @if($producto->imagen)<label class="col-span-2 inline-flex items-center gap-2"><input type="checkbox" name="eliminar_imagen" value="1"> Eliminar imagen actual</label>@endif
+                                                    <button type="submit" class="alpha-btn-primary col-span-2 rounded-xl px-4 py-2">Guardar cambios</button>
                                                 </form>
                                             @else
                                                 <div class="mt-4 flex items-center justify-between text-xs">
@@ -168,7 +144,6 @@
                     @endif
                 </section>
             </section>
-        </main>
-    </div>
-</body>
-</html>
+        <div class="mt-5">{{ $productos->links() }}</div>
+<script>document.querySelectorAll('[data-image-preview]').forEach(input=>input.addEventListener('change',()=>{const image=document.getElementById(input.dataset.imagePreview);const file=input.files[0];if(!file){image.classList.add('hidden');return}image.src=URL.createObjectURL(file);image.classList.remove('hidden')}));</script>
+@endsection

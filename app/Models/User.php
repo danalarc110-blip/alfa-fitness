@@ -14,6 +14,10 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    protected $attributes = [
+        'password_establecida' => true,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -23,7 +27,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'password_establecida',
         'rol',
+        'admin_key',
         'activo',
         'color_acento',
         'avatar_piel',
@@ -55,7 +61,23 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'activo' => 'boolean',
+            'password_establecida' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (User $user) {
+            if ($user->exists && $user->getOriginal('rol') === 'Administrador' && ($user->rol !== 'Administrador' || ! $user->activo)) {
+                throw new \LogicException('El administrador unico no puede desactivarse ni cambiar de rol.');
+            }
+            $user->admin_key = $user->rol === 'Administrador' ? 'unico' : null;
+        });
+        static::deleting(function (User $user) {
+            if ($user->rol === 'Administrador') {
+                throw new \LogicException('La cuenta del administrador unico no se puede eliminar.');
+            }
+        });
     }
 
     public function asistenciasRegistradas(): HasMany

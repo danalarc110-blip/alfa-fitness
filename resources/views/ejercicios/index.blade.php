@@ -1,30 +1,7 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'Alpha Fitness') }} - Ejercicios Populares</title>
-
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
-
-    <script>
-        if (localStorage.getItem('alphaTema') === 'light') {
-            document.documentElement.classList.add('light');
-        }
-    </script>
-
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="font-sans antialiased bg-black text-white min-h-screen">
-    <div class="min-h-screen flex flex-col md:flex-row">
-        @include('partials.sidebar', ['active' => 'ejercicios'])
-
-        <div class="flex-1 flex flex-col min-w-0 px-4 sm:px-6 md:px-10 py-6 sm:py-8">
-
-            {{-- CABECERA --}}
-            <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
+@extends('layouts.app', ['active' => 'ejercicios'])
+@section('title', 'Ejercicios')
+@section('page-header')
+<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
                 <div>
                     <div class="flex items-center gap-2">
                         <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Ejercicios Populares</h1>
@@ -42,8 +19,9 @@
                     </button>
                 </div>
             </header>
-
-            {{-- BARRA DE FILTROS Y BÚSQUEDA --}}
+@endsection
+@section('content')
+{{-- BARRA DE FILTROS Y BÚSQUEDA --}}
             <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-6 sm:mb-8" data-animate="card">
                 {{-- Filtros por Grupo Muscular (desplazable en móvil) --}}
                 <div class="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap">
@@ -68,7 +46,7 @@
                 </form>
             </div>
 
-            {{-- GRID DE EJERCICIOS POPULARES --}}
+            <p class="text-xs text-gray-400 mb-3">{{ $ejercicios->total() }} ejercicios</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 @forelse ($ejercicios as $index => $ejercicio)
                     <div class="alpha-card rounded-2xl p-5 border border-white/10 flex flex-col justify-between relative overflow-hidden group shadow-lg" data-animate="card">
@@ -76,7 +54,7 @@
                         {{-- Top Ranking Badge --}}
                         <div class="flex items-center justify-between mb-3">
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold {{ $index === 0 ? 'bg-yellow-400 text-black shadow-md shadow-yellow-400/20' : ($index === 1 ? 'bg-gray-300 text-black' : ($index === 2 ? 'bg-amber-600 text-white' : 'bg-white/5 text-gray-400 border border-white/5')) }}">
-                                @if ($index === 0) 🏆 TOP #1 @elseif ($index === 1) 🥈 TOP #2 @elseif ($index === 2) 🥉 TOP #3 @else #{{ $index + 1 }} Semanal @endif
+                                {{ $ejercicio->conteo_votos ? '#'.($ejercicios->firstItem() + $index).' Global' : 'Sin votos' }}
                             </span>
 
                             <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-white/5 text-gray-300 border border-white/5">
@@ -86,12 +64,14 @@
 
                         {{-- Visor de Imagen con Músculos Entrenados --}}
                         <div class="relative w-full h-48 bg-black/60 rounded-xl overflow-hidden mb-4 border border-white/10 flex items-center justify-center p-2">
-                            <img id="img-ej-{{ $ejercicio->id }}" src="{{ $ejercicio->imagen_url }}" alt="{{ $ejercicio->nombre }}"
+                            @if($ejercicio->tiene_imagen)
+                            <img loading="lazy" id="img-ej-{{ $ejercicio->id }}" src="{{ $ejercicio->imagen_url }}" alt="{{ $ejercicio->nombre }}"
                                 class="w-full h-full object-contain transition-all duration-300 select-none">
                             
+                            @else <span class="text-sm text-gray-400">Imagen no disponible</span> @endif
                             {{-- Botón para alternar músculos entrenados --}}
                             @if ($ejercicio->tiene_imagen_musculos)
-                                <button type="button" onclick="alternarMusculos({{ $ejercicio->id }}, '{{ $ejercicio->imagen_url }}', '{{ $ejercicio->imagen_musculos_url }}')"
+                                <button type="button" onclick="alternarMusculos({{ $ejercicio->id }}, {{ \Illuminate\Support\Js::from($ejercicio->imagen_url) }}, {{ \Illuminate\Support\Js::from($ejercicio->imagen_musculos_url) }})"
                                     class="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-black/80 hover:bg-yellow-400 hover:text-black text-yellow-400 border border-yellow-400/30 backdrop-blur-md transition-all active:scale-95 shadow-md flex items-center gap-1">
                                     <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20M12 2v20"/></svg>
                                     <span id="btn-label-{{ $ejercicio->id }}">Ver Músculos</span>
@@ -149,12 +129,10 @@
                         </a>
                     </div>
                 @endforelse
-            </div>
-
-        </div>
-    </div>
-
-    <script>
+            </div><div class="mt-5">{{ $ejercicios->links() }}</div>
+@endsection
+@push('scripts')
+<script>
         const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
         // Alternar vista entre foto del ejercicio y mapa muscular (exclusivo para este módulo)
@@ -249,5 +227,4 @@
             });
         }
     </script>
-</body>
-</html>
+@endpush

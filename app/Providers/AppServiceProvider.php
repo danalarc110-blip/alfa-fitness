@@ -19,6 +19,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        foreach (['administrar', 'asistencia', 'membresias', 'operaciones', 'inventario', 'progreso', 'clientes'] as $permiso) {
+            \Illuminate\Support\Facades\Gate::define($permiso, fn ($user) => \App\Support\Acceso::permite($user, $permiso));
+        }
     }
 }

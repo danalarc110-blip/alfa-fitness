@@ -4,105 +4,57 @@ namespace App\Http\Controllers;
 
 use App\Models\Asistencia;
 use App\Models\Cliente;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Illuminate\Validation\Rule;
 
 class AsistenciaController extends Controller
 {
-    private function actual(): array
+    public function index(Request $request)
     {
-        if (Auth::guard('web')->check()) {
-            return ['guard' => 'web', 'user' => Auth::guard('web')->user()];
-        }
-
-        return ['guard' => 'cliente', 'user' => Auth::guard('cliente')->user()];
-    }
-
-    private function nombreActual(string $guard, $user): string
-    {
-        return $guard === 'web' ? $user->name : $user->nombre;
-    }
-
-    public function index(Request $request): View
-    {
-        ['guard' => $guard, 'user' => $user] = $this->actual();
-
-        $busqueda = $request->string('q')->toString();
+        abort_unless(auth('web')->user()?->rol === 'Secretaria', 403);
+        $filtros = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'cliente_id' => ['nullable', 'integer', 'exists:clientes,id'],
+            'desde' => ['nullable', 'date_format:Y-m-d'],
+            'hasta' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:desde'],
+            'estado' => ['nullable', Rule::in(['abierta', 'cerrada'])],
+        ]);
+        $busqueda = $filtros['q'] ?? '';
         $clientes = Cliente::where('activo', true)
-            ->when($busqueda, fn ($query) => $query->where(function ($subquery) use ($busqueda) {
-                $subquery
-                    ->where('nombre', 'like', "%{$busqueda}%")
-                    ->orWhere('correo', 'like', "%{$busqueda}%");
-            }))
-            ->with(['asistencias' => fn ($query) => $query->whereNull('fecha_salida')->latest('fecha_hora')])
-            ->orderBy('nombre')
-            ->get();
+            ->when($busqueda, fn ($q) => $q->where(fn ($s) => $s->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
+            ->with(['asistencias' => fn ($q) => $q->whereNull('fecha_salida')->latest('fecha_hora'),
+                'membresias' => fn ($q) => $q->where('cancelada', false)->latest('fin')->limit(1)])
+            ->orderBy('nombre')->paginate(12, ['*'], 'clientes_page')->withQueryString();
 
-        $asistencias = Asistencia::with(['cliente', 'registrador'])
-            ->whereBetween('fecha_hora', [now()->startOfMonth(), now()->endOfMonth()])
-            ->latest('fecha_hora')
-            ->get();
+        $asistencias = Asistencia::with(['cliente:id,nombre,correo', 'registrador:id,name', 'registradorSalida:id,name'])
+            ->when($filtros['cliente_id'] ?? null, fn ($q, $id) => $q->where('cliente_id', $id))
+            ->when($busqueda, fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
+            ->when($filtros['desde'] ?? null, fn ($q, $fecha) => $q->where('fecha_hora', '>=', $fecha.' 00:00:00'))
+            ->when($filtros['hasta'] ?? null, fn ($q, $fecha) => $q->where('fecha_hora', '<=', $fecha.' 23:59:59'))
+            ->when(($filtros['estado'] ?? '') === 'abierta', fn ($q) => $q->whereNull('fecha_salida'))
+            ->when(($filtros['estado'] ?? '') === 'cerrada', fn ($q) => $q->whereNotNull('fecha_salida'))
+            ->latest('fecha_hora')->paginate(20, ['*'], 'historial_page')->withQueryString();
 
-        $hoy = Asistencia::whereDate('fecha_hora', now()->toDateString())->count();
+        $dentroAhora = Asistencia::with('cliente:id,nombre,correo')->whereNull('fecha_salida')->oldest('fecha_hora')->limit(100)->get();
+        $hoy = Asistencia::whereBetween('fecha_hora', [today(), today()->endOfDay()])->count();
         $dentro = Asistencia::whereNull('fecha_salida')->count();
 
-        return view('asistencia.index', [
-            'guard' => $guard,
-            'nombre' => $this->nombreActual($guard, $user),
-            'rolEtiqueta' => $guard === 'web' ? $user->rol : 'Miembro',
-            'avatarUrl' => $user->avatar_url,
-            'clientes' => $clientes,
-            'busqueda' => $busqueda,
-            'asistencias' => $asistencias,
-            'hoy' => $hoy,
-            'dentro' => $dentro,
-        ]);
+        return view('asistencia.index', compact('clientes', 'busqueda', 'asistencias', 'hoy', 'dentro', 'dentroAhora', 'filtros'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        $data = $request->validate([
-            'cliente_id' => ['required', 'exists:clientes,id'],
-        ]);
-
-        $abierta = Asistencia::where('cliente_id', $data['cliente_id'])
-            ->whereNull('fecha_salida')
-            ->latest('fecha_hora')
-            ->first();
-
-        if ($abierta) {
-            return back()->withErrors(['cliente_id' => 'Este cliente ya tiene una entrada abierta. Registra la salida antes de abrir otra.']);
-        }
-
-        Asistencia::create([
-            'cliente_id' => $data['cliente_id'],
-            'registrado_por' => Auth::guard('web')->id(),
-            'fecha_hora' => now(),
-            'tipo_acceso' => 'entrada',
-        ]);
-
+        abort_unless(auth('web')->user()?->rol === 'Secretaria', 403);
+        $data = $request->validate(['cliente_id' => ['required', 'exists:clientes,id']]);
+        app(\App\Services\RegistroAsistencia::class)->registrar((int) $data['cliente_id'], auth('web')->id(), false);
         return back()->with('status', 'Entrada registrada.');
     }
 
-    public function salida(Request $request): RedirectResponse
+    public function salida(Request $request)
     {
-        $data = $request->validate([
-            'cliente_id' => ['required', 'exists:clientes,id'],
-        ]);
-
-        $asistencia = Asistencia::where('cliente_id', $data['cliente_id'])
-            ->whereNull('fecha_salida')
-            ->latest('fecha_hora')
-            ->first();
-
-        if (! $asistencia) {
-            return back()->withErrors(['cliente_id' => 'Este cliente no tiene una entrada abierta.']);
-        }
-
-        $asistencia->update(['fecha_salida' => now()]);
-
+        abort_unless(auth('web')->user()?->rol === 'Secretaria', 403);
+        $data = $request->validate(['cliente_id' => ['required', 'exists:clientes,id']]);
+        app(\App\Services\RegistroAsistencia::class)->registrar((int) $data['cliente_id'], auth('web')->id(), true);
         return back()->with('status', 'Salida registrada.');
     }
 }

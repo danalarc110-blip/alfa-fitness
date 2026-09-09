@@ -10,19 +10,7 @@ use Illuminate\View\View;
 
 class RankingController extends Controller
 {
-    private function actual(): array
-    {
-        if (Auth::guard('web')->check()) {
-            return ['guard' => 'web', 'user' => Auth::guard('web')->user()];
-        }
 
-        return ['guard' => 'cliente', 'user' => Auth::guard('cliente')->user()];
-    }
-
-    private function nombreActual(string $guard, $user): string
-    {
-        return $guard === 'web' ? $user->name : $user->nombre;
-    }
 
     public function index(Request $request): View
     {
@@ -31,16 +19,15 @@ class RankingController extends Controller
         $ejercicioId = $request->integer('ejercicio_id') ?: null;
         $ejercicios = Ejercicio::where('activo', true)->orderBy('nombre')->get();
 
-        $records = PersonalRecord::with(['cliente', 'ejercicio'])
-            ->when($ejercicioId, fn ($query) => $query->where('ejercicio_id', $ejercicioId))
-            ->get();
-
-        $ranking = $records
-            ->groupBy(fn (PersonalRecord $record) => $record->cliente_id.'-'.$record->ejercicio_id)
-            ->map(fn ($grupo) => $grupo->sortByDesc(fn (PersonalRecord $record) => $record->volumen)->first())
-            ->sortByDesc(fn (PersonalRecord $record) => $record->volumen)
-            ->values()
-            ->take(25);
+        $ranking = PersonalRecord::with(['cliente', 'ejercicio'])
+            ->whereHas('cliente', fn ($q) => $q->where('activo', true))
+            ->when($ejercicioId, fn ($q) => $q->where('ejercicio_id', $ejercicioId))
+            ->whereNotExists(function ($sub) {
+                $sub->selectRaw('1')->from('personal_records as mejor')
+                    ->whereColumn('mejor.cliente_id', 'personal_records.cliente_id')
+                    ->whereColumn('mejor.ejercicio_id', 'personal_records.ejercicio_id')
+                    ->whereRaw('(mejor.peso_kg * mejor.repeticiones > personal_records.peso_kg * personal_records.repeticiones OR (mejor.peso_kg * mejor.repeticiones = personal_records.peso_kg * personal_records.repeticiones AND mejor.id > personal_records.id))');
+            })->orderByRaw('peso_kg * repeticiones DESC')->orderByDesc('id')->limit(25)->get();
 
         $misPosiciones = $guard === 'cliente'
             ? $ranking->filter(fn (PersonalRecord $record) => $record->cliente_id === $user->id)->values()

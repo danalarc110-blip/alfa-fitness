@@ -1,0 +1,2 @@
+@if(session('status'))<div role="status" class="mb-5 rounded-xl border border-green-500/30 bg-green-500/10 p-4 text-sm">{{ session('status') }}</div>@endif
+@if($errors->any())<div role="alert" tabindex="-1" data-validation-errors class="mb-5 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm"><p class="font-semibold mb-2">Revisa los siguientes datos:</p><ul class="list-disc pl-5">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif

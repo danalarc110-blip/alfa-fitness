@@ -225,11 +225,12 @@
                                 </svg>
                                 <input
                                     type="email"
-                                    name="email"
+                                    name="email" aria-label="Correo del personal"
                                     value="{{ old('email') }}"
                                     placeholder="Correo de empleado o usuario"
                                     required
                                     autofocus
+                                    autocomplete="username"
                                     class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none"
                                 >
                             </div>
@@ -244,9 +245,10 @@
                                 <input
                                     id="password"
                                     type="password"
-                                    name="password"
+                                    name="password" aria-label="Contraseña"
                                     placeholder="Contraseña"
                                     required
+                                    autocomplete="current-password"
                                     class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none pr-2"
                                 >
                                 <button type="button" id="togglePassword" class="text-gray-500 hover:text-yellow-400 transition-colors p-1" title="Ver/ocultar contraseña">
@@ -275,6 +277,7 @@
                         @csrf
 
                         {{-- Botón Google --}}
+@if(config('services.google.client_id') && config('services.google.client_secret'))
                         <a href="{{ route('cliente.google') }}" class="w-full flex items-center justify-center gap-3 bg-white/[0.05] hover:bg-white/[0.09] border border-white/10 hover:border-white/20 rounded-2xl py-3 px-4 text-sm font-semibold text-white transition-all duration-200 active:scale-95 shadow-sm group">
                             <svg class="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.63h6.47a5.53 5.53 0 01-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.92l-3.88-3c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.11A12 12 0 0012 24z"/><path fill="#FBBC05" d="M5.27 14.27a7.2 7.2 0 010-4.54v-3.1H1.27a12 12 0 000 10.75l4-3.11z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 001.27 6.63l4 3.1C6.22 6.86 8.87 4.75 12 4.75z"/></svg>
                             <span>Continuar con Google</span>
@@ -285,6 +288,7 @@
                             <span class="text-[11px] uppercase tracking-wider text-gray-500 font-medium">o con correo</span>
                             <div class="flex-1 h-px bg-white/10"></div>
                         </div>
+@endif
 
                         {{-- Correo Cliente --}}
                         <div>
@@ -294,9 +298,11 @@
                                 </svg>
                                 <input
                                     type="email"
-                                    name="correo"
+                                    name="correo" aria-label="Correo del cliente"
                                     value="{{ old('correo') }}"
                                     placeholder="tu@correo.com"
+                                    autocomplete="username"
+                                    required
                                     class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none"
                                 >
                             </div>
@@ -311,8 +317,10 @@
                                 <input
                                     id="passwordCliente"
                                     type="password"
-                                    name="password"
+                                    name="password" aria-label="Contraseña"
                                     placeholder="Tu contraseña"
+                                    autocomplete="current-password"
+                                    required
                                     class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none pr-2"
                                 >
                                 <button type="button" id="toggleServiceCliente" class="text-gray-500 hover:text-yellow-400 transition-colors p-1" title="Ver/ocultar contraseña">
@@ -353,7 +361,7 @@
                             <svg class="input-icon w-5 h-5 text-gray-500 shrink-0 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                             </svg>
-                            <input type="text" name="nombre" value="{{ old('nombre') }}" placeholder="Nombre completo" required
+                            <input type="text" name="nombre" aria-label="Nombre" value="{{ old('nombre') }}" placeholder="Nombre completo" required
                                 class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none">
                         </div>
 
@@ -362,7 +370,7 @@
                             <svg class="input-icon w-5 h-5 text-gray-500 shrink-0 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
                             </svg>
-                            <input type="email" name="correo" value="{{ old('correo') }}" placeholder="Correo electrónico" required
+                            <input type="email" name="correo" aria-label="Correo del cliente" value="{{ old('correo') }}" placeholder="Correo electrónico" required
                                 class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none">
                         </div>
 
@@ -371,7 +379,7 @@
                             <svg class="input-icon w-5 h-5 text-gray-500 shrink-0 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                             </svg>
-                            <input id="passwordRegistro" type="password" name="password" placeholder="Contraseña (mín. 8 caracteres)" required minlength="8"
+                            <input id="passwordRegistro" type="password" name="password" aria-label="Contraseña" placeholder="12+ caracteres, mayúscula, número y símbolo" required minlength="12" autocomplete="new-password"
                                 class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none pr-2">
                             <button type="button" id="toggleRegistroPassword" class="text-gray-500 hover:text-yellow-400 transition-colors p-1">
                                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -383,7 +391,7 @@
                             <svg class="input-icon w-5 h-5 text-gray-500 shrink-0 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                             </svg>
-                            <input id="passwordRegistroConfirm" type="password" name="password_confirmation" placeholder="Confirmar contraseña" required minlength="8"
+                            <input id="passwordRegistroConfirm" type="password" name="password_confirmation" aria-label="Confirmar contraseña" placeholder="Confirmar contraseña" required minlength="12" autocomplete="new-password"
                                 class="w-full bg-transparent text-sm text-white placeholder-gray-500 outline-none pr-2">
                             <button type="button" id="toggleRegistroPasswordConfirm" class="text-gray-500 hover:text-yellow-400 transition-colors p-1">
                                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>

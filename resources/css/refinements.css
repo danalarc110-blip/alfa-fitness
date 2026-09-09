@@ -1,0 +1,25 @@
+/* Shared surfaces keep the interface readable without expensive blur layers. */
+.alpha-hero { background: radial-gradient(ellipse at top right, #75601933, transparent 65%), #151515; border: 1px solid #facc152e; }
+.alpha-card.alpha-card { backdrop-filter: none; -webkit-backdrop-filter: none; transition: border-color .18s, box-shadow .18s; }
+.alpha-list-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #ffffff0d; }
+.alpha-list-row:last-child { border-bottom: 0; }
+.alpha-form label { display: block; font-size: .8rem; color: #a1a1aa; }
+.alpha-form input, .alpha-form select { display: block; width: 100%; margin-top: .5rem; padding: .75rem; border: 1px solid #ffffff26; border-radius: .75rem; background: #18181b; color: #fafafa; font-size: .875rem; color-scheme: dark; }
+.alpha-form > input { margin-top: 0; }
+.alpha-form input[type="hidden"] { display: none; }
+.alpha-feedback { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100; max-width: min(440px, calc(100vw - 3rem)); padding: 1rem 1.25rem; border-radius: .75rem; background: #202522; border: 1px solid #6ca781; color: #fafafa; font-size: .875rem; box-shadow: 0 8px 24px #0003; }
+.alpha-feedback[data-type="error"] { background: #302020; border-color: #e39696; }
+button:disabled { opacity: .55; cursor: wait; }
+html { color-scheme: dark; }
+html.light { color-scheme: light; }
+body .alpha-card:hover { box-shadow: 0 4px 14px #0002; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid #d4ae32 !important; outline-offset: 2px; }
+.alpha-skip { position: fixed; top: -100px; left: 1rem; z-index: 100; padding: 1rem; background: #facc15; color: #111; border-radius: .5rem; }
+.alpha-skip:focus { top: 1rem; }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid #facc15; outline-offset: 4px; }
+html.light .alpha-hero { background: linear-gradient(120deg, #fff, #f4f1e5); border-color: #d9d3bc; }
+html.light .alpha-list-row { border-color: #e2e8f0; }
+html.light .alpha-form input, html.light .alpha-form select { color-scheme: light; }
+html.light .nav-item-active, html.light .nav-item-active svg, html.light .nav-item-active span { color: #fff !important; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+@media (max-width: 767px) { .alpha-card:hover { box-shadow: none; } }

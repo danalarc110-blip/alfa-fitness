@@ -44,12 +44,13 @@ class LoginController extends Controller
             'password.required' => 'La contraseña es obligatoria.',
         ]);
 
-        if (! Auth::attempt(array_merge($credentials, ['activo' => true]), true)) {
+        if (! Auth::guard('web')->attempt(array_merge($credentials, ['activo' => true, 'password_establecida' => true]), $request->boolean('remember'))) {
             throw ValidationException::withMessages([
                 'email' => 'Las credenciales no coinciden con nuestros registros o la cuenta está inactiva.',
             ]);
         }
 
+        Auth::guard('cliente')->logout();
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard'));
@@ -71,6 +72,7 @@ class LoginController extends Controller
     public function logout(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
+        Auth::guard('cliente')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

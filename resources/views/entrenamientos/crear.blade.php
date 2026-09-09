@@ -23,16 +23,18 @@
 
     <div class="flex-1 flex flex-col min-w-0 px-4 sm:px-6 md:px-10 py-5 sm:py-8">
 
-        {{-- CABECERA --}}
+        <div class="flex items-center justify-between gap-4 mb-5"><a href="{{ route('entrenamientos.index') }}" class="text-sm text-gray-400">← Mis rutinas</a><form method="POST" action="{{ route('entrenamientos.eliminar', $rutina) }}" data-confirm="Eliminar la rutina {{ $rutina->nombre }} y todos sus días y ejercicios. Esta acción no se puede deshacer.">@csrf @method('DELETE')<button class="text-sm text-red-400">Eliminar rutina</button></form></div>
+        <h1 class="sr-only">Editar rutina</h1>
+
         <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 pb-6 border-b border-white/5" data-animate="header">
             <div class="min-w-0 flex-1">
-                <input id="campo-nombre" value="{{ $rutina->nombre }}"
+                <input id="campo-nombre" aria-label="Nombre de la rutina" maxlength="100" value="{{ $rutina->nombre }}"
                     class="bg-transparent text-xl sm:text-2xl font-bold text-white outline-none border-b-2 border-transparent focus:border-yellow-400 w-full max-w-md truncate transition-colors duration-200">
                 <div class="flex flex-wrap items-center gap-2 sm:gap-2.5 mt-3 text-xs text-gray-400">
-                    <input id="campo-objetivo" value="{{ $rutina->objetivo }}"
+                    <input id="campo-objetivo" aria-label="Objetivo" maxlength="60" value="{{ $rutina->objetivo }}"
                         placeholder="Objetivo"
                         class="bg-[#141414] border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-yellow-400/50 w-full sm:w-44 transition-colors">
-                    <select id="campo-nivel" class="bg-[#141414] border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-yellow-400/50 transition-colors">
+                    <select id="campo-nivel" aria-label="Nivel" class="bg-[#141414] border border-white/10 rounded-xl px-3 py-2 outline-none focus:border-yellow-400/50 transition-colors">
                         @foreach (['Principiante', 'Intermedio', 'Avanzado'] as $n)
                             <option value="{{ $n }}" @selected($rutina->nivel === $n)>{{ $n }}</option>
                         @endforeach
@@ -79,9 +81,9 @@
                         <h3 class="font-bold text-sm text-white">Catálogo de Ejercicios</h3>
                         <span class="text-[11px] text-gray-500 font-medium">Buscador</span>
                     </div>
-                    <input id="catalogo-buscar" type="text" placeholder="Buscar por nombre o músculo..."
+                    <input id="catalogo-buscar" aria-label="Buscar ejercicio" type="text" placeholder="Buscar por nombre o músculo..."
                         class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-yellow-400/60 mb-2.5 transition-colors">
-                    <select id="catalogo-grupo"
+                    <select id="catalogo-grupo" aria-label="Grupo muscular"
                         class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-gray-300 outline-none focus:border-yellow-400/60 mb-3 transition-colors">
                         <option value="Todos">Todos los grupos musculares</option>
                         @foreach ($gruposMusculares as $g)
@@ -112,22 +114,40 @@
         eliminarEjercicio:  (id)    => `/entrenamientos/ejercicios/${id}`,
     };
 
-    let DIAS = @json($diasJson);
+    let DIAS = {{ \Illuminate\Support\Js::from($diasJson) }};
 
     let diaActivoId = DIAS.length ? DIAS[0].id : null;
 
     /* ---- helpers ---- */
-    function api(url, method, body) {
-        return fetch(url, {
-            method,
-            headers: { 'X-CSRF-TOKEN': CSRF, 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            body: body ? JSON.stringify(body) : undefined,
-        }).then(r => { if (!r.ok) throw r; return r.json(); });
+    let pending = 0;
+    let unsaved = false;
+    function mostrarError(error) {
+        const message = error.message || 'No se pudo guardar. Revisa tu conexión e intenta nuevamente.';
+        const state = document.getElementById('estado-guardado');
+        if (state) { state.textContent = message; state.classList.remove('opacity-0'); state.setAttribute('role', 'alert'); }
+        window.showAlphaToast?.(message, 'error');
     }
+    async function api(url, method, body) {
+        const write = method !== 'GET';
+        if (write) pending++;
+        try {
+            const response = await fetch(url, {
+                method,
+                headers: { 'X-CSRF-TOKEN': CSRF, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: body ? JSON.stringify(body) : undefined,
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(response.status === 419 || response.status === 401 ? 'Tu sesión expiró. Vuelve a iniciar sesión.' : (Object.values(data.errors || {}).flat()[0] || data.message || 'No se pudo completar la operación.'));
+            return data;
+        } finally { if (write) pending--; }
+    }
+    window.addEventListener('beforeunload', event => { if (pending || unsaved) { event.preventDefault(); event.returnValue = ''; } });
 
     function marcarGuardado() {
         const el = document.getElementById('estado-guardado');
         if (el) {
+            el.textContent = 'Guardado';
+            el.setAttribute('role', 'status');
             el.classList.remove('opacity-0');
             el.classList.add('opacity-100');
             clearTimeout(marcarGuardado._t);
@@ -149,7 +169,7 @@
               <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
               <polyline points="21 15 16 10 5 21"/>
             </svg></div>`;
-        return `<img src="${h(url)}" class="${cls} object-cover rounded-xl shrink-0 border border-white/10 hover:border-yellow-400/50 transition-colors shadow-sm" loading="lazy">`;
+        return `<img alt="" src="${h(url)}" class="${cls} object-cover rounded-xl shrink-0 border border-white/10 hover:border-yellow-400/50 transition-colors shadow-sm" loading="lazy">`;
     }
 
     /* ---- render ---- */
@@ -182,6 +202,7 @@
         });
         document.getElementById('btn-add-dia').addEventListener('click', crearDia);
 
+        paneles.querySelectorAll('[data-rename-dia]').forEach(b => b.addEventListener('click', () => renombrarPrompt(+b.dataset.renameDia)));
         /* eventos paneles */
         paneles.querySelectorAll('[data-del-dia]').forEach(b =>
             b.addEventListener('click', () => eliminarDia(+b.dataset.delDia)));
@@ -202,6 +223,7 @@
                     <h2 class="font-bold text-base text-white">${h(d.titulo)}</h2>
                     <span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-yellow-400/10 text-yellow-400 border border-yellow-400/20">${d.ejercicios.length} ejercicio${d.ejercicios.length !== 1 ? 's' : ''}</span>
                 </div>
+                <button data-rename-dia="${d.id}" class="text-xs text-gray-400">Renombrar día</button>
                 <button data-del-dia="${d.id}" class="text-xs font-semibold text-gray-500 hover:text-red-400 transition-colors px-2.5 py-1 rounded-lg hover:bg-red-500/10">Eliminar día</button>
             </div>
             ${d.ejercicios.length
@@ -241,22 +263,22 @@
             </td>
             <td class="py-3 px-2">
                 <input type="number" min="1" max="20" value="${re.series}"
-                    data-id="${re.id}" data-campo="series"
+                    data-id="${re.id}" data-campo="series" aria-label="Series"
                     class="campo-ej w-full bg-black/60 border border-white/10 rounded-xl px-2 py-1.5 text-center text-white outline-none focus:border-yellow-400/60 font-semibold text-sm transition-colors">
             </td>
             <td class="py-3 px-2">
-                <input type="number" min="1" max="100" value="${parseInt(re.repeticiones, 10) || 10}"
+                <input type="text" maxlength="20" value="${h(re.repeticiones)}" aria-label="Repeticiones"
                     data-id="${re.id}" data-campo="repeticiones"
                     class="campo-ej w-full bg-black/60 border border-white/10 rounded-xl px-2 py-1.5 text-center text-white outline-none focus:border-yellow-400/60 font-semibold text-sm transition-colors">
             </td>
             <td class="py-3 px-2">
                 <input type="number" min="0" step="0.5" value="${re.peso ?? ''}" placeholder="—"
-                    data-id="${re.id}" data-campo="peso"
+                    data-id="${re.id}" data-campo="peso" aria-label="Peso en kilogramos"
                     class="campo-ej w-full bg-black/60 border border-white/10 rounded-xl px-2 py-1.5 text-center text-white outline-none focus:border-yellow-400/60 font-semibold text-sm transition-colors">
             </td>
             <td class="py-3 px-2">
                 <input type="number" min="0" step="5" value="${re.descanso_segundos}"
-                    data-id="${re.id}" data-campo="descanso_segundos"
+                    data-id="${re.id}" data-campo="descanso_segundos" aria-label="Descanso en segundos"
                     class="campo-ej w-full bg-black/60 border border-white/10 rounded-xl px-2 py-1.5 text-center text-white outline-none focus:border-yellow-400/60 font-semibold text-sm transition-colors">
             </td>
             <td class="py-3 pl-2 text-right">
@@ -280,7 +302,7 @@
             DIAS.push({ id: dia.id, titulo: dia.titulo, ejercicios: [] });
             diaActivoId = dia.id;
             render();
-        });
+        }).catch(mostrarError);
     }
 
     function renombrarPrompt(id) {
@@ -290,7 +312,7 @@
         api(URLS.renombrarDia(id), 'PUT', { titulo: nuevo.trim() }).then(({dia: d}) => {
             dia.titulo = d.titulo;
             render();
-        });
+        }).catch(mostrarError);
     }
 
     function eliminarDia(id) {
@@ -299,19 +321,20 @@
             DIAS = DIAS.filter(d => d.id !== id);
             if (diaActivoId === id) diaActivoId = DIAS[0]?.id ?? null;
             render();
-        });
+        }).catch(mostrarError);
     }
 
     /* ---- acciones EJERCICIOS ---- */
     function agregarEjercicio(ejId) {
         if (!diaActivoId) { alert('Crea un día primero.'); return; }
-        api(URLS.crearEjercicio(diaActivoId), 'POST', { ejercicio_id: ejId })
+        const selectedDay = diaActivoId;
+        api(URLS.crearEjercicio(selectedDay), 'POST', { ejercicio_id: ejId })
             .then(({ rutina_ejercicio: re }) => {
                 re.ejercicio.tiene_imagen          = re.ejercicio.tiene_imagen         ?? false;
                 re.ejercicio.tiene_imagen_musculos = re.ejercicio.tiene_imagen_musculos ?? false;
-                DIAS.find(d => d.id === diaActivoId).ejercicios.push(re);
+                DIAS.find(d => d.id === selectedDay)?.ejercicios.push(re);
                 render();
-            });
+            }).catch(mostrarError);
     }
 
     function guardarCampo(input) {
@@ -320,36 +343,39 @@
         let valor   = input.value;
         if (campo === 'peso' && valor === '') valor = null;
 
-        // Mantener sincronizado el estado local en memoria para cuando se cambie de pestaña
-        for (const d of DIAS) {
-            const ej = d.ejercicios.find(re => re.id === id);
-            if (ej) {
-                ej[campo] = valor;
-                break;
-            }
-        }
-
-        api(URLS.actualizarEjercicio(id), 'PUT', { [campo]: valor }).then(marcarGuardado);
+        input.disabled = true;
+        api(URLS.actualizarEjercicio(id), 'PUT', { [campo]: valor }).then(() => {
+            for (const d of DIAS) { const ej = d.ejercicios.find(re => re.id === id); if (ej) ej[campo] = valor; }
+            marcarGuardado();
+        }).catch(error => {
+            for (const d of DIAS) { const ej = d.ejercicios.find(re => re.id === id); if (ej) input.value = ej[campo] ?? ''; }
+            mostrarError(error);
+        }).finally(() => { input.disabled = false; });
     }
 
     function eliminarEjercicio(id) {
+        if (!confirm('Eliminar este ejercicio del día. El ejercicio seguirá disponible en el catálogo.')) return;
         api(URLS.eliminarEjercicio(id), 'DELETE').then(() => {
             DIAS.forEach(d => d.ejercicios = d.ejercicios.filter(re => re.id !== id));
             render();
-        });
+        }).catch(mostrarError);
     }
 
     /* ---- autosave cabecera ---- */
     let saveTmt;
+    let saveVersion = 0;
+    let saveQueue = Promise.resolve();
     function guardarRutina() {
+        unsaved = true;
+        const version = ++saveVersion;
         clearTimeout(saveTmt);
         saveTmt = setTimeout(() => {
-            api(URLS.rutina, 'PUT', {
+            saveQueue = saveQueue.then(() => api(URLS.rutina, 'PUT', {
                 nombre:         document.getElementById('campo-nombre').value,
                 objetivo:       document.getElementById('campo-objetivo').value,
                 nivel:          document.getElementById('campo-nivel').value,
                 dias_por_semana:document.getElementById('campo-dias').value,
-            }).then(marcarGuardado);
+            })).then(() => { if (version === saveVersion) { unsaved = false; marcarGuardado(); } }).catch(mostrarError);
         }, 600);
     }
     ['campo-nombre','campo-objetivo','campo-dias'].forEach(id =>
@@ -372,7 +398,7 @@
                     <p class="text-sm truncate font-semibold text-white">${h(ej.nombre)}</p>
                     <p class="text-[11px] text-gray-500">${h(ej.grupo_muscular)}${ej.subgrupo ? ' · ' + h(ej.subgrupo) : ''}</p>
                 </div>
-                <button data-add="${ej.id}"
+                <button data-add="${ej.id}" aria-label="Agregar ${h(ej.nombre)}"
                     class="shrink-0 w-7 h-7 rounded-lg bg-yellow-400 text-black font-bold text-lg leading-none hover:bg-yellow-300 transition-colors flex items-center justify-center">+</button>
             </div>`).join('');
 
@@ -381,13 +407,15 @@
     }
 
     let searchTmt;
+    let searchVersion = 0;
     function buscar() {
+        const version = ++searchVersion;
         clearTimeout(searchTmt);
         searchTmt = setTimeout(() => {
             const q     = document.getElementById('catalogo-buscar').value;
             const grupo = document.getElementById('catalogo-grupo').value;
             api(`${URLS.catalogo}?q=${encodeURIComponent(q)}&grupo=${encodeURIComponent(grupo)}`, 'GET')
-                .then(({ ejercicios }) => renderCatalogo(ejercicios));
+                .then(({ ejercicios }) => { if (version === searchVersion) renderCatalogo(ejercicios); }).catch(mostrarError);
         }, 250);
     }
     document.getElementById('catalogo-buscar').addEventListener('input', buscar);

@@ -3,8 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Cliente;
-use App\Models\Ejercicio;
-use App\Models\PersonalRecord;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -12,33 +11,10 @@ class RankingsTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_cliente_can_view_rankings_from_personal_records(): void
+    public function test_legacy_rankings_no_longer_exposes_other_clients_records(): void
     {
-        $cliente = Cliente::create([
-            'nombre' => 'Cliente Demo',
-            'correo' => 'cliente@example.com',
-            'password' => 'password',
-            'activo' => true,
-        ]);
-
-        $ejercicio = Ejercicio::create([
-            'nombre' => 'Peso muerto',
-            'grupo_muscular' => 'Espalda',
-            'activo' => true,
-        ]);
-
-        PersonalRecord::create([
-            'cliente_id' => $cliente->id,
-            'ejercicio_id' => $ejercicio->id,
-            'peso_kg' => 120,
-            'repeticiones' => 2,
-        ]);
-
-        $this->actingAs($cliente, 'cliente')
-            ->get(route('rankings.index'))
-            ->assertOk()
-            ->assertSee('Rankings')
-            ->assertSee('Peso muerto')
-            ->assertSee('Provisional');
+        $cliente = Cliente::create(['nombre' => 'Cliente', 'correo' => 'cliente@example.com', 'password' => 'Password!123', 'activo' => true]);
+        $this->actingAs($cliente, 'cliente')->get(route('rankings.index'))->assertRedirect(route('progreso.index'));
+        foreach (['Administrador', 'Secretaria', 'Entrenador'] as $rol) $this->actingAs(User::factory()->create(['rol' => $rol]))->get(route('rankings.index'))->assertForbidden();
     }
 }

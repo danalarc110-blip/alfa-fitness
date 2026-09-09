@@ -18,19 +18,7 @@ class RutinaController extends Controller
      * Devuelve ['guard' => 'web'|'cliente', 'user' => modelo autenticado].
      * Mismo patrón que ConfiguracionController.
      */
-    private function actual(): array
-    {
-        if (Auth::guard('web')->check()) {
-            return ['guard' => 'web', 'user' => Auth::guard('web')->user()];
-        }
 
-        return ['guard' => 'cliente', 'user' => Auth::guard('cliente')->user()];
-    }
-
-    private function nombreActual($guard, $user): string
-    {
-        return $guard === 'web' ? $user->name : $user->nombre;
-    }
 
     /**
      * Listado de rutinas del usuario actual.
@@ -315,14 +303,19 @@ class RutinaController extends Controller
 
         $data = $request->validate([
             'orden' => ['required', 'array'],
-            'orden.*' => ['integer', 'exists:rutina_ejercicios,id'],
+            'orden.*' => ['integer', 'distinct', Rule::exists('rutina_ejercicios', 'id')->where('rutina_dia_id', $dia->id)],
         ]);
 
+        if (count($data['orden']) !== $dia->ejercicios()->count()) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['orden' => 'Incluye todos los ejercicios del día para guardar el orden.']);
+        }
+        \Illuminate\Support\Facades\DB::transaction(function () use ($data, $dia) {
         foreach ($data['orden'] as $i => $id) {
             RutinaEjercicio::where('id', $id)
                 ->where('rutina_dia_id', $dia->id)
                 ->update(['orden' => $i + 1]);
         }
+        });
 
         return response()->json(['ok' => true]);
     }

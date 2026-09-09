@@ -8,6 +8,7 @@ import gsap from 'gsap';
    1. INICIALIZACIÓN GLOBAL
    ========================================================= */
 export function initAnimations() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     initSmoothPageEntrance();
     initCardHoverEffects();
     initButtonEffects();
@@ -200,57 +201,5 @@ export function initCounterAnimations() {
 /* =========================================================
    8. TOAST NOTIFICACIONES
    ========================================================= */
-export function showAlphaToast(message, type = 'success') {
-    let container = document.getElementById('alpha-toast-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'alpha-toast-container';
-        container.className = 'fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none';
-        document.body.appendChild(container);
-    }
-
-    const toast = document.createElement('div');
-    const isSuccess = type === 'success';
-    toast.className = `pointer-events-auto flex items-center gap-3 px-5 py-3.5 rounded-2xl border text-sm font-semibold shadow-2xl backdrop-blur-xl transition-all ${
-        isSuccess 
-            ? 'bg-[#141414]/95 border-yellow-400/40 text-yellow-400 shadow-yellow-400/10' 
-            : 'bg-[#141414]/95 border-red-500/40 text-red-400 shadow-red-500/10'
-    }`;
-
-    toast.innerHTML = `
-        <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            ${isSuccess 
-                ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' 
-                : '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'}
-        </svg>
-        <span>${message}</span>
-    `;
-
-    container.appendChild(toast);
-
-    gsap.fromTo(toast, {
-        opacity: 0,
-        x: 40,
-        scale: 0.95
-    }, {
-        opacity: 1,
-        x: 0,
-        scale: 1,
-        duration: 0.25,
-        ease: 'power2.out',
-        onComplete: () => {
-            gsap.to(toast, {
-                opacity: 0,
-                x: 20,
-                scale: 0.95,
-                delay: 2.2,
-                duration: 0.25,
-                ease: 'power2.in',
-                onComplete: () => toast.remove()
-            });
-        }
-    });
-}
-
-window.showAlphaToast = showAlphaToast;
+// Feedback is initialized separately so it also works with reduced motion.
 window.initAnimations = initAnimations;

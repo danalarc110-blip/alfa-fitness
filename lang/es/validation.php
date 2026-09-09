@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'required' => 'El campo :attribute es obligatorio.',
+    'string' => 'El campo :attribute debe ser texto.',
+    'email' => 'Ingresa un correo electrónico válido.',
+    'unique' => 'El valor de :attribute ya está registrado.',
+    'exists' => 'El registro seleccionado en :attribute no está disponible.',
+    'confirmed' => 'La confirmación de :attribute no coincide.',
+    'numeric' => 'El campo :attribute debe ser un número.',
+    'integer' => 'El campo :attribute debe ser un número entero.',
+    'boolean' => 'Selecciona un estado válido para :attribute.',
+    'date' => 'Ingresa una fecha válida en :attribute.',
+    'date_format' => 'El campo :attribute debe usar el formato :format.',
+    'after_or_equal' => 'El campo :attribute no puede ser anterior a :date.',
+    'in' => 'La opción seleccionada en :attribute no es válida.',
+    'prohibited' => 'No está permitido modificar :attribute.',
+    'regex' => 'El formato de :attribute no es válido.',
+    'array' => 'El campo :attribute debe ser una lista.',
+    'distinct' => 'El campo :attribute contiene un valor duplicado.',
+    'image' => 'El archivo debe ser una imagen válida.',
+    'mimes' => 'Los formatos permitidos para :attribute son: :values.',
+    'min' => ['string' => ':attribute debe tener al menos :min caracteres.', 'numeric' => ':attribute debe ser como mínimo :min.', 'array' => ':attribute debe contener al menos :min elementos.'],
+    'max' => ['string' => ':attribute no puede superar :max caracteres.', 'numeric' => ':attribute no puede superar :max.', 'file' => ':attribute no puede superar :max KB.', 'array' => ':attribute no puede superar :max elementos.'],
+    'attributes' => ['name' => 'nombre', 'nombre' => 'nombre', 'email' => 'correo', 'correo' => 'correo', 'password' => 'contraseña', 'password_actual' => 'contraseña actual', 'cliente_id' => 'cliente', 'ejercicio_id' => 'ejercicio', 'inicio' => 'fecha de inicio', 'fin' => 'fecha de fin', 'importe' => 'importe', 'peso_kg' => 'peso', 'repeticiones' => 'repeticiones', 'activo' => 'estado', 'rol' => 'rol', 'q' => 'búsqueda'],
+];

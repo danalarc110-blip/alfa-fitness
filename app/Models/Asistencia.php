@@ -10,6 +10,7 @@ class Asistencia extends Model
     protected $fillable = [
         'cliente_id',
         'registrado_por',
+        'salida_registrada_por',
         'fecha_hora',
         'fecha_salida',
         'tipo_acceso',
@@ -31,5 +32,17 @@ class Asistencia extends Model
     public function registrador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'registrado_por');
+    }
+
+    public function registradorSalida(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'salida_registrada_por');
+    }
+
+    public function getDuracionAttribute(): ?string
+    {
+        if (! $this->fecha_salida) return null;
+        $minutos = $this->fecha_hora->diffInMinutes($this->fecha_salida);
+        return intdiv($minutos, 60).'h '.($minutos % 60).'m';
     }
 }

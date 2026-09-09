@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rules\Password;
 use Laravel\Socialite\Facades\Socialite;
 
 class ClienteLoginController extends Controller
@@ -23,7 +24,7 @@ class ClienteLoginController extends Controller
         $data = $request->validate([
             'nombre' => ['required', 'string', 'max:255'],
             'correo' => ['required', 'string', 'email', 'max:255', 'unique:clientes,correo'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'confirmed', Password::min(12)->mixedCase()->numbers()->symbols()],
         ], [
             'nombre.required' => 'El nombre es obligatorio.',
             'correo.required' => 'El correo electrónico es obligatorio.',
@@ -41,8 +42,9 @@ class ClienteLoginController extends Controller
             'activo' => true,
         ]);
 
-        Auth::guard('cliente')->login($cliente, true);
+        Auth::guard('cliente')->login($cliente, false);
 
+        Auth::guard('web')->logout();
         $request->session()->regenerate();
 
         return redirect()->intended(route('cliente.dashboard'));
@@ -64,12 +66,13 @@ class ClienteLoginController extends Controller
             'password.required' => 'La contraseña es obligatoria.',
         ]);
 
-        if (! Auth::guard('cliente')->attempt(array_merge($credentials, ['activo' => true]), true)) {
+        if (! Auth::guard('cliente')->attempt(array_merge($credentials, ['activo' => true]), $request->boolean('remember'))) {
             throw ValidationException::withMessages([
                 'correo' => 'Las credenciales no coinciden con nuestros registros o la cuenta está inactiva.',
             ]);
         }
 
+        Auth::guard('web')->logout();
         $request->session()->regenerate();
 
         return redirect()->intended(route('cliente.dashboard'));
@@ -91,19 +94,10 @@ class ClienteLoginController extends Controller
      */
     public function logout(Request $request): RedirectResponse
     {
-        $cliente = Auth::guard('cliente')->user();
-        $eraGoogle = $cliente && ! empty($cliente->google_id);
-
         Auth::guard('cliente')->logout();
-
+        Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
-        if ($eraGoogle) {
-            $continuar = urlencode(route('login'));
-
-            return redirect()->away("https://accounts.google.com/Logout?continue=https://appengine.google.com/_ah/logout?continue={$continuar}");
-        }
 
         return redirect()->route('login');
     }
@@ -113,6 +107,7 @@ class ClienteLoginController extends Controller
      */
     public function redirectToGoogle(): RedirectResponse
     {
+        if (!config('services.google.client_id') || !config('services.google.client_secret')) return redirect()->route('login')->withErrors(['correo' => 'Google no está disponible. Ingresa con tu correo y contraseña.']);
         return Socialite::driver('google')->redirect();
     }
 
@@ -121,7 +116,13 @@ class ClienteLoginController extends Controller
      */
     public function handleGoogleCallback(Request $request): RedirectResponse
     {
-        $googleUser = Socialite::driver('google')->user();
+        try {
+            $googleUser = Socialite::driver('google')->user();
+        } catch (\Throwable $e) {
+            report($e);
+            return redirect()->route('login')->withErrors(['correo' => 'No se pudo completar el acceso con Google. Intenta nuevamente.']);
+        }
+        if (!$googleUser->getEmail() || !($googleUser->user['email_verified'] ?? $googleUser->user['verified_email'] ?? false)) return redirect()->route('login')->withErrors(['correo' => 'Google no proporcionó un correo verificado.']);
 
         // Si ya existe un cliente con ese correo (registrado antes con
         // contraseña propia), le vinculamos el google_id sin sobreescribir sus datos personalizados.
@@ -149,8 +150,9 @@ class ClienteLoginController extends Controller
             ]);
         }
 
-        Auth::guard('cliente')->login($cliente, true);
+        Auth::guard('cliente')->login($cliente, false);
 
+        Auth::guard('web')->logout();
         $request->session()->regenerate();
 
         return redirect()->intended(route('cliente.dashboard'));

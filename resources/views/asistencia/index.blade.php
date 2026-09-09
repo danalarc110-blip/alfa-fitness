@@ -1,27 +1,7 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'Alpha Fitness') }} - Asistencia</title>
-
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
-
-    <script>
-        if (localStorage.getItem('alphaTema') === 'light') {
-            document.documentElement.classList.add('light');
-        }
-    </script>
-
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="font-sans antialiased bg-black text-white min-h-screen">
-    <div class="min-h-screen flex flex-col md:flex-row">
-        @include('partials.sidebar', ['active' => 'asistencia'])
-
-        <main class="flex-1 flex flex-col min-w-0 px-4 sm:px-6 md:px-10 py-6 sm:py-8">
-            <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
+@extends('layouts.app', ['active' => 'asistencia'])
+@section('title', 'Asistencia')
+@section('page-header')
+<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Asistencia</h1>
                     <p class="text-gray-400 text-xs mt-1">Control de entrada y salida de clientes.</p>
@@ -32,20 +12,9 @@
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
                 </button>
             </header>
-
-            @if (session('status'))
-                <div class="mb-5 rounded-xl border border-yellow-400/20 bg-yellow-400/10 px-4 py-3 text-sm font-semibold text-yellow-300">
-                    {{ session('status') }}
-                </div>
-            @endif
-
-            @if ($errors->any())
-                <div class="mb-5 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                    {{ $errors->first() }}
-                </div>
-            @endif
-
-            <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5" data-animate="card">
+@endsection
+@section('content')
+<section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5" data-animate="card">
                 <div class="alpha-card rounded-2xl p-5 border border-white/10">
                     <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Entradas hoy</span>
                     <p class="text-4xl font-bold text-yellow-400 mt-2">{{ $hoy }}</p>
@@ -73,6 +42,19 @@
                 </div>
             </section>
 
+            <section class="alpha-card rounded-2xl p-5 mb-5" data-animate="card">
+                <h2 class="text-base font-bold text-white mb-3">Dentro del gimnasio</h2>
+                <div class="flex flex-wrap gap-2">@forelse($dentroAhora as $visita)<span class="px-3 py-2 rounded-xl bg-green-400/10 border border-green-400/20 text-sm text-green-200">{{ $visita->cliente->nombre }} · desde {{ $visita->fecha_hora->format('H:i') }}</span>@empty<span class="text-sm text-gray-400">No hay visitas abiertas.</span>@endforelse</div>
+            </section>
+
+            <form method="GET" action="{{ route('asistencia.index') }}" class="alpha-card alpha-form rounded-2xl p-5 mb-5 grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <label>Cliente<input name="q" value="{{ $busqueda }}" placeholder="Nombre o correo"></label>
+                <label>Desde<input type="date" name="desde" value="{{ $filtros['desde'] ?? '' }}"></label>
+                <label>Hasta<input type="date" name="hasta" value="{{ $filtros['hasta'] ?? '' }}"></label>
+                <label>Estado<select name="estado"><option value="">Todas</option><option value="abierta" @selected(($filtros['estado'] ?? '') === 'abierta')>Abiertas</option><option value="cerrada" @selected(($filtros['estado'] ?? '') === 'cerrada')>Cerradas</option></select></label>
+                <div class="flex items-end gap-2"><button class="alpha-btn-primary px-4 py-3 rounded-xl">Filtrar historial</button><a href="{{ route('asistencia.index') }}" class="text-sm py-3">Limpiar</a></div>
+            </form>
+
             <section class="grid grid-cols-1 xl:grid-cols-[1fr_430px] gap-5">
                 <div class="alpha-card rounded-2xl p-5 sm:p-6 min-w-0" data-animate="card">
                     <div class="flex items-center justify-between gap-3 mb-4">
@@ -83,12 +65,17 @@
                     @if ($clientes->isNotEmpty())
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             @foreach ($clientes as $cliente)
-                                @php $entradaAbierta = $cliente->asistencias->first(); @endphp
+                                @php
+                                    $entradaAbierta = $cliente->asistencias->first();
+                                    $membresia = $cliente->membresias->first();
+                                    $estadoMembresia = $membresia?->estado ?? 'Sin membresia';
+                                @endphp
                                 <div class="bg-black/40 border border-white/10 rounded-xl p-4 flex flex-col gap-4">
                                     <div class="flex items-start justify-between gap-3">
                                         <div class="min-w-0">
                                             <h3 class="text-sm font-bold text-white truncate">{{ $cliente->nombre }}</h3>
                                             <p class="text-[11px] text-gray-500 truncate">{{ $cliente->correo }}</p>
+                                            <p class="text-[11px] {{ $estadoMembresia === 'Vigente' ? 'text-yellow-400' : 'text-red-300' }}">Membresia: {{ $estadoMembresia }}</p>
                                         </div>
 
                                         <span class="shrink-0 inline-flex px-2 py-1 rounded-lg text-[11px] font-bold {{ $entradaAbierta ? 'bg-green-400/10 text-green-300 border border-green-400/20' : 'bg-white/5 text-gray-400 border border-white/10' }}">
@@ -159,7 +146,8 @@
                                         </div>
                                     </div>
 
-                                    <p class="text-[11px] text-gray-500 mt-2">Registró: {{ $asistencia->registrador?->name ?? 'Sistema' }}</p>
+                                    <p class="text-[11px] text-gray-500 mt-2">Duracion: {{ $asistencia->duracion ?? 'En curso' }}</p>
+                                    <p class="text-[11px] text-gray-500 mt-1">Entrada por: {{ $asistencia->registrador?->name ?? 'Registro anterior' }} · Salida por: {{ $asistencia->registradorSalida?->name ?? ($asistencia->fecha_salida ? 'Registro anterior' : 'Pendiente') }}</p>
                                 </div>
                             @endforeach
                         </div>
@@ -170,7 +158,5 @@
                     @endif
                 </aside>
             </section>
-        </main>
-    </div>
-</body>
-</html>
+<div class="mt-6 space-y-4"><div><p class="text-xs text-gray-400 mb-2">Clientes</p>{{ $clientes->links() }}</div><div><p class="text-xs text-gray-400 mb-2">Historial de visitas</p>{{ $asistencias->links() }}</div></div>
+@endsection
