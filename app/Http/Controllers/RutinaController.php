@@ -9,8 +9,9 @@ use App\Models\RutinaEjercicio;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class RutinaController extends Controller
 {
@@ -18,7 +19,6 @@ class RutinaController extends Controller
      * Devuelve ['guard' => 'web'|'cliente', 'user' => modelo autenticado].
      * Mismo patrón que ConfiguracionController.
      */
-
 
     /**
      * Listado de rutinas del usuario actual.
@@ -28,9 +28,9 @@ class RutinaController extends Controller
         ['guard' => $guard, 'user' => $user] = $this->actual();
 
         $rutinas = Rutina::deUsuario($guard, $user->id)
-            ->with('dias.ejercicios')
+            ->with(['dias' => fn ($q) => $q->withCount('ejercicios')])
             ->latest()
-            ->get();
+            ->paginate(18);
 
         return view('entrenamientos.index', [
             'guard' => $guard,
@@ -48,21 +48,25 @@ class RutinaController extends Controller
     {
         ['guard' => $guard, 'user' => $user] = $this->actual();
 
-        $rutina = Rutina::create([
-            'user_id' => $user->id,
-            'user_type' => $guard,
-            'nombre' => 'Nueva rutina',
-            'objetivo' => 'Ganar masa muscular',
-            'nivel' => 'Intermedio',
-            'dias_por_semana' => 1,
-        ]);
+        $rutina = DB::transaction(function () use ($guard, $user) {
+            $rutina = Rutina::create([
+                'user_id' => $user->id,
+                'user_type' => $guard,
+                'nombre' => 'Nueva rutina',
+                'objetivo' => 'Ganar masa muscular',
+                'nivel' => 'Intermedio',
+                'dias_por_semana' => 1,
+            ]);
 
-        $rutina->dias()->create([
-            'orden' => 1,
-            'titulo' => 'Día 1',
-            'duracion_estimada_min' => 45,
-            'duracion_estimada_max' => 60,
-        ]);
+            $rutina->dias()->create([
+                'orden' => 1,
+                'titulo' => 'Día 1',
+                'duracion_estimada_min' => 45,
+                'duracion_estimada_max' => 60,
+            ]);
+
+            return $rutina;
+        });
 
         return redirect()->route('entrenamientos.editar', $rutina);
     }
@@ -83,23 +87,24 @@ class RutinaController extends Controller
         // Serializar aqui para no usar arrow-functions dentro de @json en Blade
         $diasJson = $rutina->dias->map(function ($d) {
             return [
-                'id'         => $d->id,
-                'titulo'     => $d->titulo,
+                'id' => $d->id,
+                'titulo' => $d->titulo,
                 'ejercicios' => $d->ejercicios->map(function ($re) {
                     $ej = $re->ejercicio;
+
                     return [
-                        'id'                => $re->id,
-                        'series'            => $re->series,
-                        'repeticiones'      => $re->repeticiones,
-                        'peso'              => $re->peso,
+                        'id' => $re->id,
+                        'series' => $re->series,
+                        'repeticiones' => $re->repeticiones,
+                        'peso' => $re->peso,
                         'descanso_segundos' => $re->descanso_segundos,
                         'ejercicio' => [
-                            'id'                    => $ej->id,
-                            'nombre'                => $ej->nombre,
-                            'grupo_muscular'        => $ej->grupo_muscular,
-                            'imagen_url'            => $ej->imagen_url,
-                            'imagen_musculos_url'   => $ej->imagen_musculos_url,
-                            'tiene_imagen'          => $ej->tiene_imagen,
+                            'id' => $ej->id,
+                            'nombre' => $ej->nombre,
+                            'grupo_muscular' => $ej->grupo_muscular,
+                            'imagen_url' => $ej->imagen_url,
+                            'imagen_musculos_url' => $ej->imagen_musculos_url,
+                            'tiene_imagen' => $ej->tiene_imagen,
                             'tiene_imagen_musculos' => $ej->tiene_imagen_musculos,
                         ],
                     ];
@@ -108,13 +113,13 @@ class RutinaController extends Controller
         })->values();
 
         return view('entrenamientos.crear', [
-            'guard'            => $guard,
-            'nombre'           => $this->nombreActual($guard, $user),
-            'rolEtiqueta'      => $guard === 'web' ? $user->rol : 'Miembro',
-            'avatarUrl'        => $user->avatar_url,
-            'rutina'           => $rutina,
-            'ejercicios'       => $ejercicios,
-            'diasJson'         => $diasJson,
+            'guard' => $guard,
+            'nombre' => $this->nombreActual($guard, $user),
+            'rolEtiqueta' => $guard === 'web' ? $user->rol : 'Miembro',
+            'avatarUrl' => $user->avatar_url,
+            'rutina' => $rutina,
+            'ejercicios' => $ejercicios,
+            'diasJson' => $diasJson,
             'gruposMusculares' => ['Pecho', 'Espalda', 'Piernas', 'Hombros', 'Biceps', 'Triceps', 'Abdomen'],
         ]);
     }
@@ -169,14 +174,19 @@ class RutinaController extends Controller
     {
         $this->autorizarPropietario($rutina);
 
-        $orden = $rutina->dias()->max('orden') + 1;
+        $dia = DB::transaction(function () use ($rutina) {
+            $rutina = Rutina::whereKey($rutina->id)->lockForUpdate()->firstOrFail();
+            $orden = $rutina->dias()->max('orden') + 1;
 
-        $dia = $rutina->dias()->create([
-            'orden' => $orden,
-            'titulo' => 'Día ' . $orden,
-            'duracion_estimada_min' => 45,
-            'duracion_estimada_max' => 60,
-        ]);
+            $dia = $rutina->dias()->create([
+                'orden' => $orden,
+                'titulo' => 'Día '.$orden,
+                'duracion_estimada_min' => 45,
+                'duracion_estimada_max' => 60,
+            ]);
+
+            return $dia;
+        });
 
         return response()->json(['dia' => $dia]);
     }
@@ -198,12 +208,15 @@ class RutinaController extends Controller
     {
         $this->autorizarPropietario($dia->rutina);
 
-        $rutina = $dia->rutina;
-        $dia->delete();
+        DB::transaction(function () use ($dia) {
+            $rutina = Rutina::whereKey($dia->rutina_id)->lockForUpdate()->firstOrFail();
+            $dia->delete();
 
-        // Reordena los días restantes para que no queden huecos (Día 1, Día 2...)
-        $rutina->dias()->orderBy('orden')->get()->values()->each(function ($d, $i) {
-            $d->update(['orden' => $i + 1]);
+            // Reordena los días restantes para que no queden huecos (Día 1, Día 2...)
+            $rutina->dias()->orderBy('orden')->get()->values()->each(function ($d, $i) {
+                $d->update(['orden' => $i + 1]);
+            });
+
         });
 
         return response()->json(['ok' => true]);
@@ -218,15 +231,16 @@ class RutinaController extends Controller
      */
     public function buscarEjercicios(Request $request): JsonResponse
     {
-        $q = $request->string('q')->toString();
-        $grupo = $request->string('grupo')->toString();
+        $filters = $request->validate(['q' => ['nullable', 'string', 'max:100'], 'grupo' => ['nullable', 'string', 'max:100']]);
+        $q = $filters['q'] ?? '';
+        $grupo = $filters['grupo'] ?? '';
 
         $ejercicios = Ejercicio::where('activo', true)
-            ->when($q, fn($query) => $query->where('nombre', 'like', "%{$q}%"))
-            ->when($grupo && $grupo !== 'Todos', fn($query) => $query->where('grupo_muscular', $grupo))
+            ->when($q, fn ($query) => $query->where('nombre', 'like', "%{$q}%"))
+            ->when($grupo && $grupo !== 'Todos', fn ($query) => $query->where('grupo_muscular', $grupo))
             ->orderBy('nombre')
             ->get()
-            ->map(fn(Ejercicio $e) => [
+            ->map(fn (Ejercicio $e) => [
                 'id' => $e->id,
                 'nombre' => $e->nombre,
                 'grupo_muscular' => $e->grupo_muscular,
@@ -245,20 +259,24 @@ class RutinaController extends Controller
         $this->autorizarPropietario($dia->rutina);
 
         $data = $request->validate([
-            'ejercicio_id' => ['required', 'exists:ejercicios,id'],
+            'ejercicio_id' => ['required', 'integer', Rule::exists('ejercicios', 'id')->where('activo', true)],
         ]);
 
-        $orden = $dia->ejercicios()->max('orden') + 1;
+        $rutinaEjercicio = DB::transaction(function () use ($dia, $data) {
+            $dia = RutinaDia::whereKey($dia->id)->lockForUpdate()->firstOrFail();
+            $orden = $dia->ejercicios()->max('orden') + 1;
 
-        $rutinaEjercicio = $dia->ejercicios()->create([
-            'ejercicio_id' => $data['ejercicio_id'],
-            'orden' => $orden,
-            'series' => 3,
-            'repeticiones' => '8-10',
-            'peso' => null,
-            'descanso_segundos' => 60,
-        ]);
+            $rutinaEjercicio = $dia->ejercicios()->create([
+                'ejercicio_id' => $data['ejercicio_id'],
+                'orden' => $orden,
+                'series' => 3,
+                'repeticiones' => '8-10',
+                'peso' => null,
+                'descanso_segundos' => 60,
+            ]);
 
+            return $rutinaEjercicio;
+        });
         $rutinaEjercicio->load('ejercicio');
 
         return response()->json(['rutina_ejercicio' => $rutinaEjercicio]);
@@ -284,11 +302,14 @@ class RutinaController extends Controller
     {
         $this->autorizarPropietario($rutinaEjercicio->dia->rutina);
 
-        $dia = $rutinaEjercicio->dia;
-        $rutinaEjercicio->delete();
+        DB::transaction(function () use ($rutinaEjercicio) {
+            $dia = RutinaDia::whereKey($rutinaEjercicio->rutina_dia_id)->lockForUpdate()->firstOrFail();
+            $rutinaEjercicio->delete();
 
-        $dia->ejercicios()->orderBy('orden')->get()->values()->each(function ($re, $i) {
-            $re->update(['orden' => $i + 1]);
+            $dia->ejercicios()->orderBy('orden')->get()->values()->each(function ($re, $i) {
+                $re->update(['orden' => $i + 1]);
+            });
+
         });
 
         return response()->json(['ok' => true]);
@@ -306,15 +327,19 @@ class RutinaController extends Controller
             'orden.*' => ['integer', 'distinct', Rule::exists('rutina_ejercicios', 'id')->where('rutina_dia_id', $dia->id)],
         ]);
 
-        if (count($data['orden']) !== $dia->ejercicios()->count()) {
-            throw \Illuminate\Validation\ValidationException::withMessages(['orden' => 'Incluye todos los ejercicios del día para guardar el orden.']);
-        }
-        \Illuminate\Support\Facades\DB::transaction(function () use ($data, $dia) {
-        foreach ($data['orden'] as $i => $id) {
-            RutinaEjercicio::where('id', $id)
-                ->where('rutina_dia_id', $dia->id)
-                ->update(['orden' => $i + 1]);
-        }
+        DB::transaction(function () use ($data, $dia) {
+            $dia = RutinaDia::whereKey($dia->id)->lockForUpdate()->firstOrFail();
+            if (array_diff($data['orden'], $dia->ejercicios()->pluck('id')->all())) {
+                abort(422);
+            }
+            if (count($data['orden']) !== $dia->ejercicios()->count()) {
+                throw ValidationException::withMessages(['orden' => 'Incluye todos los ejercicios del día para guardar el orden.']);
+            }
+            foreach ($data['orden'] as $i => $id) {
+                RutinaEjercicio::where('id', $id)
+                    ->where('rutina_dia_id', $dia->id)
+                    ->update(['orden' => $i + 1]);
+            }
         });
 
         return response()->json(['ok' => true]);

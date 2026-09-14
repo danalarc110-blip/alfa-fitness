@@ -33,12 +33,13 @@ class Producto extends Model
 
     public function getImagenUrlAttribute(): ?string
     {
-        if (! $this->imagen) {
+        if (! $this->imagen || basename($this->imagen) !== $this->imagen) {
             return null;
         }
 
-        if (filter_var($this->imagen, FILTER_VALIDATE_URL) || str_starts_with($this->imagen, 'http://') || str_starts_with($this->imagen, 'https://')) {
-            return $this->imagen;
+        $optimized = pathinfo($this->imagen, PATHINFO_FILENAME).'.webp';
+        if (is_file(public_path('images/productos/'.$optimized))) {
+            return asset('images/productos/'.$optimized);
         }
 
         return asset('images/productos/'.$this->imagen);

@@ -29,7 +29,6 @@ class User extends Authenticatable
         'password',
         'password_establecida',
         'rol',
-        'admin_key',
         'activo',
         'color_acento',
         'avatar_piel',
@@ -38,6 +37,7 @@ class User extends Authenticatable
         'avatar_atuendo',
         'avatar_color_atuendo',
         'avatar',
+        'apariencia',
     ];
 
     /**
@@ -62,6 +62,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'activo' => 'boolean',
             'password_establecida' => 'boolean',
+            'apariencia' => 'array',
         ];
     }
 
@@ -85,17 +86,16 @@ class User extends Authenticatable
         return $this->hasMany(Asistencia::class, 'registrado_por');
     }
 
-    /**
-     * Obtiene la URL completa del avatar (sea URL externa de Google o archivo local).
-     */
+    /** Keep profile images first-party so opening the app never contacts a tracking host. */
     public function getAvatarUrlAttribute(): ?string
     {
-        if (! $this->avatar) {
+        if (! $this->avatar || basename($this->avatar) !== $this->avatar) {
             return null;
         }
 
-        if (filter_var($this->avatar, FILTER_VALIDATE_URL) || str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
-            return $this->avatar;
+        $optimized = pathinfo($this->avatar, PATHINFO_FILENAME).'.webp';
+        if (is_file(public_path('images/avatars/'.$optimized))) {
+            return asset('images/avatars/'.$optimized);
         }
 
         return asset('images/avatars/'.$this->avatar);

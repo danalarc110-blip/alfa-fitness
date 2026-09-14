@@ -6,14 +6,12 @@ use App\Models\Ejercicio;
 use App\Models\EjercicioCalificacion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class EjercicioController extends Controller
 {
     /**
      * Identifica al usuario autenticado (sea de la guardia web o cliente).
      */
-
 
     /**
      * Muestra la vista principal de Ejercicios Populares de la Semana.
@@ -22,8 +20,9 @@ class EjercicioController extends Controller
     {
         ['guard' => $guard, 'user' => $user] = $this->actual();
 
-        $grupo = $request->string('grupo')->toString();
-        $q = $request->string('q')->toString();
+        $filtros = $request->validate(['grupo' => ['nullable', 'string', 'max:100'], 'q' => ['nullable', 'string', 'max:100']]);
+        $grupo = $filtros['grupo'] ?? '';
+        $q = $filtros['q'] ?? '';
 
         $ejerciciosQuery = Ejercicio::where('activo', true)
             ->withAvg('calificaciones as promedio_estrellas', 'estrellas')

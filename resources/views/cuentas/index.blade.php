@@ -1,20 +1,103 @@
 @extends('layouts.app', ['active' => 'cuentas'])
-@section('title', $personal ? 'Personal del gimnasio' : 'Clientes')
-@section('eyebrow', 'Gestion de cuentas')
+
+@section('title', 'Administrar cuentas')
+@section('eyebrow', 'Usuarios')
+
 @section('content')
-<p class="text-sm text-gray-400 mb-6">Administra datos basicos y acceso. Una cuenta inactiva conserva su historial y no puede usar una sesion existente.</p>
-@can('administrar')<nav class="flex gap-3 mb-6"><a href="{{ route('cuentas.index') }}" class="{{ !$personal ? 'alpha-btn-primary' : 'alpha-btn-secondary' }} px-4 py-2 rounded-xl text-sm">Clientes</a><a href="{{ route('cuentas.index', ['tipo' => 'personal']) }}" class="{{ $personal ? 'alpha-btn-primary' : 'alpha-btn-secondary' }} px-4 py-2 rounded-xl text-sm">Personal</a></nav>@endcan
+    <section class="space-y-5">
+        <div class="alpha-card rounded-2xl p-5 sm:p-6" data-animate="card">
+            <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
+                <p class="max-w-2xl text-sm text-gray-400">
+                    Busca usuarios, consulta cuándo se registraron y controla únicamente su acceso.
+                    El baneo no elimina su cuenta ni su historial.
+                </p>
 
-@if($personal && \Illuminate\Support\Facades\Gate::allows('administrar'))
-<details class="alpha-card rounded-2xl p-5 mb-5" @if($errors->any()) open @endif><summary class="font-semibold cursor-pointer">＋ Registrar empleado</summary><form method="POST" action="{{ route('cuentas.store') }}" class="alpha-form grid sm:grid-cols-2 gap-4 mt-5">@csrf<label>Nombre *<input name="nombre" value="{{ old('nombre') }}" maxlength="100" required autocomplete="name"></label><label>Correo *<input type="email" name="correo" value="{{ old('correo') }}" maxlength="255" required autocomplete="email"></label><label>Rol *<select name="rol" required>@foreach(\App\Support\Acceso::ROLES_ASIGNABLES as $rol)<option @selected(old('rol', 'Secretaria') === $rol)>{{ $rol }}</option>@endforeach</select></label><div class="sm:col-span-2 text-xs text-gray-400">La persona recibira un enlace privado para establecer su contrasena. La clave nunca se muestra ni se comparte.</div><div><button class="alpha-btn-primary px-5 py-3 rounded-xl">Crear cuenta e invitar</button></div></form></details>
-@elseif(!$personal && \Illuminate\Support\Facades\Gate::allows('administrar'))
-<p class="alpha-card rounded-2xl p-5 mb-5 text-sm text-gray-400">Los clientes crean su propia cuenta desde el registro publico. Aqui puedes activar o desactivar su acceso.</p>
-@endif
+                <form method="GET" action="{{ route('cuentas.index') }}" class="alpha-form flex flex-col sm:flex-row gap-3 w-full lg:max-w-xl" role="search">
+                    <label class="sr-only" for="buscar-usuario">Buscar usuario</label>
+                    <input
+                        id="buscar-usuario"
+                        type="search"
+                        name="q"
+                        value="{{ $q }}"
+                        maxlength="100"
+                        placeholder="Buscar por nombre o correo"
+                        class="flex-1"
+                    >
+                    <button class="alpha-btn-primary px-5 py-3 rounded-xl">Buscar</button>
+                    @if ($q !== '')
+                        <a href="{{ route('cuentas.index') }}" class="alpha-btn-secondary px-4 py-3 rounded-xl">Limpiar</a>
+                    @endif
+                </form>
+            </div>
+        </div>
 
-<form method="GET" class="alpha-form flex flex-col sm:flex-row gap-3 mb-5"><input type="hidden" name="tipo" value="{{ $personal ? 'personal' : 'cliente' }}"><input type="search" name="q" value="{{ $q }}" maxlength="100" placeholder="Nombre o correo" class="flex-1"><select name="estado"><option value="">Todos los estados</option><option value="activo" @selected($estado === 'activo')>Activas</option><option value="inactivo" @selected($estado === 'inactivo')>Inactivas</option></select><button class="alpha-btn-secondary px-5 py-3 rounded-xl">Filtrar</button></form>
-<p class="text-xs text-gray-400 mb-3">{{ $cuentas->total() }} cuentas · Pagina {{ $cuentas->currentPage() }} de {{ $cuentas->lastPage() }}</p>
-<div class="alpha-card rounded-2xl divide-y divide-white/10">
-@forelse($cuentas as $cuenta)<article class="p-5"><div class="flex flex-wrap justify-between gap-4"><div><h2 class="font-semibold">{{ $cuenta->$campoNombre }}</h2><p class="text-sm text-gray-400">{{ $cuenta->$campoCorreo }}</p></div><span class="text-xs {{ $cuenta->activo ? 'text-green-400' : 'text-gray-400' }}">{{ $cuenta->activo ? 'Activa' : 'Inactiva' }}{{ $personal ? ' · '.$cuenta->rol : '' }}</span></div>
-@can('administrar')<details class="mt-3"><summary class="text-sm text-yellow-400 cursor-pointer">Editar cuenta</summary><form method="POST" action="{{ route('cuentas.update', [$personal ? 'personal' : 'cliente', $cuenta->id]) }}" class="alpha-form grid sm:grid-cols-3 gap-4 mt-4">@csrf @method('PUT')<label>Nombre *<input name="nombre" value="{{ $cuenta->$campoNombre }}" required maxlength="100"></label><label>Acceso<select name="activo" @disabled($personal && $cuenta->rol === 'Administrador')><option value="1" @selected($cuenta->activo)>Activo</option><option value="0" @selected(!$cuenta->activo)>Inactivo</option></select>@if($personal && $cuenta->rol === 'Administrador')<input type="hidden" name="activo" value="1">@endif</label>@if($personal)<label>Rol<select name="rol" @disabled($cuenta->rol === 'Administrador')>@foreach($cuenta->rol === 'Administrador' ? ['Administrador'] : \App\Support\Acceso::ROLES_ASIGNABLES as $rol)<option @selected($cuenta->rol === $rol)>{{ $rol }}</option>@endforeach</select>@if($cuenta->rol === 'Administrador')<input type="hidden" name="rol" value="Administrador">@endif</label>@endif<div><button class="alpha-btn-primary px-4 py-2 rounded-xl text-sm">Guardar cambios</button></div></form>@if($personal && !$cuenta->password_establecida)<form method="POST" action="{{ route('cuentas.invitar', $cuenta) }}" class="mt-3">@csrf<button class="text-sm text-yellow-400">Reenviar invitacion de contrasena</button></form>@endif</details>@endcan
-</article>@empty<div class="p-10 text-center text-gray-400">No se encontraron cuentas.</div>@endforelse</div><div class="mt-5">{{ $cuentas->links() }}</div>
+        <div class="flex items-center justify-between gap-4">
+            <p class="text-xs text-gray-400" aria-live="polite">
+                {{ $cuentas->total() }} {{ $cuentas->total() === 1 ? 'usuario encontrado' : 'usuarios encontrados' }}
+            </p>
+            @if ($cuentas->lastPage() > 1)
+                <p class="text-xs text-gray-500">Página {{ $cuentas->currentPage() }} de {{ $cuentas->lastPage() }}</p>
+            @endif
+        </div>
+
+        <div class="grid gap-3">
+            @forelse ($cuentas as $cuenta)
+                <article class="alpha-card rounded-2xl p-5 sm:p-6" data-animate="card">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <h2 class="font-semibold text-white truncate">{{ $cuenta->nombre }}</h2>
+                                <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $cuenta->activo ? 'bg-green-500/10 text-green-300' : 'bg-red-500/10 text-red-300' }}">
+                                    {{ $cuenta->activo ? 'Activo' : 'Baneado' }}
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-400">
+                                Registrado el
+                                <time datetime="{{ $cuenta->created_at?->toDateString() }}">
+                                    {{ $cuenta->created_at?->translatedFormat('d M Y') ?? 'Fecha no disponible' }}
+                                </time>
+                            </p>
+                        </div>
+
+                        @if ($cuenta->activo)
+                            <form
+                                method="POST"
+                                action="{{ route('cuentas.banear', $cuenta) }}"
+                                data-confirm="¿Banear a {{ $cuenta->nombre }}? Perderá el acceso en su próxima solicitud, pero su historial se conservará."
+                                class="shrink-0"
+                            >
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="rounded-xl px-4 py-2.5 text-sm font-semibold border border-red-400/25 bg-red-500/10 text-red-300 hover:bg-red-500/20">
+                                    Banear usuario
+                                </button>
+                            </form>
+                        @else
+                            <form
+                                method="POST"
+                                action="{{ route('cuentas.restaurar', $cuenta) }}"
+                                data-confirm="¿Restaurar el acceso de {{ $cuenta->nombre }}? Podrá volver a iniciar sesión."
+                                class="shrink-0"
+                            >
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="alpha-btn-secondary rounded-xl px-4 py-2.5 text-sm font-semibold">
+                                    Restaurar acceso
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </article>
+            @empty
+                <div class="alpha-card rounded-2xl p-10 text-center" data-animate="card">
+                    <h2 class="font-semibold text-white">No se encontraron usuarios</h2>
+                    <p class="mt-2 text-sm text-gray-400">Prueba con otro nombre o correo.</p>
+                </div>
+            @endforelse
+        </div>
+
+        @if ($cuentas->hasPages())
+            <div>{{ $cuentas->links() }}</div>
+        @endif
+    </section>
 @endsection

@@ -7,6 +7,7 @@ use App\Models\Membresia;
 use App\Models\PagoMembresia;
 use App\Models\PlanMembresia;
 use App\Models\SolicitudMembresia;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -55,6 +56,7 @@ class MembresiaController extends Controller
                 'duracion_dias' => $plan->duracion_dias, 'condiciones' => $plan->condiciones,
             ]);
         });
+
         return back()->with('status', 'Solicitud creada. La membresia se activara cuando la secretaria confirme el pago presencial.');
     }
 
@@ -62,17 +64,22 @@ class MembresiaController extends Controller
     {
         Gate::authorize('operaciones');
         $data = $request->validate([
-            'importe' => ['required', 'numeric', 'min:0.01', 'max:999999'],
+            'importe' => ['required', 'numeric', 'decimal:0,2', 'min:0.01', 'max:999999'],
             'referencia' => ['nullable', 'string', 'max:100'],
         ]);
         $secretariaId = $request->user()->id;
         DB::transaction(function () use ($solicitud, $data, $secretariaId) {
+            // Serialize all activations for this client, including different requests.
+            $cliente = Cliente::whereKey($solicitud->cliente_id)->lockForUpdate()->firstOrFail();
+            if (! $cliente->activo) {
+                throw ValidationException::withMessages(['importe' => 'No se puede activar una membresía de una cuenta desactivada.']);
+            }
             $solicitud = SolicitudMembresia::whereKey($solicitud->id)->lockForUpdate()->firstOrFail();
             if ($solicitud->estado !== 'pendiente' || $solicitud->membresia()->exists()) {
                 throw ValidationException::withMessages(['importe' => 'Esta solicitud ya fue resuelta; no se registro otro cobro.']);
             }
             $ultimaFecha = Membresia::where('cliente_id', $solicitud->cliente_id)->where('cancelada', false)->max('fin');
-            $inicio = $ultimaFecha && today()->lte($ultimaFecha) ? \Carbon\Carbon::parse($ultimaFecha)->addDay() : today();
+            $inicio = $ultimaFecha && today()->lte($ultimaFecha) ? Carbon::parse($ultimaFecha)->addDay() : today();
             $fin = $inicio->copy()->addDays($solicitud->duracion_dias - 1);
             $membresia = Membresia::create([
                 'cliente_id' => $solicitud->cliente_id, 'solicitud_id' => $solicitud->id,
@@ -86,6 +93,7 @@ class MembresiaController extends Controller
             ]);
             $solicitud->update(['estado' => 'activada', 'resuelta_en' => now(), 'resuelta_por' => $secretariaId]);
         });
+
         return back()->with('status', 'Pago registrado y membresia activada sin perder dias ya pagados.');
     }
 
@@ -96,16 +104,23 @@ class MembresiaController extends Controller
         abort_unless($esSecretaria || $esPropietario, 403);
         DB::transaction(function () use ($solicitud) {
             $bloqueada = SolicitudMembresia::whereKey($solicitud->id)->lockForUpdate()->firstOrFail();
-            if ($bloqueada->estado !== 'pendiente') throw ValidationException::withMessages(['solicitud' => 'Solo se puede cancelar una solicitud pendiente.']);
+            if ($bloqueada->estado !== 'pendiente') {
+                throw ValidationException::withMessages(['solicitud' => 'Solo se puede cancelar una solicitud pendiente.']);
+            }
             $bloqueada->update(['estado' => 'cancelada', 'resuelta_en' => now(), 'resuelta_por' => auth('web')->id()]);
         });
+
         return back()->with('status', 'Solicitud cancelada.');
     }
 
     public function cancelar(Membresia $membresia)
     {
         abort_unless(auth('web')->user()?->rol === 'Secretaria', 403);
-        $membresia->update(['cancelada' => true]);
+        DB::transaction(function () use ($membresia) {
+            Cliente::whereKey($membresia->cliente_id)->lockForUpdate()->firstOrFail();
+            $membresia->update(['cancelada' => true]);
+        });
+
         return back()->with('status', 'Membresia cancelada. El pago y el historial se conservan.');
     }
 }

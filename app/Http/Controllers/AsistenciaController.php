@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Asistencia;
 use App\Models\Cliente;
+use App\Services\RegistroAsistencia;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -16,7 +17,7 @@ class AsistenciaController extends Controller
             'q' => ['nullable', 'string', 'max:100'],
             'cliente_id' => ['nullable', 'integer', 'exists:clientes,id'],
             'desde' => ['nullable', 'date_format:Y-m-d'],
-            'hasta' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:desde'],
+            'hasta' => ['nullable', 'date_format:Y-m-d', ...($request->filled('desde') ? ['after_or_equal:desde'] : [])],
             'estado' => ['nullable', Rule::in(['abierta', 'cerrada'])],
         ]);
         $busqueda = $filtros['q'] ?? '';
@@ -46,7 +47,8 @@ class AsistenciaController extends Controller
     {
         abort_unless(auth('web')->user()?->rol === 'Secretaria', 403);
         $data = $request->validate(['cliente_id' => ['required', 'exists:clientes,id']]);
-        app(\App\Services\RegistroAsistencia::class)->registrar((int) $data['cliente_id'], auth('web')->id(), false);
+        app(RegistroAsistencia::class)->registrar((int) $data['cliente_id'], auth('web')->id(), false);
+
         return back()->with('status', 'Entrada registrada.');
     }
 
@@ -54,7 +56,8 @@ class AsistenciaController extends Controller
     {
         abort_unless(auth('web')->user()?->rol === 'Secretaria', 403);
         $data = $request->validate(['cliente_id' => ['required', 'exists:clientes,id']]);
-        app(\App\Services\RegistroAsistencia::class)->registrar((int) $data['cliente_id'], auth('web')->id(), true);
+        app(RegistroAsistencia::class)->registrar((int) $data['cliente_id'], auth('web')->id(), true);
+
         return back()->with('status', 'Salida registrada.');
     }
 }

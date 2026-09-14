@@ -2,17 +2,18 @@
 
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\Auth\ClienteLoginController;
-use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\EstablecerPasswordController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\CuentasController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EjercicioController;
-use App\Http\Controllers\EstadisticasController;
+use App\Http\Controllers\EntrenadorController;
+use App\Http\Controllers\MembresiaController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProgresoController;
-use App\Http\Controllers\RankingController;
 use App\Http\Controllers\RutinaController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
 
 // Página raíz: redirige al login
 Route::get('/', function () {
@@ -43,34 +44,35 @@ Route::get('/informacion', function () {
 })->name('informacion');
 
 // Área protegida de empleados
-Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
-Route::get('/cliente/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware('auth:cliente')->name('cliente.dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'auth.session'])->name('dashboard');
+Route::get('/cliente/dashboard', [DashboardController::class, 'index'])->middleware(['auth:cliente', 'auth.session'])->name('cliente.dashboard');
 
-Route::middleware('auth:web,cliente')->group(function () {
-    Route::get('/cuentas', [\App\Http\Controllers\CuentasController::class, 'index'])->middleware('can:clientes')->name('cuentas.index');
-    Route::post('/cuentas', [\App\Http\Controllers\CuentasController::class, 'store'])->middleware('can:administrar')->name('cuentas.store');
-    Route::post('/cuentas/personal/{usuario}/invitar', [\App\Http\Controllers\CuentasController::class, 'reenviarInvitacion'])->middleware('can:administrar')->name('cuentas.invitar');
-    Route::put('/cuentas/{tipo}/{id}', [\App\Http\Controllers\CuentasController::class, 'update'])->middleware('can:administrar')->whereNumber('id')->name('cuentas.update');
+Route::middleware(['auth:cliente,web', 'auth.session'])->group(function () {
+    Route::get('/cuentas', [CuentasController::class, 'index'])->middleware('can:administrar')->name('cuentas.index');
+    Route::patch('/cuentas/{cliente}/banear', [CuentasController::class, 'banear'])->middleware('can:administrar')->name('cuentas.banear');
+    Route::patch('/cuentas/{cliente}/restaurar', [CuentasController::class, 'restaurar'])->middleware('can:administrar')->name('cuentas.restaurar');
 
+    Route::post('/configuracion/apariencia', [ConfiguracionController::class, 'actualizarApariencia'])->name('configuracion.apariencia');
     Route::get('/configuracion', [ConfiguracionController::class, 'show'])->name('configuracion');
     Route::post('/configuracion/perfil', [ConfiguracionController::class, 'actualizarPerfil'])->name('configuracion.perfil');
-    Route::post('/configuracion/password', [ConfiguracionController::class, 'actualizarPassword'])->name('configuracion.password');
+    Route::post('/configuracion/password', [ConfiguracionController::class, 'actualizarPassword'])->middleware('throttle:5,1')->name('configuracion.password');
     Route::post('/configuracion/personalizacion', [ConfiguracionController::class, 'actualizarPersonalizacion'])->name('configuracion.personalizacion');
     Route::post('/configuracion/avatar', [ConfiguracionController::class, 'actualizarAvatar'])->name('configuracion.avatar');
+    Route::post('/configuracion/google', [ConfiguracionController::class, 'vincularGoogle'])->middleware('throttle:5,1')->name('configuracion.google');
 
-    Route::get('/membresias', [\App\Http\Controllers\MembresiaController::class, 'index'])->middleware('can:membresias')->name('membresias.index');
-    Route::post('/membresias/solicitudes', [\App\Http\Controllers\MembresiaController::class, 'solicitar'])->middleware('can:progreso')->name('membresias.solicitar');
-    Route::patch('/membresias/solicitudes/{solicitud}/activar', [\App\Http\Controllers\MembresiaController::class, 'activar'])->middleware('can:operaciones')->name('membresias.activar');
-    Route::patch('/membresias/solicitudes/{solicitud}/cancelar', [\App\Http\Controllers\MembresiaController::class, 'cancelarSolicitud'])->name('membresias.solicitudes.cancelar');
-    Route::patch('/membresias/{membresia}/cancelar', [\App\Http\Controllers\MembresiaController::class, 'cancelar'])->middleware('can:operaciones')->name('membresias.cancelar');
+    Route::get('/membresias', [MembresiaController::class, 'index'])->middleware('can:membresias')->name('membresias.index');
+    Route::post('/membresias/solicitudes', [MembresiaController::class, 'solicitar'])->middleware('can:progreso')->name('membresias.solicitar');
+    Route::patch('/membresias/solicitudes/{solicitud}/activar', [MembresiaController::class, 'activar'])->middleware('can:operaciones')->name('membresias.activar');
+    Route::patch('/membresias/solicitudes/{solicitud}/cancelar', [MembresiaController::class, 'cancelarSolicitud'])->name('membresias.solicitudes.cancelar');
+    Route::patch('/membresias/{membresia}/cancelar', [MembresiaController::class, 'cancelar'])->middleware('can:operaciones')->name('membresias.cancelar');
 
     Route::get('/asistencia', [AsistenciaController::class, 'index'])->middleware('can:asistencia')->name('asistencia.index');
     Route::post('/asistencia', [AsistenciaController::class, 'store'])->middleware('can:asistencia')->name('asistencia.store');
     Route::post('/asistencia/salida', [AsistenciaController::class, 'salida'])->middleware('can:asistencia')->name('asistencia.salida');
 
-    Route::get('/entrenadores', [\App\Http\Controllers\EntrenadorController::class, 'index'])->name('entrenadores.index');
-    Route::post('/entrenadores', [\App\Http\Controllers\EntrenadorController::class, 'store'])->middleware('can:administrar')->name('entrenadores.store');
-    Route::put('/entrenadores/{entrenador}', [\App\Http\Controllers\EntrenadorController::class, 'update'])->middleware('can:administrar')->name('entrenadores.update');
+    Route::get('/entrenadores', [EntrenadorController::class, 'index'])->name('entrenadores.index');
+    Route::post('/entrenadores', [EntrenadorController::class, 'store'])->middleware('can:administrar')->name('entrenadores.store');
+    Route::put('/entrenadores/{entrenador}', [EntrenadorController::class, 'update'])->middleware('can:administrar')->name('entrenadores.update');
     Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
     Route::post('/productos', [ProductoController::class, 'store'])->middleware('can:inventario')->name('productos.store');
     Route::put('/productos/{producto}', [ProductoController::class, 'update'])->middleware('can:inventario')->name('productos.update');
@@ -84,7 +86,7 @@ Route::middleware('auth:web,cliente')->group(function () {
 });
 
 // Entrenamientos (empleados o clientes, cualquiera que esté logueado)
-Route::middleware('auth:web,cliente')->prefix('entrenamientos')->name('entrenamientos.')->group(function () {
+Route::middleware(['auth:cliente,web', 'auth.session'])->prefix('entrenamientos')->name('entrenamientos.')->group(function () {
     Route::get('/', [RutinaController::class, 'index'])->name('index');
     Route::post('/crear', [RutinaController::class, 'crear'])->name('crear');
     Route::get('/catalogo/buscar', [RutinaController::class, 'buscarEjercicios'])->name('catalogo.buscar');
@@ -107,7 +109,7 @@ Route::middleware('auth:web,cliente')->prefix('entrenamientos')->name('entrenami
 });
 
 // Ejercicios (módulo de populares de la semana y calificaciones en estrellas)
-Route::middleware('auth:web,cliente')->prefix('ejercicios')->name('ejercicios.')->group(function () {
+Route::middleware(['auth:cliente,web', 'auth.session'])->prefix('ejercicios')->name('ejercicios.')->group(function () {
     Route::get('/', [EjercicioController::class, 'index'])->name('index');
     Route::post('/{ejercicio}/calificar', [EjercicioController::class, 'calificar'])->name('calificar');
 });

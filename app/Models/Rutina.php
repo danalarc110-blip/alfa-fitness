@@ -39,6 +39,6 @@ class Rutina extends Model
 
     public function totalEjercicios(): int
     {
-        return $this->dias->sum(fn (RutinaDia $dia) => $dia->ejercicios->count());
+        return $this->dias->sum(fn (RutinaDia $dia) => $dia->ejercicios_count ?? $dia->ejercicios->count());
     }
 }

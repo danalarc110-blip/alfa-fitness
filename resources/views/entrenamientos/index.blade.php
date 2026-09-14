@@ -29,7 +29,7 @@
                     <a href="{{ route('entrenamientos.editar', $rutina) }}"
                         class="alpha-card alpha-card-interactive group rounded-2xl p-6 relative overflow-hidden flex flex-col justify-between"
                         data-animate="card" data-tilt>
-                        
+
                         <div>
                             <div class="flex items-start justify-between gap-3 mb-3">
                                 <h2 class="font-bold text-lg text-white group-hover:text-yellow-400 transition-colors line-clamp-1">
@@ -69,4 +69,5 @@
                     </div>
                 @endforelse
             </div>
+<div class="mt-5">{{ $rutinas->links() }}</div>
 @endsection

@@ -1,205 +1,74 @@
-/**
- * Alpha Fitness — Animation Engine (Optimized & High Performance)
- * Rápido, fluido, sin saltos visuales ni retrasos en la carga de módulos.
- */
-import gsap from 'gsap';
+const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const running = new Set();
+let entranceObserver;
 
-/* =========================================================
-   1. INICIALIZACIÓN GLOBAL
-   ========================================================= */
-export function initAnimations() {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    initSmoothPageEntrance();
-    initCardHoverEffects();
-    initButtonEffects();
-    initModalAnimations();
-    initTabTransitions();
-    initRippleEffect();
-    initCounterAnimations();
+function entrance(element, delay = 0) {
+    if (motion.matches || !element?.animate) return;
+    const animation = element.animate(
+        [{opacity: .86, transform: 'translateY(5px)'}, {opacity: 1, transform: 'translateY(0)'}],
+        {duration: 180, delay, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'both'}
+    );
+    running.add(animation);
+    animation.finished.catch(() => {}).finally(() => running.delete(animation));
 }
 
-/* =========================================================
-   2. ENTRADA DE PÁGINA ULTRA FLUIDA (SIN PARPADEO NI RETRASO)
-   ========================================================= */
-export function initSmoothPageEntrance() {
-    // Micro-animación suave y no intrusiva de 0.18s
-    const elements = document.querySelectorAll('[data-animate="fade-up"], [data-animate="header"]');
-    if (elements.length) {
-        gsap.fromTo(elements, 
-            { opacity: 0.85, y: 6 },
-            { 
-                opacity: 1, 
-                y: 0, 
-                duration: 0.18, 
-                ease: 'power1.out',
-                clearProps: 'transform,opacity'
-            }
-        );
+motion.addEventListener('change', () => {
+    if (!motion.matches) return;
+    entranceObserver?.disconnect();
+    running.forEach(animation => animation.cancel());
+});
+
+document.querySelectorAll('[data-animate="header"], [data-animate="fade-up"]').forEach((element, index) => entrance(element, Math.min(index * 20, 60)));
+
+const cards = [...document.querySelectorAll('[data-animate="card"]')];
+if (!motion.matches && cards.length) {
+    if ('IntersectionObserver' in window) {
+        entranceObserver = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                entranceObserver.unobserve(entry.target);
+                entrance(entry.target);
+            });
+        }, {rootMargin: '24px 0px', threshold: .04});
+        cards.forEach(card => entranceObserver.observe(card));
+    } else {
+        cards.forEach(entrance);
     }
 }
-
-/* =========================================================
-   3. HOVER CARDS (LIVIANO Y OPTIMIZADO)
-   ========================================================= */
-export function initCardHoverEffects() {
-    const cards = document.querySelectorAll('[data-tilt], .alpha-card-interactive');
-
-    cards.forEach((card) => {
-        card.addEventListener('mouseenter', () => {
-            gsap.to(card, {
-                y: -3,
-                duration: 0.2,
-                ease: 'power1.out'
-            });
-        });
-
-        card.addEventListener('mouseleave', () => {
-            gsap.to(card, {
-                y: 0,
-                duration: 0.25,
-                ease: 'power1.out'
-            });
-        });
-    });
-}
-
-/* =========================================================
-   4. BOTONES Y RIPPLE SNAPPY
-   ========================================================= */
-export function initButtonEffects() {
-    const buttons = document.querySelectorAll('button:not([disabled]), .btn-anim, .alpha-btn-primary, .alpha-btn-secondary');
-
-    buttons.forEach((btn) => {
-        btn.addEventListener('mousedown', () => {
-            gsap.to(btn, { scale: 0.96, duration: 0.08, ease: 'power1.inOut' });
-        });
-        btn.addEventListener('mouseup', () => {
-            gsap.to(btn, { scale: 1, duration: 0.15, ease: 'power1.out' });
-        });
-        btn.addEventListener('mouseleave', () => {
-            gsap.to(btn, { scale: 1, duration: 0.12, ease: 'power1.out' });
-        });
-    });
-}
-
-export function initRippleEffect() {
-    document.querySelectorAll('.alpha-btn-primary, .alpha-btn-secondary, [data-ripple]').forEach(btn => {
-        btn.style.position = 'relative';
-        btn.style.overflow = 'hidden';
-        btn.addEventListener('click', function(e) {
-            const rect = this.getBoundingClientRect();
-            const ripple = document.createElement('span');
-            const size = Math.max(rect.width, rect.height);
-            ripple.style.cssText = `
-                position: absolute;
-                border-radius: 50%;
-                background: rgba(250, 204, 21, 0.3);
-                width: ${size}px;
-                height: ${size}px;
-                left: ${e.clientX - rect.left - size/2}px;
-                top: ${e.clientY - rect.top - size/2}px;
-                pointer-events: none;
-                transform: scale(0);
-                opacity: 1;
-            `;
-            this.appendChild(ripple);
-            gsap.to(ripple, {
-                scale: 2.2,
-                opacity: 0,
-                duration: 0.4,
-                ease: 'power2.out',
-                onComplete: () => ripple.remove()
-            });
-        });
-    });
-}
-
-/* =========================================================
-   5. MODALES (ÁGILES Y LIMPIOS)
-   ========================================================= */
-export function initModalAnimations() {
-    window.alphaAnimateModalOpen = function(modalSelector) {
-        const modal = document.querySelector(modalSelector);
-        if (!modal) return;
-        modal.classList.remove('hidden');
-        modal.style.display = 'flex';
-
-        const dialog = modal.querySelector('.modal-caja') || modal.querySelector('.modal-dialog') || modal.children[0];
-        if (dialog) {
-            gsap.fromTo(dialog, {
-                scale: 0.94,
-                opacity: 0
-            }, {
-                scale: 1,
-                opacity: 1,
-                duration: 0.2,
-                ease: 'power2.out'
-            });
-        }
-    };
-
-    window.alphaAnimateModalClose = function(modalSelector, callback) {
-        const modal = document.querySelector(modalSelector);
-        if (!modal) return;
-        const dialog = modal.querySelector('.modal-caja') || modal.querySelector('.modal-dialog') || modal.children[0];
-        if (dialog) {
-            gsap.to(dialog, {
-                scale: 0.96,
-                opacity: 0,
-                duration: 0.15,
-                ease: 'power2.in',
-                onComplete: () => {
-                    modal.classList.add('hidden');
-                    modal.style.display = '';
-                    if (typeof callback === 'function') callback();
-                }
-            });
-        } else {
-            modal.classList.add('hidden');
-            modal.style.display = '';
-            if (typeof callback === 'function') callback();
-        }
-    };
-}
-
-/* =========================================================
-   6. TRANSICIÓN DE TABS
-   ========================================================= */
-export function initTabTransitions() {
-    window.alphaAnimateTabSwitch = function(outgoingEl, incomingEl) {
-        if (outgoingEl) {
-            outgoingEl.classList.add('hidden');
-            outgoingEl.classList.remove('active');
-        }
-        if (incomingEl) {
-            incomingEl.classList.remove('hidden');
-            incomingEl.classList.add('active');
-            gsap.fromTo(incomingEl, { opacity: 0.7 }, { opacity: 1, duration: 0.15, ease: 'power1.out' });
-        }
-    };
-}
-
-/* =========================================================
-   7. CONTADORES ANIMADOS RÁPIDOS
-   ========================================================= */
-export function initCounterAnimations() {
-    document.querySelectorAll('[data-counter]').forEach(el => {
-        const target = parseInt(el.dataset.counter, 10);
-        if (isNaN(target)) return;
-        const obj = { val: 0 };
-        gsap.to(obj, {
-            val: target,
-            duration: 0.8,
-            ease: 'power1.out',
-            onUpdate: () => {
-                el.textContent = Math.round(obj.val).toLocaleString();
-            }
-        });
-    });
-}
-
-/* =========================================================
-   8. TOAST NOTIFICACIONES
-   ========================================================= */
-// Feedback is initialized separately so it also works with reduced motion.
-window.initAnimations = initAnimations;
+let modalState;
+window.alphaAnimateModalOpen = selector => {
+    const modal = document.querySelector(selector);
+    if (!modal) return;
+    modalState = {modal, trigger: document.activeElement, overflow: document.body.style.overflow};
+    modal.classList.remove('hidden');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    if (!modal.hasAttribute('aria-label') && !modal.hasAttribute('aria-labelledby')) {
+        modal.setAttribute('aria-label', 'Ventana de información');
+    }
+    modal.tabIndex = -1;
+    document.body.style.overflow = 'hidden';
+    (modal.querySelector('button') || modal).focus();
+    entrance(modal.querySelector('.modal-caja'));
+};
+window.alphaAnimateModalClose = (selector, callback) => {
+    const modal = document.querySelector(selector);
+    if (!modal) return;
+    modal.classList.add('hidden');
+    if (modalState?.modal === modal) {
+        document.body.style.overflow = modalState.overflow;
+        modalState.trigger?.focus();
+        modalState = null;
+    }
+    callback?.();
+};
+document.addEventListener('keydown', event => {
+    if (!modalState) return;
+    if (event.key === 'Escape') { window.alphaAnimateModalClose('#' + modalState.modal.id); return; }
+    if (event.key !== 'Tab') return;
+    const items = [...modalState.modal.querySelectorAll('button:not(:disabled), a[href], input:not(:disabled)')].filter(el => el.getClientRects().length);
+    const first = items[0], last = items.at(-1);
+    if (!first) { event.preventDefault(); modalState.modal.focus(); }
+    else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+});

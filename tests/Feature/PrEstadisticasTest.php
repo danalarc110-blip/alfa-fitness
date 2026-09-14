@@ -15,6 +15,9 @@ class PrEstadisticasTest extends TestCase
     {
         $cliente = Cliente::create(['nombre' => 'Cliente', 'correo' => 'cliente@example.com', 'password' => 'Password!123', 'activo' => true]);
         $this->actingAs($cliente, 'cliente')->get(route('estadisticas.index'))->assertRedirect(route('progreso.index'));
-        foreach (['Administrador', 'Secretaria', 'Entrenador'] as $rol) $this->actingAs(User::factory()->create(['rol' => $rol]))->get(route('estadisticas.index'))->assertForbidden();
+        $this->post(route('cliente.logout'));
+        foreach (['Administrador', 'Secretaria', 'Entrenador'] as $rol) {
+            $this->actingAs(User::factory()->create(['rol' => $rol]))->get(route('estadisticas.index'))->assertForbidden();
+        }
     }
 }

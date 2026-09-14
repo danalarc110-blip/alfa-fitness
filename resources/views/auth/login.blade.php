@@ -5,135 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name', 'Alpha Fitness') }} - Iniciar Sesión</title>
 
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
-
+    @include('partials.appearance')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <style>
-        /* =========================================================
-           Animaciones de fondo y efectos luminosos
-           ========================================================= */
-        @keyframes zoomFondo {
-            0%, 100% { transform: scale(1.04); }
-            50%      { transform: scale(1.08); }
-        }
 
-        @keyframes floatLuz {
-            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
-            50%      { transform: translate(15px, -15px) scale(1.1); opacity: 0.5; }
-        }
-
-        @keyframes shineBoton {
-            0%   { transform: translateX(-150%) rotate(25deg); }
-            100% { transform: translateX(250%) rotate(25deg); }
-        }
-
-        .anim-fondo {
-            animation: zoomFondo 20s ease-in-out infinite;
-        }
-
-        .luz-ambiental {
-            animation: floatLuz 8s ease-in-out infinite;
-        }
-
-        /* Tarjeta principal con cristal ahumado y relieve */
-        .card-login-alpha {
-            background: rgba(18, 18, 18, 0.94);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 35px -5px rgba(250, 204, 21, 0.12);
-        }
-
-        /* Selector de rol con pastilla animada */
-        .switch-container {
-            background: rgba(0, 0, 0, 0.65);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            position: relative;
-        }
-
-        .switch-slider {
-            position: absolute;
-            top: 4px;
-            bottom: 4px;
-            width: calc(50% - 4px);
-            background: linear-gradient(135deg, rgba(250, 204, 21, 0.18) 0%, rgba(250, 204, 21, 0.05) 100%);
-            border: 1px solid rgba(250, 204, 21, 0.45);
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(250, 204, 21, 0.15);
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.35, 1);
-            pointer-events: none;
-        }
-
-        .switch-slider.pos-usuarios {
-            transform: translateX(0);
-        }
-
-        .switch-slider.pos-clientes {
-            transform: translateX(100%);
-        }
-
-        /* Inputs estilizados */
-        .input-group {
-            background: rgba(0, 0, 0, 0.55);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.2s ease;
-        }
-
-        .input-group:focus-within {
-            border-color: rgba(250, 204, 21, 0.6);
-            background: rgba(0, 0, 0, 0.8);
-            box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.18);
-            transform: translateY(-1px);
-        }
-
-        .input-group:focus-within .input-icon {
-            color: #facc15;
-            transform: scale(1.08);
-        }
-
-        .input-icon {
-            transition: all 0.2s ease;
-        }
-
-        /* Botón de acción con efecto de brillo */
-        .btn-alpha-submit {
-            position: relative;
-            overflow: hidden;
-            background: linear-gradient(135deg, #facc15 0%, #eab308 100%);
-            color: #000;
-            font-weight: 700;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 4px 18px -2px rgba(250, 204, 21, 0.4);
-        }
-
-        .btn-alpha-submit:hover {
-            transform: translateY(-1.5px) scale(1.01);
-            box-shadow: 0 8px 25px -2px rgba(250, 204, 21, 0.55);
-        }
-
-        .btn-alpha-submit:active {
-            transform: translateY(0.5px) scale(0.98);
-        }
-
-        .btn-alpha-submit::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 40%;
-            height: 200%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
-            transform: rotate(25deg);
-            opacity: 0;
-        }
-
-        .btn-alpha-submit:hover::after {
-            opacity: 1;
-            animation: shineBoton 0.85s ease-in-out forwards;
-        }
-    </style>
 </head>
 <body class="font-sans antialiased text-white bg-black selection:bg-yellow-400 selection:text-black">
 
@@ -142,7 +17,7 @@
         {{-- Fotografía del gimnasio de fondo --}}
         <div
             class="absolute inset-0 bg-cover bg-center anim-fondo filter brightness-75 scale-105"
-            style="background-image: url('{{ asset('images/gym-bg.png') }}');"
+            style="background-image: image-set(url('{{ asset('images/gym-bg.webp') }}') type('image/webp'), url('{{ asset('images/gym-bg.png') }}') type('image/png'));"
         ></div>
         <div class="absolute inset-0 bg-gradient-to-t from-black via-black/85 to-black/65"></div>
 
@@ -153,7 +28,7 @@
         {{-- Tarjeta de Login --}}
         <div class="relative z-10 w-full max-w-[430px] my-6">
             <div class="card-login-alpha rounded-3xl p-7 sm:p-9 relative overflow-hidden">
-                
+
                 {{-- Encabezado y Logo --}}
                 <div class="flex flex-col items-center text-center mb-6">
                     <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-yellow-500/20 to-yellow-400/5 border border-yellow-400/30 flex items-center justify-center mb-3 shadow-lg shadow-yellow-400/10">
@@ -271,7 +146,7 @@
                 {{-- 2. SECCIÓN CLIENTES (Miembros / Atletas) --}}
                 {{-- ========================================================================= --}}
                 <div id="seccion-clientes" class="space-y-4 hidden">
-                    
+
                     {{-- 2A. Login Cliente --}}
                     <form id="form-cliente-login" method="POST" action="{{ route('cliente.login.submit') }}" class="space-y-4 {{ old('nombre') ? 'hidden' : '' }}">
                         @csrf
@@ -520,10 +395,6 @@
 
                 seccionClientes.classList.add('hidden');
                 seccionUsuarios.classList.remove('hidden');
-
-                if (window.gsap) {
-                    gsap.fromTo(seccionUsuarios, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.28, ease: 'power2.out' });
-                }
             } else {
                 switchSlider.classList.remove('pos-usuarios');
                 switchSlider.classList.add('pos-clientes');
@@ -537,10 +408,6 @@
 
                 seccionUsuarios.classList.add('hidden');
                 seccionClientes.classList.remove('hidden');
-
-                if (window.gsap) {
-                    gsap.fromTo(seccionClientes, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.28, ease: 'power2.out' });
-                }
             }
         }
 
@@ -557,17 +424,11 @@
             btnMostrarRegistro.addEventListener('click', () => {
                 formClienteLogin.classList.add('hidden');
                 formClienteRegistro.classList.remove('hidden');
-                if (window.gsap) {
-                    gsap.fromTo(formClienteRegistro, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.28, ease: 'power2.out' });
-                }
             });
 
             btnMostrarLogin.addEventListener('click', () => {
                 formClienteRegistro.classList.add('hidden');
                 formClienteLogin.classList.remove('hidden');
-                if (window.gsap) {
-                    gsap.fromTo(formClienteLogin, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.28, ease: 'power2.out' });
-                }
             });
         }
 

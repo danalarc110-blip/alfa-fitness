@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
 
 class ClienteLoginController extends Controller
@@ -31,7 +31,7 @@ class ClienteLoginController extends Controller
             'correo.email' => 'Ingresa un correo electrónico válido.',
             'correo.unique' => 'Ya existe una cuenta con ese correo.',
             'password.required' => 'La contraseña es obligatoria.',
-            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.min' => 'La contraseña debe tener al menos 12 caracteres.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
         ]);
 
@@ -58,11 +58,11 @@ class ClienteLoginController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'correo'   => ['required', 'string', 'email'],
+            'correo' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ], [
-            'correo.required'   => 'El correo electrónico es obligatorio.',
-            'correo.email'      => 'Ingresa un correo electrónico válido.',
+            'correo.required' => 'El correo electrónico es obligatorio.',
+            'correo.email' => 'Ingresa un correo electrónico válido.',
             'password.required' => 'La contraseña es obligatoria.',
         ]);
 
@@ -105,9 +105,13 @@ class ClienteLoginController extends Controller
     /**
      * Redirige a Google para iniciar el flujo de OAuth.
      */
-    public function redirectToGoogle(): RedirectResponse
+    public function redirectToGoogle(Request $request): RedirectResponse
     {
-        if (!config('services.google.client_id') || !config('services.google.client_secret')) return redirect()->route('login')->withErrors(['correo' => 'Google no está disponible. Ingresa con tu correo y contraseña.']);
+        $request->session()->forget('google_link');
+        if (! config('services.google.client_id') || ! config('services.google.client_secret')) {
+            return redirect()->route('login')->withErrors(['correo' => 'Google no está disponible. Ingresa con tu correo y contraseña.']);
+        }
+
         return Socialite::driver('google')->redirect();
     }
 
@@ -116,37 +120,48 @@ class ClienteLoginController extends Controller
      */
     public function handleGoogleCallback(Request $request): RedirectResponse
     {
+        $vinculacion = $request->session()->pull('google_link');
         try {
             $googleUser = Socialite::driver('google')->user();
         } catch (\Throwable $e) {
-            report($e);
+            // OAuth exceptions can contain access tokens; do not log their payload.
+            Log::warning('Fallo de autenticacion Google.', ['exception' => get_class($e)]);
+
             return redirect()->route('login')->withErrors(['correo' => 'No se pudo completar el acceso con Google. Intenta nuevamente.']);
         }
-        if (!$googleUser->getEmail() || !($googleUser->user['email_verified'] ?? $googleUser->user['verified_email'] ?? false)) return redirect()->route('login')->withErrors(['correo' => 'Google no proporcionó un correo verificado.']);
+        if (! $googleUser->getId() || ! $googleUser->getEmail() || ($googleUser->user['email_verified'] ?? $googleUser->user['verified_email'] ?? false) !== true) {
+            return redirect()->route('login')->withErrors(['correo' => 'Google no proporcionó un correo verificado.']);
+        }
 
-        // Si ya existe un cliente con ese correo (registrado antes con
-        // contraseña propia), le vinculamos el google_id sin sobreescribir sus datos personalizados.
-        $cliente = Cliente::where('correo', $googleUser->getEmail())->first();
+        // The provider subject is stable even if its email address changes.
+        $cliente = Cliente::where('google_id', $googleUser->getId())->first()
+            ?? Cliente::where('correo', $googleUser->getEmail())->first();
+        $vinculacionAutorizada = $vinculacion && $cliente
+            && $vinculacion['id'] === $cliente->id
+            && $vinculacion['expires'] >= now()->timestamp
+            && Auth::guard('cliente')->id() === $cliente->id
+            && strcasecmp($cliente->correo, $googleUser->getEmail()) === 0;
+        if (($vinculacion && ! $vinculacionAutorizada) || ($cliente && ! $cliente->google_id && ! $vinculacionAutorizada)) {
+            return redirect()->route($vinculacion ? 'configuracion' : 'login')->withErrors(['correo' => 'Para vincular una cuenta existente, inicia sesión con tu contraseña y autoriza Google desde Ajustes. Usa la misma dirección de correo.']);
+        }
 
         if ($cliente) {
+            if ($cliente->google_id && $cliente->google_id !== $googleUser->getId()) {
+                return redirect()->route('login')->withErrors(['correo' => 'Esta cuenta está vinculada a otra identidad de Google.']);
+            }
             if (! $cliente->activo) {
                 return redirect()->route('login')->withErrors([
                     'correo' => 'Tu cuenta ha sido desactivada. Comunícate con recepción.',
                 ]);
             }
 
-            $datosActualizar = ['google_id' => $googleUser->getId()];
-            if (empty($cliente->avatar)) {
-                $datosActualizar['avatar'] = $googleUser->getAvatar();
-            }
-            $cliente->update($datosActualizar);
+            $cliente->update(['google_id' => $googleUser->getId()]);
         } else {
             $cliente = Cliente::create([
-                'nombre'    => $googleUser->getName() ?: 'Cliente Google',
-                'correo'    => $googleUser->getEmail(),
+                'nombre' => $googleUser->getName() ?: 'Cliente Google',
+                'correo' => $googleUser->getEmail(),
                 'google_id' => $googleUser->getId(),
-                'avatar'    => $googleUser->getAvatar(),
-                'activo'    => true,
+                'activo' => true,
             ]);
         }
 

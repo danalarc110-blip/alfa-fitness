@@ -41,8 +41,11 @@ class Asistencia extends Model
 
     public function getDuracionAttribute(): ?string
     {
-        if (! $this->fecha_salida) return null;
-        $minutos = $this->fecha_hora->diffInMinutes($this->fecha_salida);
+        if (! $this->fecha_salida) {
+            return null;
+        }
+        $minutos = max(0, (int) $this->fecha_hora->diffInMinutes($this->fecha_salida));
+
         return intdiv($minutos, 60).'h '.($minutos % 60).'m';
     }
 }

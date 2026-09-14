@@ -25,6 +25,7 @@ class Cliente extends Authenticatable
         'avatar_barba',
         'avatar_atuendo',
         'avatar_color_atuendo',
+        'apariencia',
     ];
 
     protected $hidden = [
@@ -37,6 +38,8 @@ class Cliente extends Authenticatable
         return [
             'password' => 'hashed',
             'activo' => 'boolean',
+            'baneado_en' => 'datetime',
+            'apariencia' => 'array',
         ];
     }
 
@@ -60,17 +63,16 @@ class Cliente extends Authenticatable
         return $this->hasMany(SolicitudMembresia::class);
     }
 
-    /**
-     * Obtiene la URL completa del avatar (sea URL externa de Google o archivo local).
-     */
+    /** Keep profile images first-party so opening the app never contacts a tracking host. */
     public function getAvatarUrlAttribute(): ?string
     {
-        if (! $this->avatar) {
+        if (! $this->avatar || basename($this->avatar) !== $this->avatar) {
             return null;
         }
 
-        if (filter_var($this->avatar, FILTER_VALIDATE_URL) || str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
-            return $this->avatar;
+        $optimized = pathinfo($this->avatar, PATHINFO_FILENAME).'.webp';
+        if (is_file(public_path('images/avatars/'.$optimized))) {
+            return asset('images/avatars/'.$optimized);
         }
 
         return asset('images/avatars/'.$this->avatar);

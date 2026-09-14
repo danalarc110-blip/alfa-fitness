@@ -2,18 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Cliente;
 use App\Models\Ejercicio;
 use App\Models\PersonalRecord;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ProgresoController extends Controller
 {
-
-
     public function index(Request $request): View
     {
         ['guard' => $guard, 'user' => $user] = $this->actual();
@@ -55,7 +52,7 @@ class ProgresoController extends Controller
         abort_unless($guard === 'cliente', 403);
 
         $rules = [
-            'ejercicio_id' => ['required', 'exists:ejercicios,id'],
+            'ejercicio_id' => ['required', 'integer', Rule::exists('ejercicios', 'id')->where('activo', true)],
             'peso_kg' => ['required', 'numeric', 'min:0.5', 'max:999'],
             'repeticiones' => ['required', 'integer', 'min:1', 'max:100'],
             'notas' => ['nullable', 'string', 'max:255'],

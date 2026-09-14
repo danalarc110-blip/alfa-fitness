@@ -17,6 +17,8 @@
 /public/hot
 /public/storage
 /public/.qa-alpha
+/public/images/productos/*
+!/public/images/productos/.gitkeep
 /storage/*.key
 /storage/pail
 /vendor

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Asistencia;
 use App\Models\Cliente;
+use App\Models\Ejercicio;
 use App\Models\Membresia;
 use App\Models\PersonalRecord;
 use App\Models\Rutina;
@@ -33,8 +34,8 @@ class DashboardController extends Controller
 
         if ($perfil === 'cliente') {
             $visitas = Asistencia::where('cliente_id', $user->id);
-            $membresias = Membresia::where('cliente_id', $user->id)->where('cancelada', false)->where('inicio', '<=', today())->where('fin', '>=', today());
-            $metricas = [['Mis rutinas', $rutinas->count()], ['Mis visitas este mes', (clone $visitas)->whereBetween('fecha_hora', [now()->startOfMonth(), now()->endOfMonth()])->count()], ['Membresias vigentes', $membresias->count()], ['Mis marcas', PersonalRecord::where('cliente_id', $user->id)->count()]];
+            $membresias = Membresia::with('cliente:id,nombre')->where('cliente_id', $user->id)->where('cancelada', false)->where('inicio', '<=', today())->where('fin', '>=', today());
+            $metricas = [['Mis rutinas', Rutina::deUsuario($guard, $user->id)->count()], ['Mis visitas este mes', (clone $visitas)->whereBetween('fecha_hora', [now()->startOfMonth(), now()->endOfMonth()])->count()], ['Membresias vigentes', $membresias->count()], ['Mis marcas', PersonalRecord::where('cliente_id', $user->id)->count()]];
             $actividad = $visitas->latest('fecha_hora')->limit(5)->get();
             $porVencer = $membresias->where('fin', '<=', today()->addDays(7))->limit(5)->get();
         } elseif ($perfil === 'recepcion') {
@@ -44,7 +45,7 @@ class DashboardController extends Controller
         } elseif ($perfil === 'administrador') {
             $metricas = [['Clientes activos', Cliente::where('activo', true)->count()], ['Clientes inactivos', Cliente::where('activo', false)->count()], ['Personal activo', User::where('activo', true)->count()]];
         } else {
-            $metricas = [['Mis rutinas', Rutina::deUsuario($guard, $user->id)->count()], ['Ejercicios disponibles', \App\Models\Ejercicio::where('activo', true)->count()]];
+            $metricas = [['Mis rutinas', Rutina::deUsuario($guard, $user->id)->count()], ['Ejercicios disponibles', Ejercicio::where('activo', true)->count()]];
         }
 
         return view('home', compact('guard', 'nombre', 'rutinas', 'metricas', 'actividad', 'perfil', 'titulo', 'acciones', 'porVencer'));

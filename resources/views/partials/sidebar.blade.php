@@ -1,9 +1,9 @@
 @php
-    $guardActual = $guard ?? (auth('web')->check() ? 'web' : 'cliente');
+    $guardActual = $guard ?? (auth('cliente')->check() ? 'cliente' : 'web');
     $userActual = $guardActual === 'cliente' ? auth('cliente')->user() : auth()->user();
     $nombreActual = $nombre ?? ($userActual ? ($guardActual === 'cliente' ? $userActual->nombre : $userActual->name) : 'Usuario');
     $rolActual = $rolEtiqueta ?? ($userActual ? ($guardActual === 'cliente' ? 'Miembro' : ($userActual->rol ?? 'Usuario')) : 'Miembro');
-    
+
     // Resuelve la URL del avatar de forma segura para URLs de Google o archivos locales
     $avatarUrlActual = $avatarUrl ?? ($userActual ? $userActual->avatar_url : null);
     if ($avatarUrlActual && !filter_var($avatarUrlActual, FILTER_VALIDATE_URL) && !str_starts_with($avatarUrlActual, 'http://') && !str_starts_with($avatarUrlActual, 'https://') && !str_starts_with($avatarUrlActual, '/')) {
@@ -25,8 +25,8 @@
         ['key' => 'configuracion', 'label' => 'Configuración', 'href' => route('configuracion'), 'icon' => 'settings'],
     ];
 
-    $navItems[] = ['key' => 'cuentas', 'label' => 'Cuentas', 'href' => route('cuentas.index'), 'icon' => 'users'];
-    $permisosNav = ['cuentas' => 'clientes', 'asistencia' => 'asistencia', 'membresias' => 'membresias', 'progreso' => 'progreso', 'estadisticas' => 'progreso'];
+    $navItems[] = ['key' => 'cuentas', 'label' => 'Administrar cuentas', 'href' => route('cuentas.index'), 'icon' => 'users'];
+    $permisosNav = ['cuentas' => 'administrar', 'asistencia' => 'asistencia', 'membresias' => 'membresias', 'progreso' => 'progreso', 'estadisticas' => 'progreso'];
     $navItems = array_filter($navItems, fn ($item) => !isset($permisosNav[$item['key']]) || \App\Support\Acceso::permite($userActual, $permisosNav[$item['key']]));
 
     $icons = [
@@ -56,7 +56,10 @@
             <span></span>
         </button>
         <a href="{{ $inicioRoute }}" class="flex items-center">
-            <img src="{{ asset('images/logo-sidebar.png') }}" alt="Alpha Fitness" class="h-7 w-auto object-contain">
+            <picture>
+                <source srcset="{{ asset('images/logo-sidebar.webp') }}" type="image/webp">
+                <img src="{{ asset('images/logo-sidebar.png') }}" alt="Alpha Fitness" width="47" height="40" class="h-10 w-auto object-contain">
+            </picture>
         </a>
     </div>
 
@@ -84,7 +87,10 @@
     <div>
         {{-- Cabecera del Drawer --}}
         <div class="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
-            <img src="{{ asset('images/logo-sidebar.png') }}" alt="Alpha Fitness" class="w-28 object-contain">
+            <picture>
+                <source srcset="{{ asset('images/logo-sidebar.webp') }}" type="image/webp">
+                <img src="{{ asset('images/logo-sidebar.png') }}" alt="Alpha Fitness" width="112" height="95" class="w-28 object-contain">
+            </picture>
             <button type="button" onclick="alphaCloseMobileMenu()" aria-label="Cerrar menú"
                 class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition-all duration-150 active:scale-95">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -158,7 +164,10 @@
 
     <div class="mb-8 px-2 flex items-center justify-between">
         <a href="{{ $inicioRoute }}">
-            <img src="{{ asset('images/logo-sidebar.png') }}" alt="Alpha Fitness" class="w-32 object-contain -ml-1 hover:scale-105 transition-transform duration-300">
+            <picture>
+                <source srcset="{{ asset('images/logo-sidebar.webp') }}" type="image/webp">
+                <img src="{{ asset('images/logo-sidebar.png') }}" alt="Alpha Fitness" width="128" height="109" class="w-32 object-contain -ml-1 hover:scale-105 transition-transform duration-300">
+            </picture>
         </a>
     </div>
 

@@ -50,7 +50,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 @forelse ($ejercicios as $index => $ejercicio)
                     <div class="alpha-card rounded-2xl p-5 border border-white/10 flex flex-col justify-between relative overflow-hidden group shadow-lg" data-animate="card">
-                        
+
                         {{-- Top Ranking Badge --}}
                         <div class="flex items-center justify-between mb-3">
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold {{ $index === 0 ? 'bg-yellow-400 text-black shadow-md shadow-yellow-400/20' : ($index === 1 ? 'bg-gray-300 text-black' : ($index === 2 ? 'bg-amber-600 text-white' : 'bg-white/5 text-gray-400 border border-white/5')) }}">
@@ -67,7 +67,7 @@
                             @if($ejercicio->tiene_imagen)
                             <img loading="lazy" id="img-ej-{{ $ejercicio->id }}" src="{{ $ejercicio->imagen_url }}" alt="{{ $ejercicio->nombre }}"
                                 class="w-full h-full object-contain transition-all duration-300 select-none">
-                            
+
                             @else <span class="text-sm text-gray-400">Imagen no disponible</span> @endif
                             {{-- Botón para alternar músculos entrenados --}}
                             @if ($ejercicio->tiene_imagen_musculos)
@@ -188,6 +188,10 @@
 
         // Calificar con AJAX
         function calificarEjercicio(ejercicioId, estrellas) {
+            const rating = document.querySelector(`.star-rating[data-ejercicio-id="${ejercicioId}"]`);
+            if (rating.dataset.saving) return;
+            rating.dataset.saving = 'true';
+            rating.querySelectorAll('button').forEach(button => button.disabled = true);
             fetch(`/ejercicios/${ejercicioId}/calificar`, {
                 method: 'POST',
                 headers: {
@@ -224,6 +228,9 @@
                 if (window.showAlphaToast) {
                     window.showAlphaToast('No se pudo guardar la calificación', 'error');
                 }
+            }).finally(() => {
+                delete rating.dataset.saving;
+                rating.querySelectorAll('button').forEach(button => button.disabled = false);
             });
         }
     </script>

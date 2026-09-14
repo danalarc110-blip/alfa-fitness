@@ -6,15 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Alpha Fitness') }} - {{ $rutina->nombre }}</title>
 
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
 
-    <script>
-        if (localStorage.getItem('alphaTema') === 'light') {
-            document.documentElement.classList.add('light');
-        }
-    </script>
 
+
+    @include('partials.appearance')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased bg-black text-white min-h-screen">
@@ -297,12 +292,19 @@
     }
 
     /* ---- acciones DÍAS ---- */
+    let creatingDay = false;
     function crearDia() {
+        if (creatingDay) return;
+        creatingDay = true;
+        document.getElementById('btn-add-dia').disabled = true;
         api(URLS.crearDia, 'POST').then(({dia}) => {
             DIAS.push({ id: dia.id, titulo: dia.titulo, ejercicios: [] });
             diaActivoId = dia.id;
             render();
-        }).catch(mostrarError);
+        }).catch(mostrarError).finally(() => {
+            creatingDay = false;
+            document.getElementById('btn-add-dia').disabled = false;
+        });
     }
 
     function renombrarPrompt(id) {
@@ -325,16 +327,24 @@
     }
 
     /* ---- acciones EJERCICIOS ---- */
+    const addingExercises = new Set();
     function agregarEjercicio(ejId) {
         if (!diaActivoId) { alert('Crea un día primero.'); return; }
         const selectedDay = diaActivoId;
+        const key = `${selectedDay}:${ejId}`;
+        if (addingExercises.has(key)) return;
+        addingExercises.add(key);
+        document.querySelector(`[data-add="${ejId}"]`)?.setAttribute('disabled', '');
         api(URLS.crearEjercicio(selectedDay), 'POST', { ejercicio_id: ejId })
             .then(({ rutina_ejercicio: re }) => {
                 re.ejercicio.tiene_imagen          = re.ejercicio.tiene_imagen         ?? false;
                 re.ejercicio.tiene_imagen_musculos = re.ejercicio.tiene_imagen_musculos ?? false;
                 DIAS.find(d => d.id === selectedDay)?.ejercicios.push(re);
                 render();
-            }).catch(mostrarError);
+            }).catch(mostrarError).finally(() => {
+                addingExercises.delete(key);
+                document.querySelector(`[data-add="${ejId}"]`)?.removeAttribute('disabled');
+            });
     }
 
     function guardarCampo(input) {
@@ -343,12 +353,17 @@
         let valor   = input.value;
         if (campo === 'peso' && valor === '') valor = null;
 
+        const record = DIAS.flatMap(d => d.ejercicios).find(re => re.id === id);
+        const previous = record[campo];
+        record[campo] = valor;
         input.disabled = true;
         api(URLS.actualizarEjercicio(id), 'PUT', { [campo]: valor }).then(() => {
             for (const d of DIAS) { const ej = d.ejercicios.find(re => re.id === id); if (ej) ej[campo] = valor; }
             marcarGuardado();
         }).catch(error => {
-            for (const d of DIAS) { const ej = d.ejercicios.find(re => re.id === id); if (ej) input.value = ej[campo] ?? ''; }
+            record[campo] = previous;
+            const visibleInput = document.querySelector(`[data-id="${id}"][data-campo="${campo}"]`);
+            if (visibleInput) visibleInput.value = previous ?? '';
             mostrarError(error);
         }).finally(() => { input.disabled = false; });
     }
