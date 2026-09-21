@@ -11,6 +11,12 @@
     const contrast = (a, b) => (Math.max(luminance(a), luminance(b)) + .05) / (Math.min(luminance(a), luminance(b)) + .05);
     const valid = c => c && keys.every(k => /^#[\da-f]{6}$/i.test(c[k])) && contrast(c.text, c.background) >= 4.5 && contrast(c.text, c.surface) >= 4.5;
     const foreground = c => contrast(c, '#000000') > contrast(c, '#ffffff') ? '#000000' : '#ffffff';
+    const normalize = preference => {
+        if (!preference || !['light', 'dark', 'custom'].includes(preference.mode) || !valid(preference.colors)) return null;
+        const design = preference.design ?? 'elegant';
+        if (!['elegant', 'green'].includes(design)) return null;
+        return {design, mode: preference.mode, colors: Object.fromEntries(keys.map(k => [k, preference.colors[k]]))};
+    };
     const paint = (element, c) => {
         const readable = color => contrast(color, c.background) >= 4.5 && contrast(color, c.surface) >= 4.5 ? color : c.text;
         const tokens = {...c, 'on-primary': foreground(c.primary), 'on-accent': foreground(c.accent),
@@ -22,14 +28,17 @@
         element.style.colorScheme = luminance(c.background) > .179 ? 'light' : 'dark';
     };
     const api = window.AlphaAppearance = {
-        valid, contrast, paint,
+        valid, contrast, paint, normalize,
+        palette(preference) {
+            return preference.mode === 'custom' ? preference.colors : this.config.designPalettes[preference.design ?? 'elegant'][preference.mode];
+        },
         init(config) {
             this.config = config;
             let preference = config.preference;
             if (!config.authenticated) {
                 try {
                     const stored = JSON.parse(localStorage.getItem('alphaAppearance'));
-                    if (stored && ['light', 'dark', 'custom'].includes(stored.mode) && valid(stored.colors)) preference = stored;
+                    if (normalize(stored)) preference = normalize(stored);
                     else if (['light', 'dark'].includes(localStorage.getItem('alphaTema'))) preference = {mode: localStorage.getItem('alphaTema'), colors: config.palettes.light};
                 } catch (_) { /* Storage is optional. */ }
             }
@@ -37,17 +46,21 @@
             if (config.authenticated) this.remember(preference);
         },
         apply(preference) {
-            if (!['light', 'dark', 'custom'].includes(preference.mode) || !valid(preference.colors)) return;
+            preference = normalize(preference);
+            if (!preference) return;
             this.current = structuredClone(preference);
-            const c = preference.mode === 'custom' ? preference.colors : this.config.palettes[preference.mode];
+            const c = this.palette(preference);
             paint(document.documentElement, c);
             document.documentElement.dataset.theme = preference.mode;
+            document.documentElement.dataset.design = preference.design;
             document.documentElement.classList.toggle('light', luminance(c.background) > .179);
         },
         remember(preference) {
             try { localStorage.setItem('alphaAppearance', JSON.stringify(preference)); localStorage.removeItem('alphaTema'); } catch (_) {}
         },
         async save(preference) {
+            preference = normalize(preference);
+            if (!preference) throw new Error('Selecciona una apariencia válida.');
             if (this.config.authenticated) {
                 const response = await fetch(this.config.url, {method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': this.config.csrf}, body: JSON.stringify(preference)});
                 const data = await response.json().catch(() => ({}));

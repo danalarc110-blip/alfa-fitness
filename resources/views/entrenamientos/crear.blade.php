@@ -1,23 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'Alpha Fitness') }} - {{ $rutina->nombre }}</title>
-
-
-
-
-    @include('partials.appearance')
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="font-sans antialiased bg-black text-white min-h-screen">
-<div class="min-h-screen flex flex-col md:flex-row">
-    @include('partials.sidebar', ['active' => 'entrenamientos'])
-
-    <div class="flex-1 flex flex-col min-w-0 px-4 sm:px-6 md:px-10 py-5 sm:py-8">
-
+@extends('layouts.app', ['active' => 'entrenamientos'])
+@section('title', 'Editar rutina')
+@section('page-header')
+@endsection
+@section('content')
         <div class="flex items-center justify-between gap-4 mb-5"><a href="{{ route('entrenamientos.index') }}" class="text-sm text-gray-400">← Mis rutinas</a><form method="POST" action="{{ route('entrenamientos.eliminar', $rutina) }}" data-confirm="Eliminar la rutina {{ $rutina->nombre }} y todos sus días y ejercicios. Esta acción no se puede deshacer.">@csrf @method('DELETE')<button class="text-sm text-red-400">Eliminar rutina</button></form></div>
         <h1 class="sr-only">Editar rutina</h1>
 
@@ -92,9 +77,8 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
+@endsection
+@push('scripts')
 <script>
 (function () {
     const CSRF  = document.querySelector('meta[name="csrf-token"]').content;
@@ -441,5 +425,5 @@
     buscar();
 })();
 </script>
-</body>
-</html>
+
+@endpush

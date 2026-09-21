@@ -160,7 +160,7 @@
 {{-- =========================================================
    SIDEBAR DE ESCRITORIO (Solo visible en pantallas >= md)
    ========================================================= --}}
-<aside class="hidden md:flex flex-col w-[230px] shrink-0 bg-black/95 backdrop-blur-md border-r border-white/10 px-4 pt-6 pb-5 select-none" data-animate="sidebar">
+<aside class="alpha-desktop-sidebar hidden md:flex flex-col w-[230px] shrink-0 bg-black/95 backdrop-blur-md border-r border-white/10 px-4 pt-6 pb-5 select-none" data-animate="sidebar">
 
     <div class="mb-8 px-2 flex items-center justify-between">
         <a href="{{ $inicioRoute }}">
@@ -193,11 +193,11 @@
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
                     <span id="label-tema-sidebar">Cambiar Tema</span>
                 </span>
-                <span class="text-[10px] uppercase font-bold text-yellow-400/80">Claro / Oscuro</span>
+                <span class="alpha-sidebar-caption text-[10px] uppercase font-bold text-yellow-400/80">Claro / Oscuro</span>
             </button>
         </div>
 
-        <div class="flex items-center gap-3 px-2 mb-3 bg-white/[0.03] p-2 rounded-xl border border-white/5">
+        <div class="alpha-sidebar-profile flex items-center gap-3 px-2 mb-3 bg-white/[0.03] p-2 rounded-xl border border-white/5">
             <div class="w-9 h-9 rounded-full overflow-hidden bg-white/10 flex items-center justify-center shrink-0 border border-yellow-400/20 shadow-inner">
                 @if ($avatarUrlActual)
                     <img src="{{ $avatarUrlActual }}" alt="{{ $nombreActual }}" class="w-full h-full object-cover">
@@ -207,7 +207,7 @@
             </div>
             <div class="leading-tight min-w-0">
                 <p class="text-sm font-semibold truncate text-white">{{ $nombreActual }}</p>
-                <span class="inline-block text-[10px] uppercase tracking-wider font-semibold text-yellow-400/90 truncate">{{ $rolActual }}</span>
+                <span class="alpha-sidebar-caption inline-block text-[10px] uppercase tracking-wider font-semibold text-yellow-400/90 truncate">{{ $rolActual }}</span>
             </div>
         </div>
         <form method="POST" action="{{ $salirRoute }}">

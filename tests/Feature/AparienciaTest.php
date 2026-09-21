@@ -29,7 +29,7 @@ class AparienciaTest extends TestCase
                 $colors = Apariencia::PALETAS['dark'];
                 $colors['accent'] = '#aabbcc';
                 $this->postJson(route('configuracion.apariencia'), compact('mode', 'colors'))->assertOk();
-                $this->assertSame(compact('mode', 'colors'), $user->fresh()->apariencia);
+                $this->assertEquals(compact('mode', 'colors') + ['design' => 'elegant'], $user->fresh()->apariencia);
                 $this->get('/configuracion')->assertOk()->assertSee('Vista previa de la apariencia');
             }
             $this->post(route('logout'));
@@ -61,5 +61,33 @@ class AparienciaTest extends TestCase
         $this->actingAs($user)->postJson(route('configuracion.apariencia'), ['mode' => 'dark', 'colors' => Apariencia::PALETAS['light'], 'user_id' => $other->id, 'rol' => 'Administrador'])->assertOk();
         $this->assertNull($other->fresh()->apariencia);
         $this->assertSame('Secretaria', $user->fresh()->rol);
+    }
+
+    public function test_design_is_independent_of_mode_and_persists_for_both_guards(): void
+    {
+        foreach (['web', 'cliente'] as $guard) {
+            $user = $guard === 'web' ? User::factory()->create() : Cliente::create(['nombre' => 'Cliente verde', 'correo' => 'verde@example.test', 'activo' => true]);
+            $this->actingAs($user, $guard);
+            foreach (Apariencia::DISENOS as $design) {
+                foreach (['light', 'dark', 'custom'] as $mode) {
+                    $colors = Apariencia::PALETAS['light'];
+                    $this->postJson(route('configuracion.apariencia'), compact('design', 'mode', 'colors'))->assertOk()->assertJsonPath('appearance.design', $design);
+                    $this->assertEquals(compact('design', 'mode', 'colors'), Apariencia::preferencia($user->fresh()));
+                    $this->get('/configuracion')->assertOk()->assertSee('Elegante')->assertSee('Verde');
+                }
+            }
+            $this->post(route($guard === 'web' ? 'logout' : 'cliente.logout'));
+        }
+    }
+
+    public function test_legacy_preferences_get_elegant_without_losing_custom_colors(): void
+    {
+        $colors = Apariencia::PALETAS['dark'];
+        $user = User::factory()->create(['apariencia' => ['mode' => 'custom', 'colors' => $colors]]);
+        $this->assertEquals(['design' => 'elegant', 'mode' => 'custom', 'colors' => $colors], Apariencia::preferencia($user));
+        $this->actingAs($user)->postJson(route('configuracion.apariencia'), ['design' => 'green', 'mode' => 'custom', 'colors' => $colors])->assertOk();
+        $this->postJson(route('configuracion.apariencia'), ['mode' => 'dark', 'colors' => $colors])->assertOk()->assertJsonPath('appearance.design', 'green');
+        $this->postJson(route('configuracion.apariencia'), ['design' => 'url(unsafe)', 'mode' => 'dark', 'colors' => $colors])->assertUnprocessable();
+        $this->assertSame('green', $user->fresh()->apariencia['design']);
     }
 }

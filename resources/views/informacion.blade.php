@@ -9,7 +9,7 @@
     @include('partials.appearance')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="font-sans antialiased bg-black text-white min-h-screen">
+<body class="alpha-app alpha-public font-sans antialiased bg-black text-white min-h-screen">
 
     <div class="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
 

@@ -11,6 +11,13 @@ final class Apariencia
         'dark' => ['primary' => '#facc15', 'accent' => '#5ed4bf', 'background' => '#101216', 'surface' => '#1a1e25', 'text' => '#f1f4f9'],
     ];
 
+    public const DISENOS = ['elegant', 'green'];
+
+    public const PALETAS_VERDE = [
+        'light' => ['primary' => '#e9ed6b', 'accent' => '#516637', 'background' => '#f5f5f0', 'surface' => '#ffffff', 'text' => '#20221f'],
+        'dark' => ['primary' => '#e9ed6b', 'accent' => '#b7c98a', 'background' => '#121710', 'surface' => '#1d251c', 'text' => '#f3f5ee'],
+    ];
+
     public static function contraste(string $a, string $b): float
     {
         $luminancia = static function (string $hex): float {
@@ -49,13 +56,14 @@ final class Apariencia
 
     public static function preferencia($usuario): array
     {
-        $guardada = $usuario?->apariencia;
+        $guardada = is_array($usuario?->apariencia) ? $usuario->apariencia : [];
+        $design = in_array($guardada['design'] ?? null, self::DISENOS, true) ? $guardada['design'] : 'elegant';
         $mode = in_array($guardada['mode'] ?? null, ['light', 'dark', 'custom'], true) ? $guardada['mode'] : 'light';
         $colors = $guardada['colors'] ?? self::PALETAS['light'];
         if (! is_array($colors) || ! self::legible($colors)) {
             $colors = self::PALETAS['light'];
         }
 
-        return compact('mode', 'colors');
+        return compact('design', 'mode', 'colors');
     }
 }

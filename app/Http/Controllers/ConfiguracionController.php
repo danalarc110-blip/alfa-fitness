@@ -93,11 +93,12 @@ class ConfiguracionController extends Controller
     public function actualizarApariencia(Request $request)
     {
         ['user' => $user] = $this->actual();
-        $rules = ['mode' => ['required', Rule::in(['light', 'dark', 'custom'])], 'colors' => ['required', 'array:primary,accent,background,surface,text']];
+        $rules = ['design' => ['sometimes', 'required', Rule::in(Apariencia::DISENOS)], 'mode' => ['required', Rule::in(['light', 'dark', 'custom'])], 'colors' => ['required', 'array:primary,accent,background,surface,text']];
         foreach (array_keys(Apariencia::PALETAS['light']) as $key) {
             $rules['colors.'.$key] = ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/D'];
         }
         $data = $request->validate($rules);
+        $data['design'] ??= Apariencia::preferencia($user)['design'];
         Apariencia::validar($data['colors']);
         $user->update(['apariencia' => $data]);
 
