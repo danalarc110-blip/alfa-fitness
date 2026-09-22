@@ -35,8 +35,9 @@ class MembresiaController extends Controller
             ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
             ->latest('inicio')->paginate(15, ['*'], 'membresias_page')->withQueryString();
         $planes = PlanMembresia::where('activo', true)->orderBy('precio')->get();
+        $todosLosPlanes = Gate::allows('administrar') ? PlanMembresia::orderBy('precio')->get() : collect();
 
-        return view('membresias.index', compact('guard', 'busqueda', 'estado', 'solicitudes', 'membresias', 'planes'));
+        return view('membresias.index', compact('guard', 'busqueda', 'estado', 'solicitudes', 'membresias', 'planes', 'todosLosPlanes'));
     }
 
     public function solicitar(Request $request)

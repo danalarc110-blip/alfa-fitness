@@ -22,14 +22,17 @@
             <div class="p-8 text-center"><p class="font-medium mb-2">Tu primera rutina te espera</p><p class="text-sm text-gray-400 mb-5">Organiza tus ejercicios y días de entrenamiento.</p><form method="POST" action="{{ route('entrenamientos.crear') }}">@csrf<button class="alpha-btn-primary px-5 py-3">Crear mi rutina</button></form></div>
         @endforelse
     </section>
-    @can('asistencia')
+    @if($guard === 'cliente' || auth('web')->user()?->can('asistencia'))
     <section class="alpha-card overflow-hidden">
-        <div class="alpha-panel-heading"><h2>Actividad reciente</h2><a href="{{ route('asistencia.index') }}">Ver historial →</a></div>
+        <div class="alpha-panel-heading">
+            <h2>{{ $guard === 'cliente' ? 'Mis visitas recientes' : 'Actividad reciente' }}</h2>
+            @can('asistencia')<a href="{{ route('asistencia.index') }}">Ver historial →</a>@endcan
+        </div>
         @forelse($actividad as $visita)
-            <div class="alpha-list-row"><div><strong class="text-sm">{{ $visita->cliente?->nombre ?? 'Miembro' }}</strong><p class="text-xs text-gray-400 mt-1">{{ $visita->fecha_hora->format('d/m/Y · H:i') }}</p></div><span class="alpha-status {{ !$visita->fecha_salida ? 'alpha-status-active' : '' }}">{{ $visita->fecha_salida ? 'Visita completada' : 'En el gimnasio' }}</span></div>
-        @empty<p class="text-sm text-gray-400 py-10 text-center">Las próximas visitas aparecerán aquí.</p>@endforelse
+            <div class="alpha-list-row"><div><strong class="text-sm">{{ $guard === 'cliente' ? 'Entrada al gimnasio' : ($visita->cliente?->nombre ?? 'Miembro') }}</strong><p class="text-xs text-gray-400 mt-1">{{ $visita->fecha_hora->format('d/m/Y · H:i') }}</p></div><span class="alpha-status {{ !$visita->fecha_salida ? 'alpha-status-active' : '' }}">{{ $visita->fecha_salida ? 'Visita completada' : 'En el gimnasio' }}</span></div>
+        @empty<p class="text-sm text-gray-400 py-10 text-center">{{ $guard === 'cliente' ? 'Tus visitas al gimnasio se registrarán aquí.' : 'Las próximas visitas aparecerán aquí.' }}</p>@endforelse
     </section>
-    @endcan
+    @endif
 </div>
 @if($porVencer->isNotEmpty())
 <section class="alpha-card alpha-expiry p-6 mt-6"><h2 class="font-semibold mb-3">Planes que vencen en los próximos 7 días</h2>@foreach($porVencer as $plan)<a href="{{ route('membresias.index') }}" class="alpha-list-row text-sm"><span>{{ $plan->cliente->nombre }} · {{ $plan->plan }}</span><span class="text-yellow-400">{{ $plan->fin->format('d/m/Y') }}</span></a>@endforeach</section>

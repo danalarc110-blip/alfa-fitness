@@ -15,6 +15,7 @@ class Rutina extends Model
         'nivel',
         'dias_por_semana',
         'activa',
+        'asignado_por',
     ];
 
     protected function casts(): array

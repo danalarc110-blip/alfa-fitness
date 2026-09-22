@@ -4,15 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Ejercicio;
 use App\Models\EjercicioCalificacion;
+use App\Services\ImagenSegura;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class EjercicioController extends Controller
 {
-    /**
-     * Identifica al usuario autenticado (sea de la guardia web o cliente).
-     */
-
     /**
      * Muestra la vista principal de Ejercicios Populares de la Semana.
      */
@@ -20,11 +19,15 @@ class EjercicioController extends Controller
     {
         ['guard' => $guard, 'user' => $user] = $this->actual();
 
-        $filtros = $request->validate(['grupo' => ['nullable', 'string', 'max:100'], 'q' => ['nullable', 'string', 'max:100']]);
+        $filtros = $request->validate([
+            'grupo' => ['nullable', 'string', 'max:100'],
+            'q' => ['nullable', 'string', 'max:100'],
+        ]);
         $grupo = $filtros['grupo'] ?? '';
         $q = $filtros['q'] ?? '';
 
-        $ejerciciosQuery = Ejercicio::where('activo', true)
+        $ejerciciosQuery = Ejercicio::query()
+            ->when(! Gate::allows('administrar'), fn ($query) => $query->where('activo', true))
             ->withAvg('calificaciones as promedio_estrellas', 'estrellas')
             ->withCount('calificaciones as conteo_votos')
             ->when($q, fn ($query) => $query->where('nombre', 'like', "%{$q}%"))
@@ -95,5 +98,141 @@ class EjercicioController extends Controller
             'promedio' => $nuevoPromedio,
             'total_votos' => $totalVotos,
         ]);
+    }
+
+    /**
+     * Da de alta un nuevo ejercicio en el catálogo (administrador).
+     */
+    public function store(Request $request)
+    {
+        Gate::authorize('administrar');
+
+        $data = $request->validate([
+            'nombre' => ['required', 'string', 'max:100', 'unique:ejercicios,nombre'],
+            'grupo_muscular' => ['required', 'string', 'max:50'],
+            'subgrupo' => ['nullable', 'string', 'max:50'],
+            'imagen' => ['nullable', 'image', 'max:8192'],
+            'imagen_musculos' => ['nullable', 'image', 'max:8192'],
+        ]);
+
+        $ejercicio = null;
+        $imgArchivo = null;
+        $musculosArchivo = null;
+
+        try {
+            DB::transaction(function () use ($data, $request, &$ejercicio, &$imgArchivo, &$musculosArchivo) {
+                $ejercicio = Ejercicio::create([
+                    'nombre' => trim($data['nombre']),
+                    'grupo_muscular' => trim($data['grupo_muscular']),
+                    'subgrupo' => ! empty($data['subgrupo']) ? trim($data['subgrupo']) : null,
+                    'activo' => true,
+                ]);
+
+                $imagenSegura = app(ImagenSegura::class);
+
+                if ($request->hasFile('imagen')) {
+                    $imgArchivo = $imagenSegura->guardar($request->file('imagen'), 'ejercicios', 'ejercicio_'.$ejercicio->id);
+                    $ejercicio->update(['imagen' => $imgArchivo]);
+                }
+
+                if ($request->hasFile('imagen_musculos')) {
+                    $musculosArchivo = $imagenSegura->guardar($request->file('imagen_musculos'), 'ejercicios', 'musculos_'.$ejercicio->id);
+                    $ejercicio->update(['imagen_musculos' => $musculosArchivo]);
+                }
+            });
+        } catch (\Throwable $e) {
+            $imagenSegura = app(ImagenSegura::class);
+            if ($imgArchivo) {
+                $imagenSegura->eliminar($imgArchivo, 'ejercicios', 'ejercicio_'.$ejercicio?->id);
+            }
+            if ($musculosArchivo) {
+                $imagenSegura->eliminar($musculosArchivo, 'ejercicios', 'musculos_'.$ejercicio?->id);
+            }
+            throw $e;
+        }
+
+        return back()->with('status', 'Ejercicio agregado correctamente al catálogo.');
+    }
+
+    /**
+     * Actualiza un ejercicio existente (administrador).
+     */
+    public function update(Request $request, Ejercicio $ejercicio)
+    {
+        Gate::authorize('administrar');
+
+        $data = $request->validate([
+            'nombre' => ['required', 'string', 'max:100', 'unique:ejercicios,nombre,'.$ejercicio->id],
+            'grupo_muscular' => ['required', 'string', 'max:50'],
+            'subgrupo' => ['nullable', 'string', 'max:50'],
+            'imagen' => ['nullable', 'image', 'max:8192'],
+            'imagen_musculos' => ['nullable', 'image', 'max:8192'],
+            'eliminar_imagen' => ['nullable', 'boolean'],
+            'eliminar_imagen_musculos' => ['nullable', 'boolean'],
+        ]);
+
+        $imagenSegura = app(ImagenSegura::class);
+        $anteriorImg = $ejercicio->imagen;
+        $anteriorMusc = $ejercicio->imagen_musculos;
+        $nuevoImg = null;
+        $nuevoMusc = null;
+
+        try {
+            DB::transaction(function () use ($data, $request, $ejercicio, $imagenSegura, &$nuevoImg, &$nuevoMusc) {
+                $actualizar = [
+                    'nombre' => trim($data['nombre']),
+                    'grupo_muscular' => trim($data['grupo_muscular']),
+                    'subgrupo' => ! empty($data['subgrupo']) ? trim($data['subgrupo']) : null,
+                ];
+
+                if ($request->hasFile('imagen')) {
+                    $nuevoImg = $imagenSegura->guardar($request->file('imagen'), 'ejercicios', 'ejercicio_'.$ejercicio->id);
+                    $actualizar['imagen'] = $nuevoImg;
+                } elseif (! empty($data['eliminar_imagen'])) {
+                    $actualizar['imagen'] = null;
+                }
+
+                if ($request->hasFile('imagen_musculos')) {
+                    $nuevoMusc = $imagenSegura->guardar($request->file('imagen_musculos'), 'ejercicios', 'musculos_'.$ejercicio->id);
+                    $actualizar['imagen_musculos'] = $nuevoMusc;
+                } elseif (! empty($data['eliminar_imagen_musculos'])) {
+                    $actualizar['imagen_musculos'] = null;
+                }
+
+                $ejercicio->update($actualizar);
+            });
+
+            if ($nuevoImg || ! empty($data['eliminar_imagen'])) {
+                $imagenSegura->eliminar($anteriorImg, 'ejercicios', 'ejercicio_'.$ejercicio->id);
+            }
+            if ($nuevoMusc || ! empty($data['eliminar_imagen_musculos'])) {
+                $imagenSegura->eliminar($anteriorMusc, 'ejercicios', 'musculos_'.$ejercicio->id);
+            }
+        } catch (\Throwable $e) {
+            if ($nuevoImg) {
+                $imagenSegura->eliminar($nuevoImg, 'ejercicios', 'ejercicio_'.$ejercicio->id);
+            }
+            if ($nuevoMusc) {
+                $imagenSegura->eliminar($nuevoMusc, 'ejercicios', 'musculos_'.$ejercicio->id);
+            }
+            throw $e;
+        }
+
+        return back()->with('status', 'Ejercicio actualizado correctamente.');
+    }
+
+    /**
+     * Alterna el estado activo/inactivo del ejercicio.
+     */
+    public function toggle(Ejercicio $ejercicio)
+    {
+        Gate::authorize('administrar');
+
+        $ejercicio->activo = ! $ejercicio->activo;
+        $ejercicio->save();
+
+        $estado = $ejercicio->activo ? 'activado' : 'desactivado';
+
+        return back()->with('status', "El ejercicio \"{$ejercicio->nombre}\" fue {$estado}.");
     }
 }

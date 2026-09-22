@@ -3,9 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Producto extends Model
 {
+    public function detallesVenta(): HasMany
+    {
+        return $this->hasMany(DetalleVenta::class);
+    }
     protected $fillable = [
         'nombre',
         'precio',
@@ -42,6 +47,10 @@ class Producto extends Model
             return asset('images/productos/'.$optimized);
         }
 
-        return asset('images/productos/'.$this->imagen);
+        if (is_file(public_path('images/productos/'.$this->imagen))) {
+            return asset('images/productos/'.$this->imagen);
+        }
+
+        return null;
     }
 }

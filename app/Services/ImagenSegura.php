@@ -10,7 +10,7 @@ class ImagenSegura
 {
     public function guardar(UploadedFile $archivo, string $directorio, string $prefijo): string
     {
-        if (! in_array($directorio, ['avatars', 'productos'], true) || ! preg_match('/^[a-z0-9_]+$/D', $prefijo)) {
+        if (! in_array($directorio, ['avatars', 'productos', 'ejercicios'], true) || ! preg_match('/^[a-z0-9_]+$/D', $prefijo)) {
             throw new \InvalidArgumentException('Destino de imagen no permitido.');
         }
         $dimensiones = @getimagesize($archivo->getRealPath());

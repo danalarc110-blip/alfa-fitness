@@ -13,6 +13,6 @@ abstract class Controller
 
     protected function nombreActual($guard, $user): string
     {
-        return $guard === 'web' ? $user->name : $user->nombre;
+        return (string) ($guard === 'web' ? ($user?->name ?? 'Usuario') : ($user?->nombre ?? 'Usuario'));
     }
 }

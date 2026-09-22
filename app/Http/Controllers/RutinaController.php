@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cliente;
 use App\Models\Ejercicio;
 use App\Models\Rutina;
 use App\Models\RutinaDia;
@@ -32,12 +33,17 @@ class RutinaController extends Controller
             ->latest()
             ->paginate(18);
 
+        $clientes = $guard === 'web'
+            ? Cliente::where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'correo'])
+            : collect();
+
         return view('entrenamientos.index', [
             'guard' => $guard,
             'nombre' => $this->nombreActual($guard, $user),
             'rolEtiqueta' => $guard === 'web' ? $user->rol : 'Miembro',
             'avatarUrl' => $user->avatar_url,
             'rutinas' => $rutinas,
+            'clientes' => $clientes,
         ]);
     }
 
@@ -343,5 +349,106 @@ class RutinaController extends Controller
         });
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Asigna una rutina a un cliente (clonando la rutina con sus días y ejercicios).
+     */
+    public function asignar(Request $request, Rutina $rutina): RedirectResponse
+    {
+        ['guard' => $guard, 'user' => $user] = $this->actual();
+        abort_unless($guard === 'web', 403);
+
+        $data = $request->validate([
+            'cliente_id' => ['required', 'exists:clientes,id'],
+        ]);
+
+        $cliente = Cliente::findOrFail($data['cliente_id']);
+        if (! $cliente->activo) {
+            throw ValidationException::withMessages([
+                'cliente_id' => 'El cliente seleccionado se encuentra inactivo.',
+            ]);
+        }
+
+        DB::transaction(function () use ($rutina, $cliente, $user) {
+            $clonada = Rutina::create([
+                'user_id' => $cliente->id,
+                'user_type' => 'cliente',
+                'nombre' => $rutina->nombre,
+                'objetivo' => $rutina->objetivo,
+                'nivel' => $rutina->nivel,
+                'dias_por_semana' => $rutina->dias_por_semana,
+                'activa' => true,
+                'asignado_por' => $user->name,
+            ]);
+
+            $rutina->load(['dias.ejercicios']);
+
+            foreach ($rutina->dias as $dia) {
+                $nuevoDia = $clonada->dias()->create([
+                    'orden' => $dia->orden,
+                    'titulo' => $dia->titulo,
+                    'duracion_estimada_min' => $dia->duracion_estimada_min,
+                    'duracion_estimada_max' => $dia->duracion_estimada_max,
+                ]);
+
+                foreach ($dia->ejercicios as $ej) {
+                    $nuevoDia->ejercicios()->create([
+                        'ejercicio_id' => $ej->ejercicio_id,
+                        'orden' => $ej->orden,
+                        'series' => $ej->series,
+                        'repeticiones' => $ej->repeticiones,
+                        'peso' => $ej->peso,
+                        'descanso_segundos' => $ej->descanso_segundos,
+                    ]);
+                }
+            }
+        });
+
+        return back()->with('status', "Rutina asignada exitosamente a {$cliente->nombre}.");
+    }
+
+    /**
+     * Modo interactivo "Entrenar Ahora" con checklist de series y cronómetro de descanso.
+     */
+    public function entrenar(Rutina $rutina, ?RutinaDia $dia = null)
+    {
+        $this->autorizarPropietario($rutina);
+        ['guard' => $guard, 'user' => $user] = $this->actual();
+
+        $rutina->load(['dias.ejercicios.ejercicio']);
+
+        if (! $dia || $dia->rutina_id !== $rutina->id) {
+            $diaSeleccionado = $rutina->dias->first();
+        } else {
+            $diaSeleccionado = $dia;
+        }
+
+        return view('entrenamientos.entrenar', [
+            'guard' => $guard,
+            'nombre' => $this->nombreActual($guard, $user),
+            'rolEtiqueta' => $guard === 'web' ? $user->rol : 'Miembro',
+            'avatarUrl' => $user->avatar_url,
+            'rutina' => $rutina,
+            'diaSeleccionado' => $diaSeleccionado,
+        ]);
+    }
+
+    /**
+     * Vista imprimible / PDF-friendly de la rutina.
+     */
+    public function imprimir(Rutina $rutina)
+    {
+        $this->autorizarPropietario($rutina);
+        ['guard' => $guard, 'user' => $user] = $this->actual();
+
+        $rutina->load(['dias.ejercicios.ejercicio']);
+
+        return view('entrenamientos.imprimir', [
+            'guard' => $guard,
+            'nombre' => $this->nombreActual($guard, $user),
+            'rolEtiqueta' => $guard === 'web' ? $user->rol : 'Miembro',
+            'rutina' => $rutina,
+        ]);
     }
 }

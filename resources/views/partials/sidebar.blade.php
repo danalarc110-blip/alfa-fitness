@@ -21,12 +21,13 @@
         ['key' => 'asistencia', 'label' => 'Asistencia', 'href' => route('asistencia.index'), 'icon' => 'check-circle'],
         ['key' => 'entrenadores', 'label' => 'Entrenadores', 'href' => route('entrenadores.index'), 'icon' => 'users'],
         ['key' => 'productos', 'label' => 'Productos', 'href' => route('productos.index'), 'icon' => 'package'],
+        ['key' => 'ventas', 'label' => 'Ventas (TPV)', 'href' => route('ventas.index'), 'icon' => 'cart'],
         ['key' => 'progreso', 'label' => 'Progreso', 'href' => route('progreso.index'), 'icon' => 'trending-up'],
         ['key' => 'configuracion', 'label' => 'Configuración', 'href' => route('configuracion'), 'icon' => 'settings'],
     ];
 
     $navItems[] = ['key' => 'cuentas', 'label' => 'Administrar cuentas', 'href' => route('cuentas.index'), 'icon' => 'users'];
-    $permisosNav = ['cuentas' => 'administrar', 'asistencia' => 'asistencia', 'membresias' => 'membresias', 'progreso' => 'progreso', 'estadisticas' => 'progreso'];
+    $permisosNav = ['cuentas' => 'administrar', 'asistencia' => 'asistencia', 'membresias' => 'membresias', 'progreso' => 'progreso', 'estadisticas' => 'progreso', 'ventas' => 'inventario'];
     $navItems = array_filter($navItems, fn ($item) => !isset($permisosNav[$item['key']]) || \App\Support\Acceso::permite($userActual, $permisosNav[$item['key']]));
 
     $icons = [
@@ -38,6 +39,7 @@
         'check-circle' => '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-5"/>',
         'users' => '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
         'package' => '<path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>',
+        'cart' => '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
         'trophy' => '<path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M5 5H3v2a4 4 0 0 0 4 4"/><path d="M19 5h2v2a4 4 0 0 1-4 4"/>',
         'bar-chart' => '<path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/>',
         'settings' => '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>',

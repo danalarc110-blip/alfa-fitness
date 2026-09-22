@@ -45,6 +45,13 @@ class Ejercicio extends Model
         return $this->hasMany(PersonalRecord::class);
     }
 
+    private static array $fileExistsCache = [];
+
+    private static function archivoExiste(string $relPath): bool
+    {
+        return self::$fileExistsCache[$relPath] ??= is_file(public_path($relPath));
+    }
+
     /**
      * URL pública de la imagen del ejercicio.
      * Busca en public/images/ejercicios/ y fallback en public/images/.
@@ -53,11 +60,11 @@ class Ejercicio extends Model
     {
         $archivo = $this->imagen ?: mb_strtolower($this->nombre).'.png';
 
-        if (file_exists(public_path('images/ejercicios/'.$archivo))) {
+        if (self::archivoExiste('images/ejercicios/'.$archivo)) {
             return asset('images/ejercicios/'.$archivo);
         }
 
-        if (file_exists(public_path('images/'.$archivo))) {
+        if (self::archivoExiste('images/'.$archivo)) {
             return asset('images/'.$archivo);
         }
 
@@ -65,10 +72,10 @@ class Ejercicio extends Model
         $baseName = pathinfo($archivo, PATHINFO_FILENAME);
         foreach (['jpg', 'jpeg', 'png', 'webp', 'JPG', 'PNG', 'JPEG'] as $ext) {
             $candidate = $baseName.'.'.$ext;
-            if (file_exists(public_path('images/ejercicios/'.$candidate))) {
+            if (self::archivoExiste('images/ejercicios/'.$candidate)) {
                 return asset('images/ejercicios/'.$candidate);
             }
-            if (file_exists(public_path('images/'.$candidate))) {
+            if (self::archivoExiste('images/'.$candidate)) {
                 return asset('images/'.$candidate);
             }
         }
@@ -83,21 +90,21 @@ class Ejercicio extends Model
     {
         $archivo = $this->imagen_musculos ?: mb_strtolower($this->nombre).' musculos que entrena.png';
 
-        if (file_exists(public_path('images/ejercicios/'.$archivo))) {
+        if (self::archivoExiste('images/ejercicios/'.$archivo)) {
             return asset('images/ejercicios/'.$archivo);
         }
 
-        if (file_exists(public_path('images/'.$archivo))) {
+        if (self::archivoExiste('images/'.$archivo)) {
             return asset('images/'.$archivo);
         }
 
         $baseName = pathinfo($archivo, PATHINFO_FILENAME);
         foreach (['png', 'jpg', 'jpeg', 'webp', 'PNG', 'JPG'] as $ext) {
             $candidate = $baseName.'.'.$ext;
-            if (file_exists(public_path('images/ejercicios/'.$candidate))) {
+            if (self::archivoExiste('images/ejercicios/'.$candidate)) {
                 return asset('images/ejercicios/'.$candidate);
             }
-            if (file_exists(public_path('images/'.$candidate))) {
+            if (self::archivoExiste('images/'.$candidate)) {
                 return asset('images/'.$candidate);
             }
         }
@@ -112,14 +119,14 @@ class Ejercicio extends Model
     {
         $archivo = $this->imagen ?: mb_strtolower($this->nombre).'.png';
 
-        if (file_exists(public_path('images/ejercicios/'.$archivo)) || file_exists(public_path('images/'.$archivo))) {
+        if (self::archivoExiste('images/ejercicios/'.$archivo) || self::archivoExiste('images/'.$archivo)) {
             return true;
         }
 
         $baseName = pathinfo($archivo, PATHINFO_FILENAME);
         foreach (['jpg', 'jpeg', 'png', 'webp', 'JPG', 'PNG', 'JPEG'] as $ext) {
             $candidate = $baseName.'.'.$ext;
-            if (file_exists(public_path('images/ejercicios/'.$candidate)) || file_exists(public_path('images/'.$candidate))) {
+            if (self::archivoExiste('images/ejercicios/'.$candidate) || self::archivoExiste('images/'.$candidate)) {
                 return true;
             }
         }
@@ -131,14 +138,14 @@ class Ejercicio extends Model
     {
         $archivo = $this->imagen_musculos ?: mb_strtolower($this->nombre).' musculos que entrena.png';
 
-        if (file_exists(public_path('images/ejercicios/'.$archivo)) || file_exists(public_path('images/'.$archivo))) {
+        if (self::archivoExiste('images/ejercicios/'.$archivo) || self::archivoExiste('images/'.$archivo)) {
             return true;
         }
 
         $baseName = pathinfo($archivo, PATHINFO_FILENAME);
         foreach (['png', 'jpg', 'jpeg', 'webp', 'PNG', 'JPG'] as $ext) {
             $candidate = $baseName.'.'.$ext;
-            if (file_exists(public_path('images/ejercicios/'.$candidate)) || file_exists(public_path('images/'.$candidate))) {
+            if (self::archivoExiste('images/ejercicios/'.$candidate) || self::archivoExiste('images/'.$candidate)) {
                 return true;
             }
         }

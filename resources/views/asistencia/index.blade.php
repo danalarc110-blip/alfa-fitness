@@ -14,6 +14,21 @@
             </header>
 @endsection
 @section('content')
+@if(!empty($huerfanasCount) && $huerfanasCount > 0)
+    <div class="mb-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs" data-animate="card">
+        <div class="flex items-center gap-3 text-amber-200">
+            <svg class="w-5 h-5 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>Hay <strong>{{ $huerfanasCount }} {{ $huerfanasCount === 1 ? 'visita abierta' : 'visitas abiertas' }}</strong> de días anteriores sin salida registrada.</span>
+        </div>
+        <form method="POST" action="{{ route('asistencia.cerrar-huerfanas') }}">
+            @csrf
+            <button type="submit" class="alpha-btn-primary px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap">
+                Cerrar visitas huérfanas
+            </button>
+        </form>
+    </div>
+@endif
+
 <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5" data-animate="card">
                 <div class="alpha-card rounded-2xl p-5 border border-white/10">
                     <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Entradas hoy</span>
@@ -52,7 +67,14 @@
                 <label>Desde<input type="date" name="desde" value="{{ $filtros['desde'] ?? '' }}"></label>
                 <label>Hasta<input type="date" name="hasta" value="{{ $filtros['hasta'] ?? '' }}"></label>
                 <label>Estado<select name="estado"><option value="">Todas</option><option value="abierta" @selected(($filtros['estado'] ?? '') === 'abierta')>Abiertas</option><option value="cerrada" @selected(($filtros['estado'] ?? '') === 'cerrada')>Cerradas</option></select></label>
-                <div class="flex items-end gap-2"><button class="alpha-btn-primary px-4 py-3 rounded-xl">Filtrar historial</button><a href="{{ route('asistencia.index') }}" class="text-sm py-3">Limpiar</a></div>
+                <div class="flex flex-wrap items-end gap-2">
+                    <button class="alpha-btn-primary px-4 py-3 rounded-xl text-xs font-semibold">Filtrar</button>
+                    <a href="{{ route('asistencia.index') }}" class="alpha-btn-secondary px-3 py-3 rounded-xl text-xs">Limpiar</a>
+                    <a href="{{ route('asistencia.exportar', request()->query()) }}" class="alpha-btn-secondary px-3 py-3 rounded-xl text-xs font-semibold flex items-center gap-1" title="Descargar CSV">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        CSV
+                    </a>
+                </div>
             </form>
 
             <section class="grid grid-cols-1 xl:grid-cols-[1fr_430px] gap-5">
@@ -67,7 +89,7 @@
                             @foreach ($clientes as $cliente)
                                 @php
                                     $entradaAbierta = $cliente->asistencias->first();
-                                    $membresia = $cliente->membresias->first();
+                                    $membresia = $cliente->ultimaMembresia;
                                     $estadoMembresia = $membresia?->estado ?? 'Sin membresia';
                                 @endphp
                                 <div class="bg-black/40 border border-white/10 rounded-xl p-4 flex flex-col gap-4">

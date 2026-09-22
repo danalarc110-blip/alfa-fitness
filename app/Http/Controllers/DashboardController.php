@@ -10,6 +10,7 @@ use App\Models\PersonalRecord;
 use App\Models\Rutina;
 use App\Models\SolicitudMembresia;
 use App\Models\User;
+use App\Models\Venta;
 
 class DashboardController extends Controller
 {
@@ -21,10 +22,10 @@ class DashboardController extends Controller
         $perfil = $guard === 'cliente' ? 'cliente' : match ($user->rol) {
             'Administrador' => 'administrador', 'Secretaria' => 'recepcion', default => 'entrenador',
         };
-        $titulo = ['cliente' => 'Mi entrenamiento', 'administrador' => 'Administracion del gimnasio', 'recepcion' => 'Secretaria · Hoy', 'entrenador' => 'Espacio de entrenamiento'][$perfil];
+        $titulo = ['cliente' => 'Mi entrenamiento', 'administrador' => 'Administración del gimnasio', 'recepcion' => 'Secretaria · Hoy', 'entrenador' => 'Espacio de entrenamiento'][$perfil];
         $acciones = match ($perfil) {
-            'administrador' => [['cuentas.index', 'Gestionar cuentas'], ['productos.index', 'Gestionar productos']],
-            'recepcion' => [['asistencia.index', 'Registrar entrada o salida'], ['membresias.index', 'Cobros y membresias']],
+            'administrador' => [['cuentas.index', 'Gestionar cuentas'], ['productos.index', 'Gestionar productos'], ['ventas.index', 'Punto de Venta (TPV)']],
+            'recepcion' => [['asistencia.index', 'Registrar entrada o salida'], ['membresias.index', 'Cobros y membresías'], ['ventas.index', 'Ventas mostrador']],
             'entrenador' => [['entrenamientos.index', 'Mis rutinas'], ['ejercicios.index', 'Ejercicios']],
             default => [['entrenamientos.index', 'Mis entrenamientos'], ['progreso.index', 'Progreso y marcas personales']],
         };
@@ -43,7 +44,17 @@ class DashboardController extends Controller
             $actividad = Asistencia::with('cliente:id,nombre')->latest('fecha_hora')->limit(5)->get();
             $porVencer = Membresia::with('cliente:id,nombre')->where('cancelada', false)->whereBetween('fin', [today(), today()->addDays(7)])->limit(5)->get();
         } elseif ($perfil === 'administrador') {
-            $metricas = [['Clientes activos', Cliente::where('activo', true)->count()], ['Clientes inactivos', Cliente::where('activo', false)->count()], ['Personal activo', User::where('activo', true)->count()]];
+            $ingresosMembresiasMes = Membresia::where('cancelada', false)->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('importe');
+            $ingresosVentasMes = Venta::whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('total');
+            $totalIngresosMes = $ingresosMembresiasMes + $ingresosVentasMes;
+
+            $metricas = [
+                ['Clientes activos', Cliente::where('activo', true)->count()],
+                ['Ingresos este mes', '$'.number_format($totalIngresosMes, 2)],
+                ['Membresías cobradas', '$'.number_format($ingresosMembresiasMes, 2)],
+                ['Ventas mostrador', '$'.number_format($ingresosVentasMes, 2)],
+                ['Personal activo', User::where('activo', true)->count()],
+            ];
         } else {
             $metricas = [['Mis rutinas', Rutina::deUsuario($guard, $user->id)->count()], ['Ejercicios disponibles', Ejercicio::where('activo', true)->count()]];
         }

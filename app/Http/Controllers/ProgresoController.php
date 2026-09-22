@@ -33,6 +33,10 @@ class ProgresoController extends Controller
                 ->whereRaw('(mejor.peso_kg * mejor.repeticiones > personal_records.peso_kg * personal_records.repeticiones OR (mejor.peso_kg * mejor.repeticiones = personal_records.peso_kg * personal_records.repeticiones AND mejor.id > personal_records.id))');
         })->reorder()->orderByRaw('peso_kg * repeticiones DESC')->limit(4)->get();
 
+        $totalVolumenKg = (float) PersonalRecord::where('cliente_id', $clienteId)->selectRaw('COALESCE(SUM(peso_kg * repeticiones), 0) as total')->value('total');
+        $maximoRecord = PersonalRecord::with('ejercicio')->where('cliente_id', $clienteId)->orderByDesc('peso_kg')->first();
+        $ultimosLevantamientos = PersonalRecord::with('ejercicio')->where('cliente_id', $clienteId)->latest()->limit(8)->get()->reverse()->values();
+
         return view('progreso.index', [
             'guard' => $guard,
             'nombre' => $this->nombreActual($guard, $user),
@@ -43,6 +47,9 @@ class ProgresoController extends Controller
             'ejercicios' => $ejercicios,
             'records' => $records,
             'mejoresMarcas' => $mejoresMarcas,
+            'totalVolumenKg' => $totalVolumenKg,
+            'maximoRecord' => $maximoRecord,
+            'ultimosLevantamientos' => $ultimosLevantamientos,
         ]);
     }
 

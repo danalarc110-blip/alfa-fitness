@@ -10,9 +10,11 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EjercicioController;
 use App\Http\Controllers\EntrenadorController;
 use App\Http\Controllers\MembresiaController;
+use App\Http\Controllers\PlanMembresiaController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProgresoController;
 use App\Http\Controllers\RutinaController;
+use App\Http\Controllers\VentaController;
 use Illuminate\Support\Facades\Route;
 
 // Página raíz: redirige al login
@@ -61,12 +63,17 @@ Route::middleware(['auth:cliente,web', 'auth.session'])->group(function () {
     Route::post('/configuracion/google', [ConfiguracionController::class, 'vincularGoogle'])->middleware('throttle:5,1')->name('configuracion.google');
 
     Route::get('/membresias', [MembresiaController::class, 'index'])->middleware('can:membresias')->name('membresias.index');
+    Route::post('/membresias/planes', [PlanMembresiaController::class, 'store'])->middleware('can:administrar')->name('planes.store');
+    Route::put('/membresias/planes/{plan}', [PlanMembresiaController::class, 'update'])->middleware('can:administrar')->name('planes.update');
+    Route::patch('/membresias/planes/{plan}/toggle', [PlanMembresiaController::class, 'toggle'])->middleware('can:administrar')->name('planes.toggle');
     Route::post('/membresias/solicitudes', [MembresiaController::class, 'solicitar'])->middleware('can:progreso')->name('membresias.solicitar');
     Route::patch('/membresias/solicitudes/{solicitud}/activar', [MembresiaController::class, 'activar'])->middleware('can:operaciones')->name('membresias.activar');
     Route::patch('/membresias/solicitudes/{solicitud}/cancelar', [MembresiaController::class, 'cancelarSolicitud'])->name('membresias.solicitudes.cancelar');
     Route::patch('/membresias/{membresia}/cancelar', [MembresiaController::class, 'cancelar'])->middleware('can:operaciones')->name('membresias.cancelar');
 
     Route::get('/asistencia', [AsistenciaController::class, 'index'])->middleware('can:asistencia')->name('asistencia.index');
+    Route::get('/asistencia/exportar', [AsistenciaController::class, 'exportar'])->middleware('can:asistencia')->name('asistencia.exportar');
+    Route::post('/asistencia/cerrar-huerfanas', [AsistenciaController::class, 'cerrarHuerfanas'])->middleware('can:asistencia')->name('asistencia.cerrar-huerfanas');
     Route::post('/asistencia', [AsistenciaController::class, 'store'])->middleware('can:asistencia')->name('asistencia.store');
     Route::post('/asistencia/salida', [AsistenciaController::class, 'salida'])->middleware('can:asistencia')->name('asistencia.salida');
 
@@ -76,6 +83,8 @@ Route::middleware(['auth:cliente,web', 'auth.session'])->group(function () {
     Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
     Route::post('/productos', [ProductoController::class, 'store'])->middleware('can:inventario')->name('productos.store');
     Route::put('/productos/{producto}', [ProductoController::class, 'update'])->middleware('can:inventario')->name('productos.update');
+    Route::get('/ventas', [VentaController::class, 'index'])->middleware('can:inventario')->name('ventas.index');
+    Route::post('/ventas', [VentaController::class, 'store'])->middleware('can:inventario')->name('ventas.store');
 
     Route::get('/progreso', [ProgresoController::class, 'index'])->middleware('can:progreso')->name('progreso.index');
     Route::post('/progreso', [ProgresoController::class, 'store'])->middleware('can:progreso')->name('progreso.store');
@@ -93,6 +102,9 @@ Route::middleware(['auth:cliente,web', 'auth.session'])->prefix('entrenamientos'
     Route::get('/{rutina}', [RutinaController::class, 'editar'])->name('editar');
     Route::put('/{rutina}', [RutinaController::class, 'actualizar'])->name('actualizar');
     Route::delete('/{rutina}', [RutinaController::class, 'eliminar'])->name('eliminar');
+    Route::post('/{rutina}/asignar', [RutinaController::class, 'asignar'])->name('asignar');
+    Route::get('/{rutina}/entrenar/{dia?}', [RutinaController::class, 'entrenar'])->name('entrenar');
+    Route::get('/{rutina}/imprimir', [RutinaController::class, 'imprimir'])->name('imprimir');
 
     // Días
     Route::post('/{rutina}/dias', [RutinaController::class, 'agregarDia'])->name('dias.crear');
@@ -112,4 +124,7 @@ Route::middleware(['auth:cliente,web', 'auth.session'])->prefix('entrenamientos'
 Route::middleware(['auth:cliente,web', 'auth.session'])->prefix('ejercicios')->name('ejercicios.')->group(function () {
     Route::get('/', [EjercicioController::class, 'index'])->name('index');
     Route::post('/{ejercicio}/calificar', [EjercicioController::class, 'calificar'])->name('calificar');
+    Route::post('/', [EjercicioController::class, 'store'])->middleware('can:administrar')->name('store');
+    Route::put('/{ejercicio}', [EjercicioController::class, 'update'])->middleware('can:administrar')->name('update');
+    Route::patch('/{ejercicio}/toggle', [EjercicioController::class, 'toggle'])->middleware('can:administrar')->name('toggle');
 });

@@ -86,6 +86,11 @@ class User extends Authenticatable
         return $this->hasMany(Asistencia::class, 'registrado_por');
     }
 
+    public function ventas(): HasMany
+    {
+        return $this->hasMany(Venta::class);
+    }
+
     /** Keep profile images first-party so opening the app never contacts a tracking host. */
     public function getAvatarUrlAttribute(): ?string
     {
@@ -98,6 +103,10 @@ class User extends Authenticatable
             return asset('images/avatars/'.$optimized);
         }
 
-        return asset('images/avatars/'.$this->avatar);
+        if (is_file(public_path('images/avatars/'.$this->avatar))) {
+            return asset('images/avatars/'.$this->avatar);
+        }
+
+        return null;
     }
 }
