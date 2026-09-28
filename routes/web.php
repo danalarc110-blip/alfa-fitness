@@ -70,6 +70,10 @@ Route::middleware(['auth:cliente,web', 'auth.session'])->group(function () {
     Route::patch('/membresias/solicitudes/{solicitud}/activar', [MembresiaController::class, 'activar'])->middleware('can:operaciones')->name('membresias.activar');
     Route::patch('/membresias/solicitudes/{solicitud}/cancelar', [MembresiaController::class, 'cancelarSolicitud'])->name('membresias.solicitudes.cancelar');
     Route::patch('/membresias/{membresia}/cancelar', [MembresiaController::class, 'cancelar'])->middleware('can:operaciones')->name('membresias.cancelar');
+    Route::post('/membresias/{membresia}/pausa', [MembresiaController::class, 'solicitarPausa'])->name('membresias.pausa.solicitar');
+    Route::patch('/membresias/pausas/{pausa}/aprobar', [MembresiaController::class, 'aprobarPausa'])->middleware('can:operaciones')->name('membresias.pausa.aprobar');
+    Route::patch('/membresias/pausas/{pausa}/rechazar', [MembresiaController::class, 'rechazarPausa'])->middleware('can:operaciones')->name('membresias.pausa.rechazar');
+    Route::patch('/membresias/{membresia}/reanudar', [MembresiaController::class, 'reanudar'])->name('membresias.reanudar');
 
     Route::get('/asistencia', [AsistenciaController::class, 'index'])->middleware('can:asistencia')->name('asistencia.index');
     Route::get('/asistencia/exportar', [AsistenciaController::class, 'exportar'])->middleware('can:asistencia')->name('asistencia.exportar');
@@ -85,6 +89,8 @@ Route::middleware(['auth:cliente,web', 'auth.session'])->group(function () {
     Route::put('/productos/{producto}', [ProductoController::class, 'update'])->middleware('can:inventario')->name('productos.update');
     Route::get('/ventas', [VentaController::class, 'index'])->middleware('can:inventario')->name('ventas.index');
     Route::post('/ventas', [VentaController::class, 'store'])->middleware('can:inventario')->name('ventas.store');
+    Route::get('/ventas/{venta}/comprobante', [VentaController::class, 'comprobante'])->middleware('can:inventario')->name('ventas.comprobante');
+    Route::post('/ventas/{venta}/enviar-correo', [VentaController::class, 'enviarCorreo'])->middleware('can:inventario')->name('ventas.enviar-correo');
 
     Route::get('/progreso', [ProgresoController::class, 'index'])->middleware('can:progreso')->name('progreso.index');
     Route::post('/progreso', [ProgresoController::class, 'store'])->middleware('can:progreso')->name('progreso.store');

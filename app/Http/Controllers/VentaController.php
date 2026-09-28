@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ComprobanteVentaMail;
 use App\Models\Cliente;
 use App\Models\DetalleVenta;
 use App\Models\Producto;
@@ -9,6 +10,9 @@ use App\Models\Venta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class VentaController extends Controller
@@ -61,7 +65,7 @@ class VentaController extends Controller
         ['user' => $user] = $this->actual();
 
         $data = $request->validate([
-            'cliente_id' => ['nullable', 'exists:clientes,id'],
+            'cliente_id' => ['nullable', 'integer', Rule::exists('clientes', 'id')->where('activo', true)],
             'metodo_pago' => ['required', 'string', 'in:Efectivo,Tarjeta,Transferencia'],
             'notas' => ['nullable', 'string', 'max:255'],
             'items' => ['required', 'array', 'min:1'],
@@ -81,7 +85,11 @@ class VentaController extends Controller
                 $cantidadesPorProducto[$pid] = ($cantidadesPorProducto[$pid] ?? 0) + (int) $item['cantidad'];
             }
 
-            $productos = Producto::whereIn('id', array_keys($cantidadesPorProducto))
+            $productIds = array_keys($cantidadesPorProducto);
+            sort($productIds);
+
+            $productos = Producto::whereIn('id', $productIds)
+                ->orderBy('id')
                 ->lockForUpdate()
                 ->get()
                 ->keyBy('id');
@@ -127,6 +135,48 @@ class VentaController extends Controller
             }
         });
 
-        return back()->with('status', "Venta #{$venta->id} registrada exitosamente por \${$venta->total}.");
+        return back()
+            ->with('status', "Venta #{$venta->id} registrada exitosamente por \${$venta->total}.")
+            ->with('venta_creada_id', $venta->id);
+    }
+
+    public function comprobante(Venta $venta)
+    {
+        Gate::authorize('inventario');
+        ['guard' => $guard, 'user' => $user] = $this->actual();
+        $venta->load(['user', 'cliente', 'detalles.producto']);
+
+        return view('ventas.comprobante', [
+            'guard' => $guard,
+            'nombre' => $this->nombreActual($guard, $user),
+            'rolEtiqueta' => $guard === 'web' ? $user->rol : 'Miembro',
+            'avatarUrl' => $user->avatar_url,
+            'venta' => $venta,
+        ]);
+    }
+
+    public function enviarCorreo(Request $request, Venta $venta)
+    {
+        Gate::authorize('inventario');
+        $data = $request->validate([
+            'correo' => ['required', 'email', 'max:255'],
+        ]);
+
+        $venta->load(['user', 'cliente', 'detalles.producto']);
+
+        try {
+            Mail::to($data['correo'])->send(new ComprobanteVentaMail($venta));
+        } catch (\Throwable $e) {
+            Log::warning('Fallo al enviar comprobante de venta por correo.', [
+                'venta_id' => $venta->id,
+                'correo' => $data['correo'],
+                'exception' => get_class($e),
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', "No se pudo enviar el correo a {$data['correo']} en este momento. Verifique la conexión o intente más tarde.");
+        }
+
+        return back()->with('status', "Comprobante de la venta #{$venta->id} enviado exitosamente a {$data['correo']}.");
     }
 }

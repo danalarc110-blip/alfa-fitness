@@ -1,6 +1,6 @@
 # Protocolo del Equipo de Agentes de Desarrollo
 
-Este paquete define un equipo permanente de **7 agentes especializados** para Google Antigravity. Su objetivo no es producir más texto ni repartir todas las tareas entre todos, sino entender correctamente el problema, asignar un dueño claro, implementar cambios mínimos y demostrar el resultado con evidencia.
+Este paquete define un equipo permanente de **9 agentes especializados** para Google Antigravity. Su objetivo no es producir más texto ni repartir todas las tareas entre todos, sino entender correctamente el problema, asignar un dueño claro, implementar cambios mínimos y demostrar el resultado con evidencia.
 
 ---
 
@@ -15,6 +15,8 @@ Este paquete define un equipo permanente de **7 agentes especializados** para Go
 | **`qa-tester`** | Estrategia y ejecución de pruebas, regresión y evidencia | Programadores; no maquilla fallos |
 | **`auditor-logica`** | Invariantes, estados, concurrencia y defectos lógicos sutiles | QA funcional o seguridad especializada |
 | **`especialista-seguridad`** | Autenticación, autorización, datos sensibles, ataques y dependencias | Auditoría lógica general |
+| **`redactor-documentacion`** | Redacción y estructuración de manuales, especificaciones, guías y reportes | Analista de requisitos o Core/UI |
+| **`creador-diagramas`** | Modelado visual de arquitectura, flujos, secuencias, ER y estados (Mermaid/SVG) | Redactor de documentación o Core |
 
 La descripción del agente debe usarse para delegar solo cuando su especialidad aporte valor. Una tarea pequeña no justifica invocar al equipo completo.
 
@@ -108,6 +110,8 @@ Reglas:
 | Regla de negocio, API o base de datos | Core + QA + Auditor de Lógica |
 | Solicitud ambigua o cambio entre módulos | Analista de Requisitos + dueño técnico + QA |
 | Login, roles, permisos, pagos, archivos o datos sensibles | Seguridad + dueño técnico + QA |
+| Documentación, manuales, guías o reportes | Redactor de Documentación + Creador de Diagramas |
+| Diagramas de flujo, arquitectura o modelo ER | Creador de Diagramas + dueño técnico relevante |
 | Cambio arquitectónico grande | Líder + todos los especialistas pertinentes |
 | Diagnóstico sin petición de implementación | Especialista relevante en modo solo lectura |
 

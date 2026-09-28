@@ -28,6 +28,21 @@
 @endsection
 
 @section('content')
+@if(session('venta_creada_id'))
+<div class="mb-6 p-4 rounded-2xl bg-yellow-400/10 border border-yellow-400/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs" data-animate="card">
+    <div class="flex items-center gap-2.5 text-yellow-400 font-semibold">
+        <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        <span>¡Venta registrada exitosamente! Puedes consultar el comprobante digital o enviarlo por correo:</span>
+    </div>
+    <div class="flex items-center gap-2">
+        <a href="{{ route('ventas.comprobante', session('venta_creada_id')) }}" class="alpha-btn-primary px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-yellow-400/10">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+            Ver / Enviar Comprobante
+        </a>
+    </div>
+</div>
+@endif
+
 {{-- MÉTRICAS DE VENTAS --}}
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 sm:mb-8" data-animate="card">
     <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden">
@@ -100,6 +115,7 @@
                         <th class="py-3 px-3">Productos</th>
                         <th class="py-3 px-3">Método</th>
                         <th class="py-3 px-3 text-right">Total</th>
+                        <th class="py-3 px-3 text-right">Comprobante</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-white/5">
@@ -131,6 +147,12 @@
                             </td>
                             <td class="py-3 px-3 text-right font-bold text-white text-sm">
                                 ${{ number_format($v->total, 2) }}
+                            </td>
+                            <td class="py-3 px-3 text-right">
+                                <a href="{{ route('ventas.comprobante', $v) }}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-yellow-400/10 border border-white/10 hover:border-yellow-400/30 text-gray-300 hover:text-yellow-400 transition text-[11px] font-medium" title="Ver comprobante e imprimir o enviar por correo">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                                    Ticket
+                                </a>
                             </td>
                         </tr>
                     @endforeach
@@ -193,7 +215,12 @@
                                 <option value="" data-precio="0" data-stock="0">-- Seleccionar producto --</option>
                                 @foreach($productos as $prod)
                                     <option value="{{ $prod->id }}" data-precio="{{ $prod->precio }}" data-stock="{{ $prod->stock }}">
-                                        {{ $prod->nombre }} - ${{ number_format($prod->precio, 2) }} (Stock: {{ $prod->stock }})
+                                        {{ $prod->nombre }} - ${{ number_format($prod->precio, 2) }}
+                                        @if($prod->stock <= 3)
+                                            ⚠️ (¡Stock crítico: {{ $prod->stock }}!)
+                                        @else
+                                            (Stock: {{ $prod->stock }})
+                                        @endif
                                     </option>
                                 @endforeach
                             </select>
@@ -293,7 +320,8 @@
 
         let opcionesHtml = '<option value="" data-precio="0" data-stock="0">-- Seleccionar producto --</option>';
         catalogoProductos.forEach(p => {
-            opcionesHtml += `<option value="${p.id}" data-precio="${p.precio}" data-stock="${p.stock}">${p.nombre} - $${Number(p.precio).toFixed(2)} (Stock: ${p.stock})</option>`;
+            const stockLabel = p.stock <= 3 ? `⚠️ (¡Stock crítico: ${p.stock}!)` : `(Stock: ${p.stock})`;
+            opcionesHtml += `<option value="${p.id}" data-precio="${p.precio}" data-stock="${p.stock}">${p.nombre} - $${Number(p.precio).toFixed(2)} ${stockLabel}</option>`;
         });
 
         nuevaFila.innerHTML = `

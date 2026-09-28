@@ -6,6 +6,8 @@ use App\Models\Asistencia;
 use App\Models\Cliente;
 use App\Services\RegistroAsistencia;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class AsistenciaController extends Controller
@@ -116,18 +118,23 @@ class AsistenciaController extends Controller
     {
         abort_unless(auth('web')->user()?->rol === 'Secretaria', 403);
 
-        $huerfanas = Asistencia::whereNull('fecha_salida')
-            ->where('fecha_hora', '<', now()->subHours(12))
-            ->get();
-
         $cerradas = 0;
-        foreach ($huerfanas as $asistencia) {
-            $asistencia->update([
-                'fecha_salida' => $asistencia->fecha_hora->copy()->addHours(2),
-                'salida_registrada_por' => auth('web')->id(),
-            ]);
-            $cerradas++;
-        }
+        DB::transaction(function () use (&$cerradas) {
+            $huerfanas = Asistencia::whereNull('fecha_salida')
+                ->where('fecha_hora', '<', now()->subHours(12))
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($huerfanas as $asistencia) {
+                $asistencia->update([
+                    'fecha_salida' => $asistencia->fecha_hora->copy()->addHours(2),
+                    'salida_registrada_por' => auth('web')->id(),
+                ]);
+                $cerradas++;
+            }
+        });
+
+        Cache::forget('aforo_en_vivo');
 
         return back()->with('status', $cerradas > 0
             ? "Se cerraron exitosamente {$cerradas} visitas huérfanas de días anteriores."

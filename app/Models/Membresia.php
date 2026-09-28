@@ -23,9 +23,34 @@ class Membresia extends Model
     public function activadora(): BelongsTo { return $this->belongsTo(User::class, 'activada_por'); }
     public function pago() { return $this->hasOne(PagoMembresia::class); }
 
+    public function pausas()
+    {
+        return $this->hasMany(PausaMembresia::class);
+    }
+
+    public function pausaVigente(): ?PausaMembresia
+    {
+        return $this->pausas
+            ->first(fn ($p) => $p->estaVigenteHoy());
+    }
+
+    public function diasPausadosAcumulados(): int
+    {
+        if ($this->relationLoaded('pausas')) {
+            return (int) $this->pausas
+                ->whereIn('estado', ['aprobada', 'finalizada', 'reanudada_anticipada'])
+                ->sum('dias');
+        }
+
+        return (int) $this->pausas()
+            ->whereIn('estado', ['aprobada', 'finalizada', 'reanudada_anticipada'])
+            ->sum('dias');
+    }
+
     public function getEstadoAttribute(): string
     {
         if ($this->cancelada) return 'Cancelada';
+        if ($this->pausaVigente()) return 'En Pausa';
         if ($this->inicio->isAfter(today())) return 'Programada';
         return $this->fin->isBefore(today()) ? 'Vencida' : 'Vigente';
     }

@@ -17,11 +17,33 @@ class RegistroAsistencia
             if ($salida) {
                 if (!$abierta) throw ValidationException::withMessages(['cliente_id' => 'Este cliente no tiene una entrada abierta.']);
                 $abierta->update(['fecha_salida' => now(), 'salida_registrada_por' => $empleadoId]);
+                \Illuminate\Support\Facades\Cache::forget('aforo_en_vivo');
                 return;
             }
             if (!$cliente->activo) throw ValidationException::withMessages(['cliente_id' => 'No se puede registrar la entrada de una cuenta desactivada.']);
+
+            $pausaActiva = \App\Models\PausaMembresia::where('cliente_id', $clienteId)
+                ->where('estado', 'aprobada')
+                ->where('inicio_pausa', '<=', today())
+                ->where('fin_pausa_estimada', '>=', today())
+                ->whereHas('membresia', fn ($q) => $q->where('cancelada', false)->where('fin', '>=', today()))
+                ->exists();
+            if ($pausaActiva) {
+                throw ValidationException::withMessages(['cliente_id' => 'La membresía del socio está congelada/en pausa temporal. Debe reanudar su membresía para ingresar.']);
+            }
+
+            // Si hay una visita abierta pero es huérfana de más de 12 horas, auto-cerrarla para permitir nuevo ingreso
+            if ($abierta && $abierta->fecha_hora->lt(now()->subHours(12))) {
+                $abierta->update([
+                    'fecha_salida' => $abierta->fecha_hora->copy()->addHours(2),
+                    'salida_registrada_por' => $empleadoId,
+                ]);
+                $abierta = null;
+            }
+
             if ($abierta) throw ValidationException::withMessages(['cliente_id' => 'Este cliente ya está dentro. Registra su salida antes de una nueva entrada.']);
             Asistencia::create(['cliente_id' => $clienteId, 'registrado_por' => $empleadoId, 'fecha_hora' => now(), 'tipo_acceso' => 'entrada']);
+            \Illuminate\Support\Facades\Cache::forget('aforo_en_vivo');
         });
     }
 }

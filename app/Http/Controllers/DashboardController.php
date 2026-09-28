@@ -59,6 +59,49 @@ class DashboardController extends Controller
             $metricas = [['Mis rutinas', Rutina::deUsuario($guard, $user->id)->count()], ['Ejercicios disponibles', Ejercicio::where('activo', true)->count()]];
         }
 
-        return view('home', compact('guard', 'nombre', 'rutinas', 'metricas', 'actividad', 'perfil', 'titulo', 'acciones', 'porVencer'));
+        $capacidadMaxima = 80;
+        $dentroAhora = Asistencia::whereNull('fecha_salida')->where('fecha_hora', '>=', now()->subHours(12))->count();
+        $porcentajeAforo = min(100, (int) round(($dentroAhora / $capacidadMaxima) * 100));
+        $estadoAforo = match (true) {
+            $porcentajeAforo >= 85 => ['etiqueta' => 'Afluencia Alta', 'color' => 'text-red-400', 'bg' => 'bg-red-500', 'badge' => 'bg-red-500/10 text-red-400 border-red-500/20', 'bar' => 'bg-red-500'],
+            $porcentajeAforo >= 50 => ['etiqueta' => 'Afluencia Moderada', 'color' => 'text-amber-400', 'bg' => 'bg-amber-400', 'badge' => 'bg-amber-500/10 text-amber-400 border-amber-500/20', 'bar' => 'bg-amber-400'],
+            default => ['etiqueta' => 'Capacidad Óptima', 'color' => 'text-emerald-400', 'bg' => 'bg-emerald-400', 'badge' => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', 'bar' => 'bg-emerald-400'],
+        };
+
+        $aforo = [
+            'actual' => $dentroAhora,
+            'capacidad' => $capacidadMaxima,
+            'porcentaje' => $porcentajeAforo,
+            'estado' => $estadoAforo['etiqueta'],
+            'color' => $estadoAforo['color'],
+            'bg' => $estadoAforo['bg'],
+            'badge' => $estadoAforo['badge'],
+            'bar' => $estadoAforo['bar'],
+        ];
+
+        $asistencias30d = Asistencia::where('fecha_hora', '>=', now()->subDays(30))->pluck('fecha_hora');
+        $horasDistribucion = [];
+        for ($h = 6; $h <= 22; $h++) {
+            $horasDistribucion[$h] = 0;
+        }
+        foreach ($asistencias30d as $fh) {
+            $hora = (int) \Carbon\Carbon::parse($fh)->format('G');
+            if (isset($horasDistribucion[$hora])) {
+                $horasDistribucion[$hora]++;
+            }
+        }
+        $maxVisitasHora = max(1, ...array_values($horasDistribucion));
+        $horasPico = [];
+        foreach ($horasDistribucion as $hora => $total) {
+            $horasPico[] = [
+                'hora' => sprintf('%02d:00', $hora),
+                'hora_corta' => sprintf('%02d', $hora),
+                'total' => $total,
+                'porcentaje' => round(($total / $maxVisitasHora) * 100),
+                'es_pico' => $total === $maxVisitasHora && $total > 0,
+            ];
+        }
+
+        return view('home', compact('guard', 'nombre', 'rutinas', 'metricas', 'actividad', 'perfil', 'titulo', 'acciones', 'porVencer', 'aforo', 'horasPico'));
     }
 }

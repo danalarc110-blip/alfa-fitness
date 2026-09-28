@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cliente;
 use App\Models\Membresia;
 use App\Models\PagoMembresia;
+use App\Models\PausaMembresia;
 use App\Models\PlanMembresia;
 use App\Models\SolicitudMembresia;
 use Carbon\Carbon;
@@ -31,13 +32,18 @@ class MembresiaController extends Controller
             ->when($busqueda && ! $clienteId, fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
             ->when($estado, fn ($q) => $q->where('estado', $estado))
             ->latest()->paginate(15, ['*'], 'solicitudes_page')->withQueryString();
-        $membresias = Membresia::with(['cliente:id,nombre', 'pago.registrador:id,name'])
+        $membresias = Membresia::with(['cliente:id,nombre', 'pago.registrador:id,name', 'pausas'])
             ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
             ->latest('inicio')->paginate(15, ['*'], 'membresias_page')->withQueryString();
+        $pausasPendientes = PausaMembresia::with(['cliente:id,nombre', 'membresia'])
+            ->where('estado', 'pendiente')
+            ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
+            ->latest()
+            ->get();
         $planes = PlanMembresia::where('activo', true)->orderBy('precio')->get();
         $todosLosPlanes = Gate::allows('administrar') ? PlanMembresia::orderBy('precio')->get() : collect();
 
-        return view('membresias.index', compact('guard', 'busqueda', 'estado', 'solicitudes', 'membresias', 'planes', 'todosLosPlanes'));
+        return view('membresias.index', compact('guard', 'busqueda', 'estado', 'solicitudes', 'membresias', 'pausasPendientes', 'planes', 'todosLosPlanes'));
     }
 
     public function solicitar(Request $request)
@@ -120,8 +126,190 @@ class MembresiaController extends Controller
         DB::transaction(function () use ($membresia) {
             Cliente::whereKey($membresia->cliente_id)->lockForUpdate()->firstOrFail();
             $membresia->update(['cancelada' => true]);
+            $membresia->pausas()->whereIn('estado', ['pendiente', 'aprobada'])->update(['estado' => 'rechazada']);
         });
 
         return back()->with('status', 'Membresia cancelada. El pago y el historial se conservan.');
+    }
+
+    public function solicitarPausa(Request $request, Membresia $membresia)
+    {
+        $esPropietario = auth('cliente')->check() && $membresia->cliente_id === auth('cliente')->id();
+        $esStaff = auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true);
+        abort_unless($esPropietario || $esStaff, 403);
+
+        $data = $request->validate([
+            'dias' => ['required', 'integer', 'min:3', 'max:30'],
+            'motivo' => ['required', 'string', 'max:255'],
+            'inicio_pausa' => ['required', 'date', 'after_or_equal:today'],
+        ]);
+
+        DB::transaction(function () use ($membresia, $data, $esStaff) {
+            $membresiaBloqueada = Membresia::whereKey($membresia->id)->lockForUpdate()->firstOrFail();
+            $cliente = Cliente::whereKey($membresiaBloqueada->cliente_id)->lockForUpdate()->firstOrFail();
+
+            if (! $cliente->activo) {
+                throw ValidationException::withMessages(['dias' => 'No se puede gestionar pausas de un socio inactivo o bloqueado.']);
+            }
+            if ($membresiaBloqueada->cancelada) {
+                throw ValidationException::withMessages(['dias' => 'No se puede pausar una membresía cancelada.']);
+            }
+            if ($membresiaBloqueada->fin->isBefore(today())) {
+                throw ValidationException::withMessages(['dias' => 'No se puede pausar una membresía que ya está vencida.']);
+            }
+
+            $inicio = Carbon::parse($data['inicio_pausa']);
+            if ($inicio->isAfter($membresiaBloqueada->fin)) {
+                throw ValidationException::withMessages([
+                    'inicio_pausa' => "La fecha de inicio de la pausa ({$inicio->format('d/m/Y')}) no puede ser posterior al vencimiento de la membresía ({$membresiaBloqueada->fin->format('d/m/Y')}).",
+                ]);
+            }
+
+            if ($membresiaBloqueada->pausas()->whereIn('estado', ['pendiente', 'aprobada'])->where('fin_pausa_estimada', '>=', today())->exists()) {
+                throw ValidationException::withMessages(['dias' => 'Esta membresía ya tiene una pausa activa o pendiente de revisión.']);
+            }
+
+            $diasPrevios = $membresiaBloqueada->diasPausadosAcumulados();
+            if ($diasPrevios + $data['dias'] > 30) {
+                $restantes = max(0, 30 - $diasPrevios);
+                throw ValidationException::withMessages(['dias' => "Límite superado. Máximo 30 días de pausa por membresía. Disponibles: {$restantes} días."]);
+            }
+
+            $finEstimada = $inicio->copy()->addDays($data['dias'] - 1);
+
+            $pausa = PausaMembresia::create([
+                'membresia_id' => $membresiaBloqueada->id,
+                'cliente_id' => $membresiaBloqueada->cliente_id,
+                'dias' => $data['dias'],
+                'motivo' => $data['motivo'],
+                'estado' => $esStaff ? 'aprobada' : 'pendiente',
+                'inicio_pausa' => $inicio,
+                'fin_pausa_estimada' => $finEstimada,
+                'aprobada_por' => $esStaff ? auth('web')->id() : null,
+            ]);
+
+            if ($esStaff) {
+                $membresiaBloqueada->fin = $membresiaBloqueada->fin->copy()->addDays($data['dias']);
+                $membresiaBloqueada->save();
+            }
+        });
+
+        $msg = $esStaff
+            ? 'Membresía congelada con éxito. Se postergó la fecha de vencimiento sin pérdida de días.'
+            : 'Solicitud de congelamiento enviada. La secretaria revisará y autorizará la pausa.';
+
+        return back()->with('status', $msg);
+    }
+
+    public function aprobarPausa(Request $request, PausaMembresia $pausa)
+    {
+        abort_unless(auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true), 403);
+
+        DB::transaction(function () use ($pausa) {
+            // Estandarización de orden de bloqueo: Membresia primero, Pausa después (prevención de deadlocks)
+            $membresia = Membresia::whereKey($pausa->membresia_id)->lockForUpdate()->firstOrFail();
+            $pausaBloqueada = PausaMembresia::whereKey($pausa->id)->lockForUpdate()->firstOrFail();
+
+            if ($pausaBloqueada->estado !== 'pendiente') {
+                throw ValidationException::withMessages(['pausa' => 'Esta pausa ya fue resuelta anteriormente.']);
+            }
+
+            if ($membresia->cancelada) {
+                throw ValidationException::withMessages(['pausa' => 'No se puede aprobar una pausa sobre una membresía cancelada.']);
+            }
+
+            if ($membresia->fin->isBefore(today())) {
+                throw ValidationException::withMessages(['pausa' => 'No se puede aprobar una pausa sobre una membresía que ya venció.']);
+            }
+
+            if ($pausaBloqueada->fin_pausa_estimada->isBefore(today())) {
+                throw ValidationException::withMessages(['pausa' => 'El período solicitado para la pausa ya transcurrió en el pasado.']);
+            }
+
+            if ($membresia->diasPausadosAcumulados() + $pausaBloqueada->dias > 30) {
+                throw ValidationException::withMessages(['pausa' => 'La aprobación excede el tope de 30 días de congelamiento permitido.']);
+            }
+
+            $pausaBloqueada->update([
+                'estado' => 'aprobada',
+                'aprobada_por' => auth('web')->id(),
+            ]);
+
+            $membresia->fin = $membresia->fin->copy()->addDays($pausaBloqueada->dias);
+            $membresia->save();
+        });
+
+        return back()->with('status', 'Pausa aprobada. Fecha de vencimiento postergada exitosamente.');
+    }
+
+    public function rechazarPausa(Request $request, PausaMembresia $pausa)
+    {
+        abort_unless(auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true), 403);
+
+        DB::transaction(function () use ($pausa) {
+            $pausaBloqueada = PausaMembresia::whereKey($pausa->id)->lockForUpdate()->firstOrFail();
+            if ($pausaBloqueada->estado !== 'pendiente') {
+                throw ValidationException::withMessages(['pausa' => 'Solo se pueden rechazar solicitudes de pausa pendientes.']);
+            }
+
+            $pausaBloqueada->update(['estado' => 'rechazada']);
+        });
+
+        return back()->with('status', 'Solicitud de pausa rechazada.');
+    }
+
+    public function reanudar(Request $request, Membresia $membresia)
+    {
+        $esPropietario = auth('cliente')->check() && $membresia->cliente_id === auth('cliente')->id();
+        $esStaff = auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true);
+        abort_unless($esPropietario || $esStaff, 403);
+
+        DB::transaction(function () use ($membresia) {
+            $membresiaBloqueada = Membresia::whereKey($membresia->id)->lockForUpdate()->firstOrFail();
+
+            if ($membresiaBloqueada->cancelada) {
+                throw ValidationException::withMessages(['membresia' => 'No se puede reanudar una membresía cancelada.']);
+            }
+
+            $pausa = $membresiaBloqueada->pausas()
+                ->where('estado', 'aprobada')
+                ->where('fin_pausa_estimada', '>=', today())
+                ->lockForUpdate()
+                ->first();
+
+            if (! $pausa) {
+                throw ValidationException::withMessages(['membresia' => 'Esta membresía no tiene ninguna pausa activa o programada para reanudar.']);
+            }
+
+            if (today()->isBefore($pausa->inicio_pausa)) {
+                // Pausa futura que se anula/cancela antes de haber comenzado efectivamente
+                $diasDevolver = $pausa->dias;
+                $membresiaBloqueada->fin = $membresiaBloqueada->fin->copy()->subDays($diasDevolver);
+                $membresiaBloqueada->save();
+
+                $pausa->update([
+                    'estado' => 'reanudada_anticipada',
+                    'fecha_reanudacion' => today(),
+                    'dias' => 0,
+                    'fin_pausa_estimada' => today(),
+                ]);
+            } else {
+                // Pausa actualmente en curso
+                $diasEfectivos = max(1, (int) today()->diffInDays($pausa->inicio_pausa, true) + 1);
+                $diasDevolver = max(0, $pausa->dias - $diasEfectivos);
+
+                $membresiaBloqueada->fin = $membresiaBloqueada->fin->copy()->subDays($diasDevolver);
+                $membresiaBloqueada->save();
+
+                $pausa->update([
+                    'estado' => 'reanudada_anticipada',
+                    'fecha_reanudacion' => today(),
+                    'dias' => $diasEfectivos,
+                    'fin_pausa_estimada' => today(),
+                ]);
+            }
+        });
+
+        return back()->with('status', 'Membresía reanudada con éxito. Los días no utilizados fueron devueltos a la vigencia.');
     }
 }

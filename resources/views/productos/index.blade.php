@@ -130,9 +130,20 @@
 
                                     <div class="mt-3 flex items-center justify-between text-xs">
                                         <span class="text-gray-500">Existencias</span>
-                                        <span class="font-semibold {{ $producto->stock > 0 && $producto->activo ? 'text-green-400' : 'text-red-300' }}">
-                                            {{ $producto->activo && $producto->stock > 0 ? $producto->stock.' disponibles' : 'No disponible' }}
-                                        </span>
+                                        <div class="text-right">
+                                            @if (! $producto->activo || $producto->stock <= 0)
+                                                <span class="font-semibold text-red-300">No disponible</span>
+                                            @elseif ($producto->stock <= 3)
+                                                <span class="inline-flex items-center gap-1 font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md text-[11px]" title="Quedan {{ $producto->stock }} unidad(es)">
+                                                    <svg class="w-3 h-3 text-amber-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" /></svg>
+                                                    Stock crítico ({{ $producto->stock }})
+                                                </span>
+                                            @else
+                                                <span class="font-semibold text-green-400">
+                                                    {{ $producto->stock.' disponibles' }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </div>

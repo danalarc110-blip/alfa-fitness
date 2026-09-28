@@ -32,7 +32,204 @@
 @endforelse
 </div>
 {{ $solicitudes->links() }}
+@if($pausasPendientes->isNotEmpty())
+    <section class="mt-8 mb-8" data-animate="card">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                    Solicitudes de Pausa / Congelamiento Pendientes
+                </h2>
+                <p class="text-xs text-gray-400">Solicitudes enviadas por socios que requieren aprobación de recepción.</p>
+            </div>
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                {{ $pausasPendientes->count() }} pendientes
+            </span>
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            @foreach($pausasPendientes as $pausa)
+                <article class="alpha-card p-5 border border-amber-500/20 bg-amber-500/[0.02] rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <div>
+                                <h3 class="font-bold text-sm text-white">{{ $pausa->cliente->nombre }}</h3>
+                                <p class="text-xs text-gray-400">{{ $pausa->membresia->plan }}</p>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-400/20 text-amber-400 border border-amber-400/30">
+                                {{ $pausa->dias }} días
+                            </span>
+                        </div>
+                        <div class="space-y-1 text-xs text-gray-300 bg-black/40 p-3 rounded-xl border border-white/5 my-3">
+                            <p><span class="text-gray-500">Inicio:</span> <strong class="text-white">{{ $pausa->inicio_pausa->format('d/m/Y') }}</strong></p>
+                            <p><span class="text-gray-500">Fin previsto:</span> <strong class="text-white">{{ $pausa->fin_pausa_estimada->format('d/m/Y') }}</strong></p>
+                            <p><span class="text-gray-500">Historial:</span> {{ $pausa->membresia->diasPausadosAcumulados() }} de 30 días usados</p>
+                            @if($pausa->motivo)
+                                <p class="text-[11px] text-gray-400 italic pt-1 border-t border-white/5">"{{ $pausa->motivo }}"</p>
+                            @endif
+                        </div>
+                    </div>
+
+                    @if(auth('web')->user()?->can('operaciones'))
+                        <div class="flex items-center gap-2 pt-2 border-t border-white/5">
+                            <form method="POST" action="{{ route('membresias.pausa.aprobar', $pausa) }}" class="flex-1">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="alpha-btn-primary w-full py-2 rounded-xl text-xs font-semibold">
+                                    Aprobar Pausa
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ route('membresias.pausa.rechazar', $pausa) }}" class="flex-1">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="alpha-btn-secondary w-full py-2 rounded-xl text-xs font-semibold text-red-300 hover:text-red-200">
+                                    Rechazar
+                                </button>
+                            </form>
+                        </div>
+                    @else
+                        <p class="text-center text-xs text-amber-400 font-medium py-1">En espera de validación en recepción</p>
+                    @endif
+                </article>
+            @endforeach
+        </div>
+    </section>
+@endif
+
 <h2 class="text-lg font-semibold mt-8 mb-4">Historial de membresías</h2>
+<div class="overflow-x-auto alpha-card rounded-2xl">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="text-left border-b border-white/10 text-xs text-gray-400 uppercase tracking-wider">
+                <th class="p-4">Cliente</th>
+                <th class="p-4">Plan</th>
+                <th class="p-4">Vigencia</th>
+                <th class="p-4">Estado</th>
+                <th class="p-4">Congelamiento</th>
+                <th class="p-4">Pago</th>
+                <th class="p-4 text-right">Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($membresias as $membresia)
+                @php
+                    $diasUsados = $membresia->diasPausadosAcumulados();
+                    $pausaActiva = $membresia->pausaVigente();
+                    $puedeGestionar = $guard === 'cliente' ? ($membresia->cliente_id === auth('cliente')->id()) : auth('web')->user()?->can('operaciones');
+                @endphp
+                <tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                    <td class="p-4 font-medium text-white">{{ $membresia->cliente->nombre }}</td>
+                    <td class="p-4 text-gray-300">{{ $membresia->plan }}</td>
+                    <td class="p-4 whitespace-nowrap text-xs text-gray-400">
+                        {{ $membresia->inicio->format('d/m/Y') }} — {{ $membresia->fin->format('d/m/Y') }}
+                    </td>
+                    <td class="p-4">
+                        @if($membresia->estado === 'En Pausa')
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                                En Pausa
+                            </span>
+                        @elseif($membresia->estado === 'Vigente')
+                            <span class="alpha-status alpha-status-active">Vigente</span>
+                        @else
+                            <span class="alpha-status">{{ $membresia->estado }}</span>
+                        @endif
+                    </td>
+                    <td class="p-4 text-xs">
+                        <span class="font-mono {{ $diasUsados >= 30 ? 'text-red-400' : 'text-gray-400' }}">
+                            {{ $diasUsados }}/30 d
+                        </span>
+                        @if($pausaActiva)
+                            <p class="text-[11px] text-amber-400 mt-0.5">Hasta {{ $pausaActiva->fin_pausa_estimada->format('d/m/Y') }}</p>
+                        @endif
+                    </td>
+                    <td class="p-4 text-xs">
+                        <strong class="text-yellow-400">${{ number_format((float)$membresia->importe, 2) }}</strong>
+                        @if($membresia->pago)
+                            <br><span class="text-[11px] text-gray-500">{{ $membresia->pago->pagado_en->format('d/m/Y') }}</span>
+                        @endif
+                    </td>
+                    <td class="p-4 text-right whitespace-nowrap">
+                        @if($puedeGestionar)
+                            @if($membresia->estado === 'En Pausa')
+                                <form method="POST" action="{{ route('membresias.reanudar', $membresia) }}" class="inline-block" onsubmit="return confirm('¿Deseas reanudar esta membresía hoy? Los días no consumidos de la pausa se reajustarán automáticamente sin perder días.')">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="alpha-btn-primary px-3 py-1.5 rounded-lg text-xs font-semibold">
+                                        Reanudar
+                                    </button>
+                                </form>
+                            @elseif($membresia->estado === 'Vigente' && $diasUsados < 30)
+                                <button type="button"
+                                    onclick="abrirModalPausa({{ $membresia->id }}, '{{ addslashes($membresia->cliente->nombre) }}', {{ 30 - $diasUsados }})"
+                                    class="alpha-btn-secondary px-3 py-1.5 rounded-lg text-xs font-semibold hover:border-amber-400/50 hover:text-amber-400 transition-colors">
+                                    Pausar
+                                </button>
+                            @endif
+                        @endif
+                    </td>
+                </tr>
+            @empty
+                <tr><td colspan="7" class="p-8 text-center text-gray-400">No hay membresías registradas.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+<div class="mt-5">{{ $membresias->links() }}</div>
+
+{{-- MODAL SOLICITAR PAUSA --}}
+<div id="modal-pausa-membresia" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="alpha-card border border-white/10 rounded-2xl max-w-md w-full p-6 bg-[#101216] shadow-2xl">
+        <div class="flex justify-between items-center mb-4 pb-3 border-b border-white/10">
+            <div>
+                <h3 class="font-bold text-white text-base">Congelar / Pausar Membresía</h3>
+                <p class="text-xs text-gray-400" id="pausa-cliente-nombre"></p>
+            </div>
+            <button type="button" onclick="document.getElementById('modal-pausa-membresia').classList.add('hidden')" class="text-gray-400 hover:text-white">&times;</button>
+        </div>
+        <form id="form-pausa-membresia" method="POST" action="" class="space-y-4">
+            @csrf
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 mb-1">Fecha de inicio</label>
+                <input type="date" name="inicio_pausa" id="pausa-inicio-pausa" value="{{ date('Y-m-d') }}" min="{{ date('Y-m-d') }}" required class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-yellow-400/60 outline-none">
+            </div>
+            <div>
+                <div class="flex justify-between items-center mb-1">
+                    <label class="text-xs font-semibold text-gray-400">Días a pausar</label>
+                    <span class="text-[11px] text-amber-400 font-mono" id="pausa-max-dias-label">Máx 30 días</span>
+                </div>
+                <input type="number" name="dias" id="pausa-dias" min="3" max="30" value="7" required class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-yellow-400/60 outline-none">
+                <p class="text-[11px] text-gray-500 mt-1">Límite estricto de 30 días acumulados por membresía (mínimo 3 días). Durante la pausa el acceso al gimnasio queda congelado.</p>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 mb-1">Motivo (médico, viaje, etc.)</label>
+                <input type="text" name="motivo" maxlength="255" placeholder="Ej: Reposo médico, viaje de trabajo" required class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-yellow-400/60 outline-none">
+            </div>
+            <div class="flex justify-end gap-3 pt-3">
+                <button type="button" onclick="document.getElementById('modal-pausa-membresia').classList.add('hidden')" class="alpha-btn-secondary px-4 py-2 text-sm">Cancelar</button>
+                <button type="submit" class="alpha-btn-primary px-5 py-2 text-sm font-semibold">Confirmar Pausa</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function abrirModalPausa(membresiaId, clienteNombre, maxDias) {
+        const modal = document.getElementById('modal-pausa-membresia');
+        const form = document.getElementById('form-pausa-membresia');
+        const label = document.getElementById('pausa-cliente-nombre');
+        const maxLabel = document.getElementById('pausa-max-dias-label');
+        const inputDias = document.getElementById('pausa-dias');
+
+        form.action = `/membresias/${membresiaId}/pausa`;
+        label.textContent = `Socio: ${clienteNombre}`;
+        maxLabel.textContent = `Disponibles: ${maxDias} días`;
+        inputDias.max = maxDias;
+        inputDias.value = Math.min(7, maxDias);
+        modal.classList.remove('hidden');
+    }
+</script>
+
 @can('administrar')
 <section class="mt-10 pt-8 border-t border-white/10" data-animate="card">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">

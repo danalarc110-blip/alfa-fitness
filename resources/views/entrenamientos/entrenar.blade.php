@@ -130,7 +130,15 @@
                     <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     Cronómetro de Descanso
                 </h3>
-                <span id="timer-estado" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/5 text-gray-400">Detenido</span>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="alphaToggleSonidoTimer()" id="btn-toggle-sonido"
+                        class="text-xs p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-yellow-400 transition-colors"
+                        title="Sonido y vibración al terminar descanso" aria-label="Alternar sonido y vibración">
+                        <svg id="icono-sonido-on" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                        <svg id="icono-sonido-off" class="w-3.5 h-3.5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                    </button>
+                    <span id="timer-estado" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/5 text-gray-400">Detenido</span>
+                </div>
             </div>
 
             {{-- PANTALLA DEL TIMER --}}
@@ -201,10 +209,86 @@
 
 @push('scripts')
 <script>
-    // ESTADO DEL CRONÓMETRO
+    // ESTADO DEL CRONÓMETRO Y ALERTA MULTIMEDIA
     let segundosRestantes = 60;
     let tiempoBase = 60;
     let timerInterval = null;
+    let sonidoHabilitado = localStorage.getItem('alfa_timer_sonido') !== 'false';
+    let sharedAudioCtx = null;
+
+    function obtenerAudioCtx() {
+        if (!sharedAudioCtx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+                sharedAudioCtx = new AudioCtx();
+            }
+        }
+        if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+            sharedAudioCtx.resume().catch(() => {});
+        }
+        return sharedAudioCtx;
+    }
+
+    function actualizarIconoSonido() {
+        const iconOn = document.getElementById('icono-sonido-on');
+        const iconOff = document.getElementById('icono-sonido-off');
+        if (iconOn && iconOff) {
+            if (sonidoHabilitado) {
+                iconOn.classList.remove('hidden');
+                iconOff.classList.add('hidden');
+            } else {
+                iconOn.classList.add('hidden');
+                iconOff.classList.remove('hidden');
+            }
+        }
+    }
+
+    function alphaToggleSonidoTimer() {
+        sonidoHabilitado = !sonidoHabilitado;
+        localStorage.setItem('alfa_timer_sonido', sonidoHabilitado ? 'true' : 'false');
+        actualizarIconoSonido();
+        if (sonidoHabilitado) {
+            obtenerAudioCtx();
+        }
+        if (window.showAlphaToast) {
+            window.showAlphaToast(sonidoHabilitado ? 'Alerta sonora y vibración activada' : 'Alerta sonora y vibración silenciada', 'info');
+        }
+    }
+
+    function reproducirAlertaDescanso() {
+        if (!sonidoHabilitado) return;
+
+        // Vibración háptica en móviles compatibles
+        if (navigator.vibrate) {
+            try {
+                navigator.vibrate([180, 80, 180, 80, 250]);
+            } catch (e) {}
+        }
+
+        // Tono armónico elegante con Web Audio API (D5 y A5)
+        try {
+            const ctx = obtenerAudioCtx();
+            if (!ctx) return;
+            const playBell = (freq, delay, dur) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+                gain.gain.setValueAtTime(0.35, ctx.currentTime + delay);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(ctx.currentTime + delay);
+                osc.stop(ctx.currentTime + delay + dur);
+            };
+            playBell(587.33, 0, 0.4);
+            playBell(880.00, 0.2, 0.6);
+        } catch (e) {
+            console.warn('AudioContext bloqueado o no soportado:', e);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', actualizarIconoSonido);
 
     function formatearTiempo(s) {
         const min = Math.floor(s / 60);
@@ -229,6 +313,7 @@
                 pausarTimer();
                 document.getElementById('timer-estado').textContent = '¡A entrenar!';
                 document.getElementById('timer-estado').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-400 text-black animate-pulse';
+                reproducirAlertaDescanso();
                 if (window.showAlphaToast) {
                     window.showAlphaToast('¡Tiempo de descanso cumplido! Comienza la siguiente serie.', 'info');
                 }
@@ -259,6 +344,7 @@
 
     // TOGGLE DE SERIES INTERACTIVAS
     function toggleSerie(btn, descanso) {
+        obtenerAudioCtx();
         const completada = btn.dataset.completada === 'true';
         if (!completada) {
             btn.dataset.completada = 'true';
@@ -285,6 +371,7 @@
     }
 
     function finalizarEntrenamiento() {
+        pausarTimer();
         document.getElementById('modal-fin-entrenamiento').classList.remove('hidden');
     }
 
