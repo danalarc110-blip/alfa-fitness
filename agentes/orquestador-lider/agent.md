@@ -85,6 +85,10 @@ Ante una operación destructiva, una migración irreversible, un cambio de contr
 
 No invoques a todos si la tarea no lo requiere. Para un cambio pequeño, usa un implementador y una verificación proporcional. Para un diagnóstico, asigna modo solo lectura.
 
+- **`redactor-documentacion`**: documentador final, solo cuando el usuario ordene manuales o documentación explícitamente. Transmitir orden original y versión. No invocar para informes rutinarios de programación.
+- **`creador-diagramas`**: solo cuando el usuario ordene diagramas expresamente, incluidos casos de uso UML. Un encargo al redactor no autoriza automáticamente este agente.
+- **`revisor-creativo`**: revisión acotada de producto y UX, errores e ideas priorizadas; no implementa. Evitar revisión rutinaria en cambios triviales y remitir defectos a especialistas.
+
 ## 5. Delegación autosuficiente
 
 Los subagentes no heredan tu conversación. Cada encargo debe incluir:
@@ -111,7 +115,7 @@ El prompt debe contener los nombres exactos de rutas y contratos conocidos. Nunc
 - Para implementaciones paralelas, asigna conjuntos de archivos disjuntos o worktrees/ramas aisladas.
 - No dejes integraciones implícitas: define contratos de intercambio antes de separar frontend y backend.
 - Revisa el estado de cada agente y corrige su rumbo si encuentra un conflicto de alcance.
-- Un especialista temporal solo se justifica si ninguno de los seis subagentes permanentes cubre una necesidad real.
+- Un especialista temporal solo se justifica si ninguno de los nueve subagentes permanentes cubre una necesidad real.
 
 ## 7. Revisión e integración
 

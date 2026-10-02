@@ -1,103 +1,34 @@
-# Equipo de 7 Agentes para Google Antigravity
+# Equipo de 10 agentes para Alpha Fitness
 
-Versión reforzada del equipo de desarrollo. Incluye cinco agentes mejorados y dos nuevos especialistas:
+Agentes personalizados para Google Antigravity, en español. El líder coordina nueve especialistas y elige solo los necesarios.
 
-- `analista-requisitos`: elimina ambigüedades y crea criterios de aceptación trazables.
-- `especialista-seguridad`: revisa autenticación, autorización, entradas, datos y dependencias.
+| Agente | Uso |
+| --- | --- |
+| orquestador-lider | Alcance, delegación, integración y cierre |
+| analista-requisitos | Reglas y criterios verificables |
+| ingeniero-core | Backend y datos |
+| ingeniero-ui | Interfaz y accesibilidad |
+| qa-tester | Pruebas y regresión |
+| auditor-logica | Invariantes y estados |
+| especialista-seguridad | Autenticación, permisos y datos |
+| redactor-documentacion | Manual técnico y de usuario finales, solo por orden explícita |
+| creador-diagramas | Casos de uso UML, ER, secuencias y otros diagramas, solo por orden explícita |
+| revisor-creativo | Errores con evidencia e ideas útiles, sin implementar |
 
-Todos aplican un protocolo común de comprensión, alcance, evidencia y traspaso de contexto.
+## Distribución e instalación
 
----
+En este repositorio ya están en `.agents/agents/<nombre>/agent.md`. La carpeta `agentes/` y `agentes.zip` distribuyen el mismo contenido. Para otro proyecto, copiar agentes/AGENTS.md a la raíz y los diez directorios de agentes a `.agents/agents/`. Revisar el descubrimiento con `/agents` en Antigravity. Estos archivos no configuran subagentes nativos de Codex; AGENTS.md sí aporta reglas al trabajo en el repositorio.
 
-## Estructura del paquete
+## Órdenes de ejemplo
 
-```text
-agentes/
-├── AGENTS.md
-├── GUIA_HERRAMIENTAS.md
-├── README.md
-├── orquestador-lider/agent.md
-├── analista-requisitos/agent.md
-├── ingeniero-core/agent.md
-├── ingeniero-ui/agent.md
-├── qa-tester/agent.md
-├── auditor-logica/agent.md
-└── especialista-seguridad/agent.md
-```
+- «Revisor creativo: examina el flujo de membresías y presenta errores e ideas priorizadas, sin cambiar código».
+- «Documentador final: crea el manual técnico y el manual de usuario de esta versión».
+- «Creador de diagramas: genera los casos de uso UML con fichas y el ER de esta versión».
 
-## Instalación recomendada
+Durante programación, los dos agentes finales permanecen inactivos. Una orden de manuales no autoriza nuevos diagramas. No hay vigilancia ni ejecución continua por tener instalados los archivos.
 
-En el proyecto donde se usarán:
+## Mantenimiento
 
-```text
-proyecto/
-├── AGENTS.md                         # Copia de agentes/AGENTS.md
-└── .agents/
-    └── agents/
-        ├── orquestador-lider/agent.md
-        ├── analista-requisitos/agent.md
-        ├── ingeniero-core/agent.md
-        ├── ingeniero-ui/agent.md
-        ├── qa-tester/agent.md
-        ├── auditor-logica/agent.md
-        └── especialista-seguridad/agent.md
-```
+Mantener idénticos los agent.md de ambas carpetas y las dos copias de AGENTS.md; regenerar agentes.zip. Consultar GUIA_HERRAMIENTAS.md y el protocolo. El control por orden está en las descripciones, los cuerpos de los dos agentes y el líder; no se inventa una propiedad YAML de activación.
 
-Después abre el proyecto en Antigravity y usa el panel `/agents` para comprobar que los siete agentes fueron descubiertos. `orquestador-lider` puede seleccionarse como agente principal; los otros seis están configurados como subagentes.
-
----
-
-## Uso rápido
-
-- Para una petición amplia o poco clara, inicia con `orquestador-lider`; él delegará primero a `analista-requisitos` si hace falta.
-- Para una tarea pequeña, invoca solo al especialista correspondiente y a una verificación proporcional.
-- Activa siempre `especialista-seguridad` cuando el cambio toque login, roles, permisos, sesiones, pagos, archivos, consultas, datos personales o secretos.
-- No copies simultáneamente dos agentes sobre los mismos archivos sin worktrees o propiedad explícita.
-
----
-
-## Frontmatter compatible
-
-Cada `agent.md` usa propiedades documentadas para agentes personalizados:
-
-```yaml
----
-name: ingeniero-core
-description: Descripción precisa para que el planificador sepa cuándo delegar.
-mainAgent: false
-subagent: true
-model: inherit
-commandExecutionPolicy: sandbox
-tools:
-  - view_file
-  - grep_search
-  - find_by_name
-  - list_dir
-  - write_to_file
-  - replace_file_content
-  - run_command
-  - manage_task
-  - send_message
-  - search_web
-  - read_url_content
----
-```
-
-Campos opcionales documentados: `mcpServers`, `skills` y `plugins`. No se incluyen nombres inventados como `enable_write_tools`, `enable_mcp_tools` o `enable_subagent_tools`, porque no pertenecen al esquema actual de agentes Markdown.
-
-> Antigravity advierte que un nombre de herramienta desconocido o mal escrito puede bloquear el inicio de un subagente. Conserva los nombres exactos y confirma cualquier herramienta nueva en tu versión antes de agregarla.
-
-Documentación oficial de referencia: [Custom subagents](https://antigravity.google/docs/subagents/).
-
----
-
-## Qué se mejoró
-
-- Contexto completo en cada delegación, porque los subagentes no heredan la conversación del padre.
-- Diferenciación entre hechos, inferencias, supuestos y recomendaciones.
-- Preguntas solo cuando una decisión sea material; primero se inspecciona lo que puede descubrirse.
-- Propiedad de archivos y aislamiento para evitar colisiones entre agentes.
-- Criterios de aceptación y matriz de trazabilidad requisito → implementación → prueba.
-- Puertas separadas de lógica, QA, seguridad, UI y datos.
-- Informes con comandos, códigos de salida, pruebas no ejecutadas y riesgos restantes.
-- Menor solapamiento entre QA, auditoría lógica y seguridad.
+Referencia del formato y descubrimiento: https://antigravity.google/docs/subagents/

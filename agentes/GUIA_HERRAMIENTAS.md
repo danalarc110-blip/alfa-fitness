@@ -1,6 +1,6 @@
 # Guía de Herramientas y Compatibilidad
 
-Esta guía documenta las herramientas usadas por los siete agentes. La lista se mantiene con nombres exactos para evitar fallos de validación al iniciar subagentes.
+Esta guía documenta las herramientas usadas por los diez agentes. La lista se mantiene con nombres exactos para evitar fallos de validación al iniciar subagentes.
 
 ---
 
@@ -29,7 +29,7 @@ Esta guía documenta las herramientas usadas por los siete agentes. La lista se 
 | Herramienta | Uso correcto |
 | :--- | :--- |
 | `invoke_subagent` | Delegar una tarea completa con contexto autosuficiente. |
-| `define_subagent` | Crear un especialista temporal solo si ninguno de los siete roles cubre la necesidad. |
+| `define_subagent` | Crear un especialista temporal solo si ninguno de los diez roles cubre la necesidad. |
 | `manage_subagents` | Revisar estados o detener agentes que ya no son necesarios. |
 | `send_message` | Comunicar bloqueos, evidencia o cambios de alcance al líder o a otro agente conocido. |
 | `schedule` | Programar una comprobación futura; no sustituye una prueba necesaria para cerrar la tarea actual. |
@@ -88,6 +88,10 @@ No agregar propiedades no documentadas para simular capacidades. La autorizació
 | `qa-tester` | Lectura, edición de tests y comandos | Construye reproducciones y ejecuta suites. |
 | `auditor-logica` | Lectura, comandos y edición de reproducciones | Prueba invariantes y fallos sutiles. |
 | `especialista-seguridad` | Lectura, comandos, investigación y permisos | Audita superficie de ataque sin ampliar privilegios. |
+
+| `redactor-documentacion` | Lectura, edición documental y comandos seguros | Manuales finales únicamente por orden del usuario. |
+| `creador-diagramas` | Lectura, edición de fuentes y renderizado | Diagramas únicamente por orden del usuario. |
+| `revisor-creativo` | Lectura, comprobaciones seguras e investigación | Examina y recomienda sin modificar producción. |
 
 ---
 

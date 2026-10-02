@@ -1,6 +1,6 @@
 # Protocolo del Equipo de Agentes de Desarrollo
 
-Este paquete define un equipo permanente de **9 agentes especializados** para Google Antigravity. Su objetivo no es producir más texto ni repartir todas las tareas entre todos, sino entender correctamente el problema, asignar un dueño claro, implementar cambios mínimos y demostrar el resultado con evidencia.
+Este paquete define un equipo permanente de **10 agentes especializados** para Google Antigravity. Su objetivo no es producir más texto ni repartir todas las tareas entre todos, sino entender correctamente el problema, asignar un dueño claro, implementar cambios mínimos y demostrar el resultado con evidencia.
 
 ---
 
@@ -16,6 +16,7 @@ Este paquete define un equipo permanente de **9 agentes especializados** para Go
 | **`auditor-logica`** | Invariantes, estados, concurrencia y defectos lógicos sutiles | QA funcional o seguridad especializada |
 | **`especialista-seguridad`** | Autenticación, autorización, datos sensibles, ataques y dependencias | Auditoría lógica general |
 | **`redactor-documentacion`** | Redacción y estructuración de manuales, especificaciones, guías y reportes | Analista de requisitos o Core/UI |
+| **`revisor-creativo`** | Revisión de producto, errores con evidencia e ideas priorizadas, sin implementar | QA, Lógica, Seguridad o UI |
 | **`creador-diagramas`** | Modelado visual de arquitectura, flujos, secuencias, ER y estados (Mermaid/SVG) | Redactor de documentación o Core |
 
 La descripción del agente debe usarse para delegar solo cuando su especialidad aporte valor. Una tarea pequeña no justifica invocar al equipo completo.
@@ -110,8 +111,9 @@ Reglas:
 | Regla de negocio, API o base de datos | Core + QA + Auditor de Lógica |
 | Solicitud ambigua o cambio entre módulos | Analista de Requisitos + dueño técnico + QA |
 | Login, roles, permisos, pagos, archivos o datos sensibles | Seguridad + dueño técnico + QA |
-| Documentación, manuales, guías o reportes | Redactor de Documentación + Creador de Diagramas |
-| Diagramas de flujo, arquitectura o modelo ER | Creador de Diagramas + dueño técnico relevante |
+| Manuales/documentación final solicitados explícitamente | Redactor de Documentación; Diagramas solo con orden adicional explícita |
+| Diagramas pedidos explícitamente, incluidos casos de uso UML | Creador de Diagramas + dueño técnico relevante |
+| Revisión creativa o de producto acotada | Revisor Creativo; remitir defectos a QA/UI/Core según corresponda |
 | Cambio arquitectónico grande | Líder + todos los especialistas pertinentes |
 | Diagnóstico sin petición de implementación | Especialista relevante en modo solo lectura |
 
@@ -165,3 +167,11 @@ SIGUIENTE DUEÑO RECOMENDADO:
 ```
 
 El líder resume al usuario sin ocultar fallos, pruebas omitidas ni riesgos residuales.
+
+## 8. Activación controlada y distribución
+
+- `redactor-documentacion` es el documentador final y `creador-diagramas` el modelador; conservar estos identificadores para evitar duplicados. Ambos permanecen inactivos hasta una orden explícita del usuario para su entregable. El líder debe transmitir esa orden y el commit/versión objetivo. «Termina», «revisa» o «presenta un informe» no bastan. Pedir manuales no autoriza diagramas nuevos automáticamente.
+- Registrar deuda documental en el informe normal del dueño técnico sin activar estos agentes. Su trabajo no es requisito automático para cerrar programación.
+- `revisor-creativo` puede revisar un cambio relevante por encargo acotado del líder o una petición de creatividad/revisión del usuario. Analiza y recomienda; no implementa ni vigila continuamente.
+- `.agents/agents/` contiene los agentes que descubre Antigravity. `agentes/` es la copia distribuible. Mantener idénticos todos los `agent.md`, sincronizar AGENTS.md raíz con agentes/AGENTS.md y regenerar agentes.zip al modificar el paquete.
+- Estas son instrucciones de agentes para Antigravity, no procesos que ya estén ejecutándose ni una configuración nativa de agentes de Codex. Validar descubrimiento en la instalación real; no prometer cumplimiento por haber validado archivos.
