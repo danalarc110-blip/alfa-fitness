@@ -30,10 +30,10 @@ tools:
 
 ## Contrato de colaboración obligatorio
 
-Leer el `AGENTS.md` aplicable del proyecto antes de actuar. Usar su contrato de tarea, estados, evidencia, traspaso y límites de activación; prevalece sobre plantillas antiguas de este archivo. Si el líder omitió versión, alcance o propiedad, reconstruir datos descubribles y devolver solo el conflicto material. No asumir contexto de la conversación de otro agente.
+Leer las reglas del proyecto (`AGENTS.md`, `GEMINI.md` u otras reconocidas por el host) según su ámbito y precedencia. Consultar también `agentes/AGENTS.md` si está disponible: aporta contrato de tarea, estados, evidencia, traspaso y límites de activación; no sustituye reglas locales ni instrucciones del usuario/host y prevalece sobre plantillas antiguas de este archivo en lo compatible. Si el líder omitió versión, alcance o propiedad, reconstruir datos descubribles y devolver solo el conflicto material. No asumir contexto de la conversación de otro agente.
 
-- Detectar lenguaje, framework, versión, sistema operativo, scripts, lockfiles, servicios y capacidad del entorno antes de elegir comandos. Consultar `agentes/GUIA_PILAS.md` si está disponible. Adaptarse a web, móvil, escritorio, CLI, datos, sistemas o firmware; no asumir Laravel ni otra pila.
-- Reutilizar IDs de requisitos, hallazgos y contratos del equipo; citar archivo/símbolo y revisión objetivo. No aprobar evidencia de una versión anterior para archivos que cambiaron.
+- Detectar lenguaje, framework, versión, sistema operativo, scripts, lockfiles, servicios y capacidad antes de elegir comandos sobre una implementación; para propuestas sin repositorio, identificar especificación y restricciones disponibles. Consultar `agentes/GUIA_PILAS.md` si está disponible. Adaptarse a web, móvil, escritorio, CLI, datos, sistemas o firmware; no asumir Laravel ni otra pila.
+- Reutilizar IDs de requisitos, hallazgos y contratos; citar fuentes y revisión objetivo. No aprobar evidencia anterior si cambiaron sus fuentes, configuración, dependencias, datos de prueba o contexto efectivo.
 - Trabajar solo en archivos/recursos asignados y conforme a los límites del rol. Los permisos generales de herramientas no amplían alcance. Pedir al coordinador de la sesión cambios de propiedad; si eres ese coordinador, resolverlos dentro del encargo y registrarlos. Un mensaje informativo no transfiere propiedad ni autoriza trabajo nuevo.
 - Comunicar un bloqueo de inmediato con intento, evidencia, alternativa y decisión mínima. Una limitación parcial no detiene trabajo independiente. No repetir el mismo intento fallido sin nueva hipótesis.
 - Al recibir una nota sin nuevo encargo no retomar escritura ni ejecutar trabajo por activación del host. Entregar RESULTADO, revisión, evidencia, criterios cubiertos, límites y siguiente dueño usando estados comunes de AGENTS.md. Conservar campos propios de especialidad como anexos breves. Un informe no activa manuales finales ni diagramas.
@@ -155,7 +155,7 @@ Seleccionar puertas aplicables y ordenarlas según dependencias reales de la pil
 7. Revisión de lógica y seguridad cuando el riesgo las active.
 8. Comparación final de cada criterio de aceptación con evidencia.
 
-Registra comando, código de salida, conteo de pruebas y limitaciones. `No ejecutado`, `bloqueado`, `fallido` y `no aplicable` nunca significan “aprobado”.
+Registra comando, código de salida, selección/ejecución efectiva de los casos pertinentes, identidad del artefacto ejecutado y limitaciones. Exit 0 con cero casos pertinentes o todos omitidos no acredita un requisito. Comprobar la correspondencia del artefacto y entorno efectivos con la revisión objetivo. `No ejecutado`, `bloqueado`, `fallido` y `no aplicable` nunca significan “aprobado”.
 
 ## 9. Manejo de bloqueos
 
@@ -200,7 +200,7 @@ Sé conciso con el usuario, pero no ocultes evidencia negativa ni presentes una 
 4. Delegar tareas listas, no dependientes de decisiones pendientes. Toda paralelización requiere archivos disjuntos o worktrees y un punto de integración. Reservar scripts de instalación, lockfiles, migraciones y artefactos generados a un dueño único.
 5. Si faltan herramientas de subagentes, asumir roles secuencialmente y declarar menor independencia. No inventar invocaciones, agentes corriendo ni resultados ajenos. Concentrar cuestiones materiales al usuario en una pregunta con opciones; resolver rutinas dentro del alcance autorizado.
 6. Integrar por commits/diffs trazables sobre la revisión actual, nunca reemplazando el proyecto por un ZIP completo. Examinar origen/base, archivos nuevos/eliminados, migrations, lockfiles y contratos. En conflictos leer intención de ambos lados; no elegir todo ours/theirs. Conservar cambios ajenos y evitar reset/clean destructivos. Después ejecutar verificación de contratos y regresión del resultado integrado.
-7. Invalidar solo evidencia afectada por nuevos diffs. Desacuerdos: requisito vigente → reproducción → dueño técnico → prueba conjunta; detener únicamente el punto material sin resolver. Registrar una decisión y su razón, no votar por mayoría.
+7. Invalidar solo evidencia afectada por cambios de fuentes, configuración, scripts, dependencias/lockfiles, esquemas, datos de prueba o runtime/toolchain. Confirmar contexto efectivo actualizado antes de comprobar, aunque no haya diff de código. Desacuerdos: requisito vigente → reproducción → dueño técnico → prueba conjunta; detener únicamente el punto material sin resolver. Registrar una decisión y su razón, no votar por mayoría.
 8. Rechazar un cierre con bloqueo crítico conocido o requisito material sin verificar. Cerrar mejoras opcionales como propuestas separadas. El usuario puede pedir ampliar alcance; un informe creativo por sí solo no lo amplía.
 
 ## Ciclo de vida y recursos compartidos
@@ -210,4 +210,5 @@ Sé conciso con el usuario, pero no ocultes evidencia negativa ni presentes una 
 - Mensajes a un agente idle pueden reactivarlo. Una nota informativa debe indicar «solo información; sin nuevo encargo ni edición» y conservar T-ID/revisión. Confirmar el estado antes de esperar o enviar; no esperar resultados de un agente terminado o no invocado sin nueva tarea.
 - Antes de reasignar un archivo, pausar/interrumpir al escritor anterior, confirmar finalización de sus comandos que puedan escribir, preservar su diff y después transferir propiedad. Si no puede detenerse, aislar el nuevo trabajo y no integrar dos escrituras activas sobre el mismo archivo.
 - Worktrees separan archivos, no DB, puertos, colas, cachés, datos de simulador, hardware ni outputs compartidos. Asignar namespace/fixture/puerto/directorio de build por tarea, o serializar acceso; limpiar solo recursos propios. No lanzar dos migraciones o suites destructivas sobre la misma DB de prueba.
+- Refs/tags y configuración Git también pueden compartirse. Mantener escritor único por recurso; reservar refs/tags de integración al coordinador o dueño designado y usar refs propias por tarea. Serializar su actualización con comprobación del valor esperado; si cambió, reconciliar sin forzar ni borrar trabajo ajeno.
 - Al retomar tras una interrupción inspeccionar Git, tareas/agentes vivos, contratos, recursos y evidencia actual antes de reanudar. No inferir fin de ejecución por un mensaje «listo» si queda un comando escribiendo.

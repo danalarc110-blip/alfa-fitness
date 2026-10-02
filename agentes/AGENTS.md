@@ -1,6 +1,6 @@
 # Protocolo del Equipo de Agentes de Desarrollo
 
-Versión del protocolo: **3.1**. Equipo portable, independiente de lenguaje/framework.
+Versión del protocolo: **3.2**. Equipo portable, independiente de lenguaje/framework.
 
 Este paquete define un equipo permanente de **10 agentes especializados** para Google Antigravity; los principios pueden aplicarse secuencialmente en otras herramientas sin fingir subagentes. Su objetivo no es producir más texto ni repartir todas las tareas entre todos, sino entender correctamente el problema, asignar un dueño claro, implementar cambios mínimos y demostrar el resultado con evidencia.
 
@@ -36,7 +36,7 @@ Antes de modificar código, cada agente debe construir y mantener una **Ficha de
 3. **Estado esperado**: comportamiento deseado y ejemplos relevantes.
 4. **Alcance**: módulos que sí pueden cambiar y elementos fuera de alcance.
 5. **Restricciones**: compatibilidad, seguridad, diseño, rendimiento, dependencias y cambios del usuario que deben preservarse.
-6. **Criterios de aceptación**: condiciones binarias y comprobables.
+6. **Criterios de aceptación**: condiciones comprobables con método de evaluación definido; para resultados probabilísticos, métricas y tolerancias acordadas.
 7. **Incógnitas**: separar hechos confirmados, inferencias y supuestos.
 8. **Plan de verificación**: cómo se demostrará el resultado antes de editar.
 
@@ -132,9 +132,9 @@ Una tarea solo puede declararse terminada cuando supera las puertas aplicables:
 
 - **Comprensión**: criterios de aceptación trazables y sin contradicciones materiales abiertas.
 - **Alcance**: el diff contiene únicamente cambios necesarios y preserva trabajo ajeno.
-- **Construcción**: instalación, compilación, análisis estático o arranque según la pila.
+- **Construcción**: instalación, compilación, análisis estático o arranque según la pila. Comprobar que el artefacto realmente ejecutado corresponde a las fuentes, configuración y toolchain objetivo; un build exitoso por sí solo no demuestra esa procedencia.
 - **Funcionalidad**: camino normal, errores esperados y límites relevantes.
-- **Regresión**: pruebas existentes y nuevas pasan sin desactivar controles legítimos.
+- **Regresión**: pruebas pertinentes pasan sin desactivar controles legítimos. Comprobar selección y ejecución efectiva: exit 0 con cero casos pertinentes, todos omitidos o solo colección/dry-run no acredita el criterio. Si tests no aplican, justificar la comprobación alternativa.
 - **Datos**: migraciones, transacciones, compatibilidad y recuperación verificadas cuando apliquen.
 - **UI/UX**: estados, responsive, teclado y accesibilidad verificados cuando apliquen.
 - **Seguridad**: autenticación, autorización y entradas no pierden protección.
@@ -177,17 +177,17 @@ El líder resume al usuario sin ocultar fallos, pruebas omitidas ni riesgos resi
 
 ## 8. Activación controlada y distribución
 
-- `redactor-documentacion` es el documentador final y `creador-diagramas` el modelador; conservar estos identificadores para evitar duplicados. Ambos permanecen inactivos hasta una orden explícita del usuario para su entregable. El líder debe transmitir esa orden y el commit/versión objetivo. «Termina», «revisa» o «presenta un informe» no bastan. Pedir manuales no autoriza diagramas nuevos automáticamente.
+- `redactor-documentacion` es el documentador final y `creador-diagramas` el modelador; conservar estos identificadores para evitar duplicados. Ambos permanecen inactivos hasta una orden explícita del usuario para su entregable. El líder debe transmitir esa orden y el commit/versión objetivo, o la revisión de especificación para un diseño futuro. «Termina», «revisa» o «presenta un informe» no bastan. Pedir manuales no autoriza diagramas nuevos automáticamente.
 - Registrar deuda documental en el informe normal del dueño técnico sin activar estos agentes. Su trabajo no es requisito automático para cerrar programación.
 - `revisor-creativo` puede revisar un cambio relevante por encargo acotado del líder o una petición de creatividad/revisión del usuario. Analiza y recomienda; no implementa ni vigila continuamente.
-- `.agents/agents/` contiene los agentes que descubre Antigravity. `agentes/` es la copia distribuible. Mantener idénticos todos los `agent.md`, sincronizar AGENTS.md raíz con agentes/AGENTS.md y regenerar agentes.zip al modificar el paquete.
+- `.agents/agents/` contiene los agentes que descubre Antigravity. `agentes/` es la copia distribuible. En el repositorio mantenedor del paquete, mantener idénticos los `agent.md` de ambas carpetas y las dos copias del protocolo, y regenerar agentes.zip. Al instalarlo en otro proyecto, preservar sus reglas y agentes existentes; integrar solo cláusulas compatibles o una referencia a `agentes/AGENTS.md`. El protocolo portable no sustituye instrucciones del usuario/host ni reglas locales aplicables; no exigir que el AGENTS.md del proyecto receptor sea idéntico al del paquete.
 - Estas son instrucciones de agentes para Antigravity, no procesos que ya estén ejecutándose ni una configuración nativa de agentes de Codex. Validar descubrimiento en la instalación real; no prometer cumplimiento por haber validado archivos.
 
 ## 9. Sinergia: contrato común y decisiones
 
 ### Descubrimiento y adaptación
 
-Identificar manifests/lockfiles, lenguaje y versión, framework, SO objetivo, entrypoints, scripts de build/test, servicios, datos y entorno ejecutable. Si es un monorepo, mapear proyectos y sus contratos; no mezclar comandos o runtimes. Usar las herramientas existentes, documentación oficial de la versión instalada y `agentes/GUIA_PILAS.md` cuando sea útil. No migrar tecnología ni instalar otra cadena de herramientas por preferencia. Si falta capacidad, entregar la parte comprobable y especificar lo pendiente; «casi todo» no significa prometer hardware/emuladores/servicios que no existen.
+Para tareas sobre una implementación, identificar manifests/lockfiles, lenguaje y versión, framework, SO objetivo, entrypoints, scripts de build/test, servicios, datos y entorno ejecutable. Para un diseño futuro solicitado sin repositorio, identificar revisión de especificación, requisitos y restricciones; la ausencia de código no es un bloqueo por sí sola. Si es un monorepo, mapear proyectos y sus contratos; no mezclar comandos o runtimes. Usar las herramientas existentes, documentación oficial de la versión instalada y `agentes/GUIA_PILAS.md` cuando sea útil. No migrar tecnología ni instalar otra cadena de herramientas por preferencia. Si falta capacidad, entregar la parte comprobable y especificar lo pendiente; «casi todo» no significa prometer hardware/emuladores/servicios que no existen.
 
 ### Identificadores y estados únicos
 
@@ -217,7 +217,7 @@ Ruta habitual: Analista → R-ID/C-ID → Core/UI → diff → QA → evidencia;
 
 - Definir DAG simple de tareas; no lanzar implementación que dependa de una decisión sin resolver. El líder mantiene tabla compacta en sesión o archivo si hay continuidad, con un escritor único. El registro no obliga a generar documentación final.
 - Un dueño por archivo, incluyendo tests, contratos, migraciones, lockfiles y artefactos generados. Paralelizar solo archivos disjuntos o worktrees. Cambios de API acordados antes de implementar ambos lados.
-- Evidencia ligada a revisión: un nuevo diff invalida pruebas/revisiones de sus dependencias, no todo el trabajo. Integrar y comprobar sobre el resultado combinado; que cada rama pase por separado no demuestra integración.
+- Evidencia ligada a revisión y contexto efectivo: cambios de fuentes, configuración, scripts, dependencias/lockfiles, esquemas, datos de prueba o runtime/toolchain invalidan solo comprobaciones dependientes, aunque no cambie código. Confirmar entorno actualizado y recarga/reinicio pertinente antes de probar; no publicar valores secretos. Integrar y comprobar sobre el resultado combinado; que cada rama pase por separado no demuestra integración.
 - Desacuerdo: fuente vigente y reproducción; el líder registra resolución y la distribuye. Si falta decisión material del usuario, detener solo tareas dependientes. Ningún especialista reduce una protección o borra cambios de otro para terminar.
 - Tras dos intentos fallidos por la misma causa, cambiar hipótesis o declarar bloqueo con causa y alternativa; no repetir comandos indefinidamente. Continuar trabajo útil independiente.
 
@@ -239,6 +239,7 @@ Las categorías de QA (fallo de entorno/prueba defectuosa/comportamiento esperad
 
 - Las herramientas declaradas y el sandbox son capacidades/permisos, no un bloqueo técnico de carpetas o un modo de solo lectura. Toda ejecución respeta el alcance y propiedad; en análisis no usar shell para editar, instalar o modificar datos. Comprobar los efectos reales de scripts antes de correrlos, incluso si se llaman lint/test/build.
 - Un worktree no aísla recursos externos. El contrato T-ID incluye DB/schema, puertos, colas/cache, outputs, simuladores o dispositivos compartidos si aplican: nombre/namespace, dueño y limpieza. Aislar por tarea o serializar. Que suites separadas pasen no demuestra garantías del motor/dispositivo ni ausencia de interferencia.
+- Git puede compartir refs/tags y configuración entre worktrees. Asignar un escritor por recurso compartido; reservar refs/tags de integración al líder o dueño de integración designado y usar refs propias por tarea cuando corresponda. Serializar actualizaciones, comprobar el valor esperado antes de actualizar y conservar el trabajo si cambió; no forzar la ref para resolver una carrera.
 - Reasignar escritura solo tras detener/confirmar finalización de escritor y comandos que escriben, preservar trabajo y registrar nuevo dueño/revisión. Si no puede detenerse, usar trabajo aislado sin integrar mientras exista colisión. No borrar worktrees activos ni detener procesos ajenos para resolverla.
 - Retomar tareas con inspección del estado actual, no por memoria: revisión/diff, contratos, procesos y recursos, autorizaciones y comprobaciones afectadas. Contexto mínimo de cada mensaje incluye T-ID/revisión e intención: nota informativa sin trabajo o nueva tarea autorizada. El despertar de un agente por el host no crea autorización.
 - Mantener un coordinador por alcance y referirse a IDs reales de sesiones; no invocar al mismo líder recursivamente. Un coordinador delegado devuelve conflictos con tareas hermanas al padre. Usar concurrencia compatible con recursos/límites del host; cubrir roles secuencialmente si faltan capacidades.

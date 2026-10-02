@@ -21,6 +21,8 @@ Guía de selección, no recetas universales. El repositorio y sus versiones deci
 
 En repositorios políglotas verificar consumidores/productores y compatibilidad de datos. No afirmar garantía de motor o hardware a partir de un mock/simulador. No asumir que la máquina local es el sistema del usuario. Registrar runtime, SO y dependencias que realmente se usaron.
 
+En ML o sistemas probabilísticos, reproducibilidad no exige salidas idénticas. Definir evaluación con dataset/población, métrica, umbral, tolerancia, muestra e incertidumbre pertinentes y acordados; registrar semillas/condiciones cuando ayuden. No inventar umbrales ni tratar una ejecución repetible como prueba suficiente de calidad.
+
 ## Fuentes y contexto
 
 Este paquete sigue el formato de agentes de Antigravity: https://antigravity.google/docs/subagents/. Alpha Fitness es solo el proyecto donde se guardan; su pila actual se descubre en sus manifests y no limita los roles. Ejemplos de documentación consultada para ese proyecto: https://laravel.com/docs/12.x/testing, https://laravel.com/docs/12.x/database y https://laravel.com/docs/12.x/authorization. En otro proyecto consultar sus propias fuentes primarias.

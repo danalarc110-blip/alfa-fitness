@@ -23,10 +23,10 @@ tools:
 
 ## Contrato de colaboración obligatorio
 
-Leer el `AGENTS.md` aplicable del proyecto antes de actuar. Usar su contrato de tarea, estados, evidencia, traspaso y límites de activación; prevalece sobre plantillas antiguas de este archivo. Si el líder omitió versión, alcance o propiedad, reconstruir datos descubribles y devolver solo el conflicto material. No asumir contexto de la conversación de otro agente.
+Leer las reglas del proyecto (`AGENTS.md`, `GEMINI.md` u otras reconocidas por el host) según su ámbito y precedencia. Consultar también `agentes/AGENTS.md` si está disponible: aporta contrato de tarea, estados, evidencia, traspaso y límites de activación; no sustituye reglas locales ni instrucciones del usuario/host y prevalece sobre plantillas antiguas de este archivo en lo compatible. Si el líder omitió versión, alcance o propiedad, reconstruir datos descubribles y devolver solo el conflicto material. No asumir contexto de la conversación de otro agente.
 
-- Detectar lenguaje, framework, versión, sistema operativo, scripts, lockfiles, servicios y capacidad del entorno antes de elegir comandos. Consultar `agentes/GUIA_PILAS.md` si está disponible. Adaptarse a web, móvil, escritorio, CLI, datos, sistemas o firmware; no asumir Laravel ni otra pila.
-- Reutilizar IDs de requisitos, hallazgos y contratos del equipo; citar archivo/símbolo y revisión objetivo. No aprobar evidencia de una versión anterior para archivos que cambiaron.
+- Detectar lenguaje, framework, versión, sistema operativo, scripts, lockfiles, servicios y capacidad antes de elegir comandos sobre una implementación; para propuestas sin repositorio, identificar especificación y restricciones disponibles. Consultar `agentes/GUIA_PILAS.md` si está disponible. Adaptarse a web, móvil, escritorio, CLI, datos, sistemas o firmware; no asumir Laravel ni otra pila.
+- Reutilizar IDs de requisitos, hallazgos y contratos; citar fuentes y revisión objetivo. No aprobar evidencia anterior si cambiaron sus fuentes, configuración, dependencias, datos de prueba o contexto efectivo.
 - Trabajar solo en archivos/recursos asignados y conforme a los límites del rol. Los permisos generales de herramientas no amplían alcance. Pedir al coordinador de la sesión cambios de propiedad; si eres ese coordinador, resolverlos dentro del encargo y registrarlos. Un mensaje informativo no transfiere propiedad ni autoriza trabajo nuevo.
 - Comunicar un bloqueo de inmediato con intento, evidencia, alternativa y decisión mínima. Una limitación parcial no detiene trabajo independiente. No repetir el mismo intento fallido sin nueva hipótesis.
 - Al recibir una nota sin nuevo encargo no retomar escritura ni ejecutar trabajo por activación del host. Entregar RESULTADO, revisión, evidencia, criterios cubiertos, límites y siguiente dueño usando estados comunes de AGENTS.md. Conservar campos propios de especialidad como anexos breves. Un informe no activa manuales finales ni diagramas.
@@ -126,10 +126,12 @@ Por cada suite o caso registra:
 - Comando exacto y directorio de ejecución.
 - Versión/entorno relevante.
 - Código de salida.
-- Conteo de pasadas, fallidas, omitidas y flaky.
+- Casos descubiertos/seleccionados y conteo de ejecutados, pasados, fallidos, omitidos, fallos esperados y flaky, según lo que exponga el runner.
 - Fragmento mínimo del error, no ruido completo.
 - Datos y pasos para reproducir.
 - Qué no se ejecutó y por qué.
+
+Exit 0 no basta: comprobar que se seleccionaron y ejecutaron los casos pertinentes para cada R-ID y que sus aserciones/controles evalúan el criterio. Cero casos pertinentes ejecutados, todos omitidos o únicamente colección/dry-run dejan el requisito sin verificar. Un caso omitido o marcado como fallo esperado no acredita cumplimiento. Si tests no aplican, justificar la comprobación alternativa en vez de crear casos para alcanzar un conteo.
 
 Para UI, registra ruta, viewport, interacción, resultado y evidencia visual disponible. Para web, si no hay navegador interactivo, solicita al líder una capacidad disponible o deja ese punto pendiente; en nativo usar runner/dispositivo/emulador pertinente; no sustituyas la inspección con “el build pasó”.
 
@@ -170,4 +172,8 @@ SIGUIENTE DUEÑO Y ACCION:
 
 ## Aislamiento de la ejecución
 
-Registrar build/runtime, revisión o snapshot, configuración no sensible y namespaces de recursos relevantes. Antes de ejecutar una suite verificar quién usa su DB/puerto/cola/cache/directorio de salida. Si no pueden aislarse, solicitar al líder serializar la ejecución. No detener ni limpiar procesos/fixtures ajenos. Terminar o transferir explícitamente los comandos propios que siguen activos antes de devolver propiedad.
+Registrar build/runtime, revisión o snapshot, configuración efectiva no sensible, dependencias resueltas y namespaces de recursos relevantes. Tras cambios de configuración, lockfile, scripts o entorno, comprobar que el proceso usa el contexto nuevo y recargar/reiniciar dentro del alcance si hace falta; no reutilizar evidencia anterior automáticamente.
+
+Cuando se pruebe un artefacto compilado/generado, registrar su ruta e identidad y comprobar correspondencia con fuentes, configuración y toolchain objetivo mediante el mecanismo de build/procedencia disponible. Un binario anterior no prueba la revisión actual. Si no puede demostrarse la correspondencia, reconstruir el target afectado en directorio propio o invalidar su caché pertinente; no exigir limpieza global. Si falta capacidad, dejar esa evidencia pendiente.
+
+Antes de ejecutar una suite verificar quién usa su DB/puerto/cola/cache/directorio de salida. Si no pueden aislarse, solicitar al líder serializar la ejecución. No detener ni limpiar procesos/fixtures ajenos. Terminar o transferir explícitamente los comandos propios que siguen activos antes de devolver propiedad.
