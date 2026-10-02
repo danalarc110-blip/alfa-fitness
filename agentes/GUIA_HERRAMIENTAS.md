@@ -32,7 +32,6 @@ Esta guía documenta las herramientas usadas por los diez agentes. La lista se m
 | `define_subagent` | Crear un especialista temporal solo si ninguno de los diez roles cubre la necesidad. |
 | `manage_subagents` | Revisar estados o detener agentes que ya no son necesarios. |
 | `send_message` | Comunicar bloqueos, evidencia o cambios de alcance al líder o a otro agente conocido. |
-| `schedule` | Programar una comprobación futura; no sustituye una prueba necesaria para cerrar la tarea actual. |
 
 ### Investigación y comunicación
 
@@ -49,13 +48,15 @@ Esta guía documenta las herramientas usadas por los diez agentes. La lista se m
 
 ## 2. Navegador y pruebas visuales
 
-Antigravity incluye un subagente de navegador independiente. No se añade `read_browser_page` a los frontmatters porque no figura como herramienta estable del esquema de agentes personalizados y un nombre no reconocido puede dejar el subagente bloqueado.
+La documentación de Antigravity identifica un subagente de navegador activado exclusivamente con `/browser`; no se invoca como cualquier subagente mediante `invoke_subagent`. Comprobar el mecanismo disponible en la instalación antes de prometer interacción. No añadir herramientas de navegador inventadas a los frontmatters.
 
-Cuando una interfaz necesite validación real:
+Para interfaces web que necesiten validación real, y solo si la capacidad está disponible:
 
 1. `ingeniero-ui` prepara el servidor y define resoluciones, rutas y acciones a comprobar.
-2. `orquestador-lider` invoca el agente de navegador disponible en la instalación, o QA usa la herramienta E2E ya configurada en el proyecto.
+2. Usar la suite E2E/capacidad autorizada que esté disponible. Para el navegador integrado seguir `/browser` y la interacción admitida por el host; si requiere intervención del usuario, comunicar ese paso como limitación concreta. No simular una invocación directa.
 3. El informe registra navegador, viewport, flujo, capturas/evidencia y limitaciones.
+
+Para interfaces móviles/nativas no asumir servidor, navegador ni viewport web: inventariar runner, emulador/dispositivo, SO y mecanismo de captura pertinente. Si falta, definir evidencia pendiente y una alternativa existente compatible; la validación web no demuestra interacción nativa.
 
 ---
 
@@ -88,7 +89,6 @@ No agregar propiedades no documentadas para simular capacidades. La autorizació
 | `qa-tester` | Lectura, edición de tests y comandos | Construye reproducciones y ejecuta suites. |
 | `auditor-logica` | Lectura, comandos y edición de reproducciones | Prueba invariantes y fallos sutiles. |
 | `especialista-seguridad` | Lectura, comandos, investigación y permisos | Audita superficie de ataque sin ampliar privilegios. |
-
 | `redactor-documentacion` | Lectura, edición documental y comandos seguros | Manuales finales únicamente por orden del usuario. |
 | `creador-diagramas` | Lectura, edición de fuentes y renderizado | Diagramas únicamente por orden del usuario. |
 | `revisor-creativo` | Lectura, comprobaciones seguras e investigación | Examina y recomienda sin modificar producción. |
@@ -112,3 +112,9 @@ Reglas:
 - Si un permiso falta, informar al líder y pedir solo el alcance necesario.
 
 Referencia oficial: [Custom subagents](https://antigravity.google/docs/subagents/) y [Hooks / nombres de herramientas](https://antigravity.google/docs/hooks).
+
+## 6. Compatibilidad y capacidades mínimas
+
+Nombres de herramientas contrastados con el inventario oficial de Hooks el 2 de octubre de 2026; esto no prueba su mapeo en cada versión instalada. Verificar descubrimiento con `/agents` y capacidades efectivas antes de ejecutar encargos. `schedule` existe en el host, pero se retiró del líder porque el paquete no requiere temporizadores ni tareas recurrentes. `generate_image` se retiró del diagramador para conservar fuentes técnicas exactas.
+
+La política sandbox no garantiza aislamiento de datos/puertos ni hace al creativo técnicamente incapaz de escribir mediante shell: respetar sus límites y no ampliar permisos. Los mensajes a agentes idle pueden reactivarlos; distinguir nota informativa de encargo. Antes de cancelar/reasignar, observar comandos y recursos todavía activos y preservar trabajo; permisos disponibles no autorizan limpiar recursos ajenos.

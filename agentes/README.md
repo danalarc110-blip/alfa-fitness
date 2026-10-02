@@ -1,4 +1,4 @@
-# Equipo portable de 10 agentes — protocolo 3.0
+# Equipo portable de 10 agentes — protocolo 3.1
 
 Agentes personalizados para Google Antigravity, en español e independientes de tecnología. Se guardan en Alpha Fitness, pero detectan y se adaptan a la pila de cada proyecto. El líder coordina nueve especialistas y elige solo los necesarios.
 
@@ -42,3 +42,5 @@ El líder fija revisión, propiedad, dependencias y contratos; Core/UI implement
 Cambios de colaboradores se integran por commits/diffs sobre la base actual, preservando trabajo ajeno y verificando el resultado combinado. Si la herramienta no ofrece subagentes, los roles se aplican secuencialmente y se declara la independencia limitada.
 
 Evaluación y mejoras de cada rol: [INFORME_MEJORA_EQUIPO.md](INFORME_MEJORA_EQUIPO.md).
+
+Correcciones recientes: [REVISION_3_1.md](REVISION_3_1.md).

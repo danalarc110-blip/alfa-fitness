@@ -1,6 +1,6 @@
 # Protocolo del Equipo de Agentes de Desarrollo
 
-Versión del protocolo: **3.0**. Equipo portable, independiente de lenguaje/framework.
+Versión del protocolo: **3.1**. Equipo portable, independiente de lenguaje/framework.
 
 Este paquete define un equipo permanente de **10 agentes especializados** para Google Antigravity; los principios pueden aplicarse secuencialmente en otras herramientas sin fingir subagentes. Su objetivo no es producir más texto ni repartir todas las tareas entre todos, sino entender correctamente el problema, asignar un dueño claro, implementar cambios mínimos y demostrar el resultado con evidencia.
 
@@ -234,3 +234,15 @@ Si llega un ZIP sin historia, abrirlo en una carpeta separada, inspeccionar ruta
 La delegación transmite intención y evidencia, no solo archivos. En cualquier pila comprobar el diff resultante integrado y las fronteras entre módulos; reservar actualización de contrato al dueño designado y avisar a consumidores antes de publicar esa revisión.
 
 Las categorías de QA (fallo de entorno/prueba defectuosa/comportamiento esperado), la confianza de auditoría y los estados de hallazgo especializados son campos distintos del estado de tarea. Normalizar para el líder: probable/hipótesis/informativo sin demostración → SOSPECHA; evidencia negativa suficiente → DESCARTADO; mejora opcional → PROPUESTA; defecto probado/demostrado → CONFIRMADO. Explicar cada mapeo; un aviso informativo de configuración puede estar confirmado sin ser un defecto. El líder no transforma confianza alta en prueba ejecutada.
+
+## 10. Ejecución, reanudación y alcance
+
+- Las herramientas declaradas y el sandbox son capacidades/permisos, no un bloqueo técnico de carpetas o un modo de solo lectura. Toda ejecución respeta el alcance y propiedad; en análisis no usar shell para editar, instalar o modificar datos. Comprobar los efectos reales de scripts antes de correrlos, incluso si se llaman lint/test/build.
+- Un worktree no aísla recursos externos. El contrato T-ID incluye DB/schema, puertos, colas/cache, outputs, simuladores o dispositivos compartidos si aplican: nombre/namespace, dueño y limpieza. Aislar por tarea o serializar. Que suites separadas pasen no demuestra garantías del motor/dispositivo ni ausencia de interferencia.
+- Reasignar escritura solo tras detener/confirmar finalización de escritor y comandos que escriben, preservar trabajo y registrar nuevo dueño/revisión. Si no puede detenerse, usar trabajo aislado sin integrar mientras exista colisión. No borrar worktrees activos ni detener procesos ajenos para resolverla.
+- Retomar tareas con inspección del estado actual, no por memoria: revisión/diff, contratos, procesos y recursos, autorizaciones y comprobaciones afectadas. Contexto mínimo de cada mensaje incluye T-ID/revisión e intención: nota informativa sin trabajo o nueva tarea autorizada. El despertar de un agente por el host no crea autorización.
+- Mantener un coordinador por alcance y referirse a IDs reales de sesiones; no invocar al mismo líder recursivamente. Un coordinador delegado devuelve conflictos con tareas hermanas al padre. Usar concurrencia compatible con recursos/límites del host; cubrir roles secuencialmente si faltan capacidades.
+- Orden de verificaciones según dependencias de la pila: configurar/compilar antes de pruebas que lo necesiten; análisis estático/sintaxis primero cuando aporte diagnóstico. Saltarse un orden de ejemplo no permite omitir puertas pertinentes. Cambios inequívocos ya autorizados en requisitos no exigen aprobación repetida para actualizar sus tests dentro del alcance; conservar controles legítimos y trazabilidad.
+- Formato, idioma, extensión y plantillas pedidos prevalecen sobre estructuras/documentos por defecto de cada rol. Para propuestas solicitadas, especificaciones/requisitos son fuente válida y se marcan como futuro; para sistema actual, usar evidencia de implementación. Los manuales finales y diagramas mantienen su orden explícita de activación.
+
+La guía de herramientas contrasta nombres con documentación oficial, pero no certifica disponibilidad en una instalación concreta. El navegador integrado tiene su mecanismo documentado `/browser`; no asumir que puede invocarse como cualquier subagente. Reutilizar E2E disponible o declarar la limitación. Este paquete no incluye tareas programadas ni vigilancia continua.
