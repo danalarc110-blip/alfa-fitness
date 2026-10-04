@@ -1,0 +1,33 @@
+**********************
+PowerShell transcript start
+Start time: 20261004172420
+Username: EDUARDOCUELLAR\MINEDUCYT
+RunAs User: EDUARDOCUELLAR\MINEDUCYT
+Configuration Name: 
+Machine: EDUARDOCUELLAR (Microsoft Windows NT 10.0.19045.0)
+Host Application: C:\Users\MINEDUCYT\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.dll -Command try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}
+& 'C:\Users\MINEDUCYT\Documents\Codex\2026-10-04\qu\work\verificar.ps1' -Etapa linea-base -Fresh
+Process ID: 7292
+PSVersion: 7.6.5
+PSEdition: Core
+GitCommitId: 7.6.5
+OS: Microsoft Windows 10.0.19045
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+
+
+COMMAND: php artisan migrate:fresh --seed --force (SQLite aislada storage/framework/testing/auditoria-aislada.sqlite)
+
+COMMAND: php artisan test --no-ansi
+
+COMMAND: php artisan route:list --json
+Rutas registradas: 82
+EXIT: 0
+**********************
+PowerShell transcript end
+End time: 20261004172438
+**********************
