@@ -4,11 +4,26 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 
 class EncabezadosSeguros
 {
     public function handle(Request $request, Closure $next)
     {
+        if (app()->environment('production')) {
+            config(['app.debug' => false, 'session.secure' => true, 'session.http_only' => true, 'session.same_site' => 'lax', 'session.encrypt' => true]);
+            URL::forceScheme('https');
+            if (! $request->isSecure()) {
+                $url = parse_url((string) config('app.url'));
+                abort_unless(is_array($url) && in_array($url['scheme'] ?? '', ['http', 'https'], true)
+                    && ! empty($url['host']) && ! isset($url['user']) && ! isset($url['pass']), 503);
+                $host = $url['host'];
+                $port = isset($url['port']) && ! in_array($url['port'], [80, 443], true) ? ':'.$url['port'] : '';
+
+                // APP_URL is trusted deployment configuration; never redirect to the request's Host.
+                return redirect()->away('https://'.$host.$port.$request->getRequestUri(), 308);
+            }
+        }
         $response = $next($request);
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'DENY');

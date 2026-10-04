@@ -52,6 +52,15 @@ return [
 
     'channels' => [
 
+        'auditoria' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/auditoria.log'),
+            'level' => 'info',
+            'days' => (int) env('AUDIT_LOG_DAYS', 30),
+            'permission' => 0600,
+            'replace_placeholders' => true,
+        ],
+
         'stack' => [
             'driver' => 'stack',
             'channels' => explode(',', (string) env('LOG_STACK', 'single')),

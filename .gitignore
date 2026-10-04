@@ -3,6 +3,8 @@
 .env
 .env.backup
 .env.production
+.env.*
+!.env.example
 .phpactor.json
 .phpunit.result.cache
 /.fleet
@@ -19,6 +21,11 @@
 /public/.qa-alpha
 /public/images/productos/*
 !/public/images/productos/.gitkeep
+!/public/images/productos/.htaccess
+/public/images/avatars/*
+!/public/images/avatars/.htaccess
+/public/images/ejercicios/ejercicio_*.webp
+/public/images/ejercicios/musculos_*.webp
 /storage/*.key
 /storage/pail
 /vendor
