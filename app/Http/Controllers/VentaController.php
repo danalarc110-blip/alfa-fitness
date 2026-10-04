@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Mail\ComprobanteVentaMail;
 use App\Models\Cliente;
-use App\Models\DetalleVenta;
 use App\Models\Producto;
 use App\Models\Venta;
 use Illuminate\Http\Request;

@@ -13,9 +13,7 @@ class ComprobanteVentaMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Venta $venta)
-    {
-    }
+    public function __construct(public Venta $venta) {}
 
     public function envelope(): Envelope
     {

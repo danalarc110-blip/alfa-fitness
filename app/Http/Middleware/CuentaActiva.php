@@ -18,10 +18,14 @@ class CuentaActiva
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
                 $mensaje = ! $usuario->activo ? 'Tu cuenta esta desactivada.' : 'Debes establecer tu contrasena desde el enlace de invitacion.';
-                if ($request->expectsJson()) return response()->json(['message' => $mensaje], 403);
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => $mensaje], 403);
+                }
+
                 return redirect()->route('login')->withErrors(['cuenta' => $mensaje]);
             }
         }
+
         return $next($request);
     }
 }

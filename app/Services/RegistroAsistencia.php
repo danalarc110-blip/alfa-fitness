@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Asistencia;
 use App\Models\Cliente;
+use App\Models\PausaMembresia;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -15,14 +17,19 @@ class RegistroAsistencia
             $cliente = Cliente::whereKey($clienteId)->lockForUpdate()->firstOrFail();
             $abierta = Asistencia::where('cliente_id', $clienteId)->whereNull('fecha_salida')->latest('fecha_hora')->first();
             if ($salida) {
-                if (!$abierta) throw ValidationException::withMessages(['cliente_id' => 'Este cliente no tiene una entrada abierta.']);
+                if (! $abierta) {
+                    throw ValidationException::withMessages(['cliente_id' => 'Este cliente no tiene una entrada abierta.']);
+                }
                 $abierta->update(['fecha_salida' => now(), 'salida_registrada_por' => $empleadoId]);
-                \Illuminate\Support\Facades\Cache::forget('aforo_en_vivo');
+                Cache::forget('aforo_en_vivo');
+
                 return;
             }
-            if (!$cliente->activo) throw ValidationException::withMessages(['cliente_id' => 'No se puede registrar la entrada de una cuenta desactivada.']);
+            if (! $cliente->activo) {
+                throw ValidationException::withMessages(['cliente_id' => 'No se puede registrar la entrada de una cuenta desactivada.']);
+            }
 
-            $pausaActiva = \App\Models\PausaMembresia::where('cliente_id', $clienteId)
+            $pausaActiva = PausaMembresia::where('cliente_id', $clienteId)
                 ->where('estado', 'aprobada')
                 ->where('inicio_pausa', '<=', today())
                 ->where('fin_pausa_estimada', '>=', today())
@@ -41,9 +48,11 @@ class RegistroAsistencia
                 $abierta = null;
             }
 
-            if ($abierta) throw ValidationException::withMessages(['cliente_id' => 'Este cliente ya está dentro. Registra su salida antes de una nueva entrada.']);
+            if ($abierta) {
+                throw ValidationException::withMessages(['cliente_id' => 'Este cliente ya está dentro. Registra su salida antes de una nueva entrada.']);
+            }
             Asistencia::create(['cliente_id' => $clienteId, 'registrado_por' => $empleadoId, 'fecha_hora' => now(), 'tipo_acceso' => 'entrada']);
-            \Illuminate\Support\Facades\Cache::forget('aforo_en_vivo');
+            Cache::forget('aforo_en_vivo');
         });
     }
 }

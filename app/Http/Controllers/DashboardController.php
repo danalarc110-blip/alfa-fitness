@@ -11,6 +11,7 @@ use App\Models\Rutina;
 use App\Models\SolicitudMembresia;
 use App\Models\User;
 use App\Models\Venta;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -85,7 +86,7 @@ class DashboardController extends Controller
             $horasDistribucion[$h] = 0;
         }
         foreach ($asistencias30d as $fh) {
-            $hora = (int) \Carbon\Carbon::parse($fh)->format('G');
+            $hora = (int) Carbon::parse($fh)->format('G');
             if (isset($horasDistribucion[$hora])) {
                 $horasDistribucion[$hora]++;
             }

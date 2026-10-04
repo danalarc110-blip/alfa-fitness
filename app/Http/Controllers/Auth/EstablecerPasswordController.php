@@ -26,6 +26,7 @@ class EstablecerPasswordController extends Controller
         $estado = Password::broker('users')->reset($data, function (User $user, string $password) {
             $user->forceFill(['password' => Hash::make($password), 'password_establecida' => true, 'remember_token' => Str::random(60)])->save();
         });
+
         return $estado === Password::PASSWORD_RESET
             ? redirect()->route('login')->with('status', 'Contrasena establecida. Ya puedes iniciar sesion.')
             : back()->withErrors(['email' => __($estado)]);

@@ -6,9 +6,9 @@ use App\Models\Asistencia;
 use App\Models\Cliente;
 use App\Models\Ejercicio;
 use App\Models\Membresia;
-use App\Models\PlanMembresia;
 use App\Models\Producto;
 use App\Models\User;
+use Database\Seeders\EjercicioSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -92,7 +92,7 @@ class AuditoriaSistemaTest extends TestCase
 
     public function test_all_seeded_exercises_have_muscle_images_available(): void
     {
-        $this->seed(\Database\Seeders\EjercicioSeeder::class);
+        $this->seed(EjercicioSeeder::class);
 
         $ejercicios = Ejercicio::where('activo', true)->get();
         $this->assertGreaterThan(0, $ejercicios->count());
