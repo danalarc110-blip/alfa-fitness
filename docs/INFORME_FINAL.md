@@ -2,7 +2,15 @@
 
 Fecha: 4 de octubre de 2026. Repositorio: [danalarc110-blip/alfa-fitness](https://github.com/danalarc110-blip/alfa-fitness). Rama de entrega: `auditoria-y-cierre`. Base: `28950473b9c302325c1f4075f4e929a22f476ceb`. No se integra ni modifica `main`.
 
-El código y las pruebas locales quedan aprobados. Esto no certifica seguridad absoluta ni cumplimiento legal integral: todavía hacen falta datos legales reales, permisos sobre imágenes y verificación del despliegue con Google, SMTP y MySQL propios. Los documentos legales son una base para revisión por un abogado de El Salvador.
+Actualización de alcance, 5 de octubre de 2026: el usuario confirmó que es un **proyecto estudiantil**, no un despliegue comercial. No se requiere contratar un abogado, identificar una empresa inexistente ni configurar servicios externos para presentar la demostración. Las recomendaciones sobre un gimnasio real de este informe son referencias para una posible adopción futura, no tareas pendientes de la entrega académica.
+
+Se mantienen las protecciones y todos los módulos. Los documentos son plantillas educativas; el acceso muestra el carácter estudiantil y recomienda datos/operaciones ficticios. Se publica la versión `2026-10-05-academico` sin modificar archivos legales ya aceptados. Las credenciales de demostración local no se suben a GitHub. Esto no certifica seguridad absoluta; si se usan datos reales, deben protegerse y atenderse las solicitudes, también en un proyecto estudiantil.
+
+Verificación del ajuste académico: **173 pruebas, 1.440 aserciones, cero errores/fallos/omitidas y 133 rutas**. Se conservaron los controles de consentimiento, guard, registro y archivo inmutable; cuatro pruebas nuevas cubren el contexto educativo. Chrome comprobó los cuatro roles con cuentas ficticias, documentos públicos y vista móvil sin errores JavaScript. Evidencias: [academico.txt](evidencia/academico.txt), [academico-junit.xml](evidencia/academico-junit.xml) y [browser-academico.txt](evidencia/browser-academico.txt). Pint, build y compilación de vistas aprobados.
+
+Arranque local: se respaldó SQLite antes de aplicar las seis migraciones pendientes con `migrate --force`, sin fresh ni reset. Se confirmó que la copia local no tenía usuarios/clientes; se añadieron tres empleados y un cliente de demostración con claves aleatorias, más los datos ficticios del comando existente. No se cambiaron claves ni cuentas anteriores. Los accesos se entregan en un archivo privado fuera de Git y de `public`, restringido al usuario de Windows. `php artisan serve --host=127.0.0.1 --port=8000 --tries=1 --no-reload` queda en segundo plano, limitado a este equipo. Login y los cuatro documentos responden HTTP 200 con la versión académica efectiva.
+
+Al actualizar otra copia, si `.env` declara una versión vieja, cambiar solo `LEGAL_VERSION=2026-10-05-academico` y ejecutar `php artisan optimize:clear`; no regenerar APP_KEY ni sustituir `.env`. La tabla de cierre de abajo corresponde a la auditoría original del 4 de octubre; los resultados de este párrafo son los actuales.
 
 ## 1. Resumen de cambios
 
@@ -90,6 +98,8 @@ Límites de verificación:
 
 ## 4. Lo que solo tú puedes completar
 
+Esta sección es una referencia **solo para una posible adopción real**. No necesitas abogados, dominios ni datos de una empresa para la presentación estudiantil. Google real y SMTP son opcionales; la demostración local funciona con los accesos por correo y SQLite.
+
 ### 1. Datos legales y abogado — necesario antes de uso público
 
 Abre `.env` local con un editor. Completa estas variables sin subir ese archivo a GitHub. El responsable y el abogado deben decidir valores reales, plazos por categoría, proveedores/países, menores, delegado y obligaciones comerciales/tributarias.
@@ -151,7 +161,7 @@ php artisan route:list
 
 Si no existe la rama local: `git switch --track origin/auditoria-y-cierre`. Si hay cambios locales, consérvalos y resuelve el solapamiento; no uses `reset --hard`. Si un comando falla, no continúes a ciegas: guarda el mensaje sin secretos, mantiene el respaldo y corrige la causa. El modo mantenimiento no reemplaza respaldos.
 
-Debe verse `built` en Vite, `DONE` en migraciones nuevas y las rutas originales más `/gestion`, `/legal` y `/administracion/dos-factores`. La migración no recrea la base ni cambia claves; el login conserva Personal/Clientes. Con dependencias de desarrollo instaladas, `php artisan test` debe mostrar **169 passed (1404 assertions)** y `composer audit` ninguna vulnerabilidad. Revisa luego los flujos con una cuenta de cada rol en una copia MySQL.
+Debe verse `built` en Vite, `DONE` en migraciones nuevas y las rutas originales más `/gestion`, `/legal` y `/administracion/dos-factores`. La migración no recrea la base ni cambia claves; el login conserva Personal/Clientes. Con dependencias de desarrollo instaladas, `php artisan test` debe mostrar **173 passed (1440 assertions)** y `composer audit` ninguna vulnerabilidad. Para adoptar MySQL en una instalación real, revisa primero los flujos con una cuenta de cada rol en una copia de prueba.
 
 No ejecutar `migrate:fresh`, `migrate:reset`, `db:wipe`, `key:generate` ni `composer setup` como actualización. No ejecutar seeders ni `alpha:datos-prueba` sobre datos reales. Una reversión de migración elimina sus columnas/tablas nuevas, incluyendo evidencia legal/agenda/bitácoras: exportarla antes; para revertir código se prefieren commits individuales y restauración planificada.
 

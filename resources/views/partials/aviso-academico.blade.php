@@ -1,0 +1,1 @@
+<p class="text-xs text-gray-400 my-3" role="note">Proyecto estudiantil · Demostración de gestión de gimnasio. Utiliza datos y operaciones de prueba; no introduzcas números de tarjeta ni información médica.</p>

@@ -1,6 +1,8 @@
 # Información de seguridad y responsabilidad por lesiones
 
-Versión: 2026-10-04. Base para revisar por un abogado y por el profesional responsable de entrenamiento antes de su uso definitivo.
+Versión: 2026-10-05-academico. Plantilla educativa de un proyecto estudiantil.
+
+Este texto simula información de seguridad de un gimnasio; no exige asesoría jurídica para la presentación académica. Las rutinas y cargas de prueba no son recomendaciones para entrenar. Si se utiliza para actividades reales, deberá adaptarse a los procedimientos y responsables del gimnasio.
 
 La actividad física y el uso de pesas o máquinas pueden producir fatiga, caídas, lesiones musculares u otros daños. Conocer estos riesgos ayuda a entrenar con cuidado; no elimina la obligación del gimnasio de mantener equipos adecuados, dar instrucciones y cumplir sus deberes de seguridad.
 
@@ -14,4 +16,4 @@ La lectura y aceptación de este aviso expresa que recibiste información sobre 
 
 Responsable del gimnasio: {{NOMBRE_RESPONSABLE}}. Contacto: {{CORREO_PRIVACIDAD}} y {{TELEFONO_RESPONSABLE}}. Procedimiento local de atención de accidentes: {{PROCEDIMIENTO_ACCIDENTES}}.
 
-Base jurídica a contrastar por el abogado: [Ley de Protección al Consumidor, publicación de la Defensoría](https://defensoria.gob.sv/wp-content/uploads/2015/10/ley_reglamento.pdf), art. 17. Se escogió informar riesgos y preservar los derechos del consumidor; no una renuncia total por lesiones. El personal debe completar y practicar el procedimiento de accidentes; este texto no crea por sí solo un protocolo sanitario.
+Referencia educativa, a contrastar antes de una adopción real: [Ley de Protección al Consumidor, publicación de la Defensoría](https://defensoria.gob.sv/wp-content/uploads/2015/10/ley_reglamento.pdf), art. 17. Se escogió informar riesgos y preservar los derechos del consumidor; no una renuncia total por lesiones. En un gimnasio real, el personal debe completar y practicar el procedimiento de accidentes; este texto no crea por sí solo un protocolo sanitario.

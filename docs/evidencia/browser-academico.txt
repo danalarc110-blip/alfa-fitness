@@ -1,0 +1,5 @@
+Acceso local de demostración admin: aprobado, sin desbordamiento móvil.
+Acceso local de demostración secretaria: aprobado, sin desbordamiento móvil.
+Acceso local de demostración entrenador: aprobado, sin desbordamiento móvil.
+Acceso local de demostración cliente: aprobado, sin desbordamiento móvil.
+PASS: cuatro accesos y documentos educativos, versión actual, responsive y sin excepciones JavaScript.

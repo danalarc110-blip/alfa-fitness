@@ -1,8 +1,8 @@
 # Aviso y política de privacidad de Alpha Fitness
 
-Versión: 2026-10-04. Fecha de revisión: 4 de octubre de 2026.
+Versión: 2026-10-05-academico. Fecha de revisión: 5 de octubre de 2026.
 
-Esta es una base pendiente de completar con datos reales y de revisión por un abogado de El Salvador. Publicarla no acredita, por sí sola, cumplimiento legal.
+Plantilla educativa de un proyecto estudiantil. Simula el aviso de un gimnasio para aprender a proteger datos y explicar su uso; no necesitas contratar un abogado para presentar esta demostración. Usa cuentas y operaciones de prueba. Los marcadores identifican información institucional que no se ha inventado. Si se adopta para un gimnasio real, será necesario completar y revisar su contenido para ese uso; esta plantilla no acredita cumplimiento legal.
 
 ## Quién trata tus datos
 
@@ -52,4 +52,4 @@ El retiro de una autorización opcional no elimina obligaciones de conservación
 
 Para menores de edad, el responsable debe verificar la representación y la forma adecuada de informar y obtener las autorizaciones aplicables. Este registro no verifica automáticamente la edad ni sustituye ese procedimiento.
 
-Marco consultado: [Ley para la Protección de Datos Personales, Decreto 144, texto oficial](https://www.ace.gob.sv/documentos/decretos/decreto_144_proteccion_datos.pdf) y [políticas oficiales de la ACE](https://www.ace.gob.sv/politicas.php). La [ficha oficial de la reforma de septiembre de 2026](https://www.asamblea.gob.sv/leyes-y-decretos/view/7022) aún informa publicación material pendiente; su vigencia efectiva debe cotejarse con la autoridad y el abogado.
+Marco de referencia de la plantilla: [Ley para la Protección de Datos Personales, Decreto 144, texto oficial](https://www.ace.gob.sv/documentos/decretos/decreto_144_proteccion_datos.pdf) y [políticas oficiales de la ACE](https://www.ace.gob.sv/politicas.php). En la revisión del 4 de octubre, la [ficha oficial de la reforma de septiembre de 2026](https://www.asamblea.gob.sv/leyes-y-decretos/view/7022) indicaba publicación material pendiente. Para una adopción real debe cotejarse la normativa entonces vigente; no se exige ese trámite para exponer esta demostración.

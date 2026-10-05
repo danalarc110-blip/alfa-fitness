@@ -1,0 +1,36 @@
+**********************
+PowerShell transcript start
+Start time: 20261005073943
+Username: EDUARDOCUELLAR\MINEDUCYT
+RunAs User: EDUARDOCUELLAR\MINEDUCYT
+Configuration Name:
+Machine: EDUARDOCUELLAR (Microsoft Windows NT 10.0.19045.0)
+Host Application: C:\Users\MINEDUCYT\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.dll -Command try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}
+$paginaAcademica = Invoke-WebRequest -Uri 'http://127.0.0.1:8000/login' -TimeoutSec 30; if ($paginaAcademica.StatusCode -ne 200 -or $paginaAcademica.Content -notmatch 'Proyecto estudiantil') { throw 'Login no disponible' }; foreach ($documento in @('privacidad','terminos','lesiones','derechos')) { $paginaDocumento = Invoke-WebRequest -Uri ('http://127.0.0.1:8000/legal/' + $documento) -TimeoutSec 30; if ($paginaDocumento.StatusCode -ne 200 -or $paginaDocumento.Content -notmatch '2026-10-05-academico' -or $paginaDocumento.Content -notmatch 'Plantilla educativa') { throw "Documento $documento no coincide" } }; 'PASS: login y cuatro documentos HTTP 200, aviso académico y versión nueva efectivos.'; Get-NetTCPConnection -State Listen -LocalPort 8000 | Select-Object LocalAddress,LocalPort,OwningProcess; & ..\work\verificar.ps1 -Etapa academico -Fresh
+Process ID: 15744
+PSVersion: 7.6.5
+PSEdition: Core
+GitCommitId: 7.6.5
+OS: Microsoft Windows 10.0.19045
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+
+
+LocalAddress LocalPort OwningProcess
+------------ --------- -------------
+127.0.0.1         8000         15836
+COMMAND: php artisan migrate:fresh --seed --force (SQLite aislada storage/framework/testing/auditoria-aislada.sqlite)
+
+COMMAND: php artisan test --no-ansi
+
+COMMAND: php artisan route:list --json
+Rutas registradas: 133
+EXIT: 0
+**********************
+PowerShell transcript end
+End time: 20261005074050
+**********************

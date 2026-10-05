@@ -10,6 +10,7 @@
 <body class="alpha-app">
     <main class="max-w-4xl mx-auto p-4 sm:p-8">
         <header class="flex flex-wrap justify-between gap-4 mb-6"><a href="{{ route('login') }}">← Volver al acceso</a><button type="button" onclick="alphaToggleTema()">◐ Claro / Oscuro</button></header>
+        @include('partials.aviso-academico')
         @include('partials.feedback')
         <section class="alpha-card p-5 sm:p-8 alpha-legal">@yield('content')</section>
         <footer class="mt-6 text-sm flex flex-wrap gap-4">@include('partials.legal-links')</footer>

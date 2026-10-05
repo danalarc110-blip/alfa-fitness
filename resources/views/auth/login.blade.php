@@ -18,6 +18,7 @@
         <button class="alpha-theme-control text-xs" type="button" onclick="alphaToggleTema()" aria-label="Cambiar tema">◐ Claro / Oscuro</button>
         <div class="alpha-login-inner">
             <p class="alpha-eyebrow">Bienvenido a Alpha Fitness</p><h1>Un nuevo día.<br>Una mejor versión.</h1><p class="alpha-login-subtitle">Ingresa a tu cuenta para continuar.</p>
+            @include('partials.aviso-academico')
             @include('partials.feedback')
             @php($clientTab = $errors->has('correo') || $errors->has('nombre') || $errors->has('aceptacion_legal') || old('correo') || old('nombre'))
             <div class="alpha-login-tabs" role="tablist" aria-label="Tipo de cuenta">

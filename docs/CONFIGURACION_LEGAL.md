@@ -1,6 +1,8 @@
 # Configurar documentos y conservar su versión aceptada
 
-Antes de uso público, un abogado de El Salvador debe revisar los documentos y el responsable debe completar los datos reales. Mantener marcadores pendientes permite identificar lo que falta, pero no acredita un aviso completo ni cumplimiento.
+Alpha Fitness es un proyecto estudiantil. Para la demostración no se requiere contratar un abogado ni completar datos de una empresa inexistente. Los documentos funcionan como plantillas educativas y los marcadores hacen visible qué información tendría un gimnasio real. Mantener consentimiento, privacidad y permisos es parte del aprendizaje, no un trámite externo.
+
+Si se convierte en un servicio real, completar y revisar los documentos para ese contexto. Los marcadores no acreditan un aviso completo ni cumplimiento. No usar datos sensibles o bancarios reales durante las pruebas.
 
 ## Completar los datos
 
@@ -20,7 +22,7 @@ La huella facilita comprobar integridad; no es una firma electrónica ni un sell
 
 ## Publicar una actualización legal
 
-1. Revisa con el abogado los cambios de texto y completa los datos reales de `.env`.
+1. En la demostración, revisa los textos con el equipo del proyecto; no inventes datos institucionales. Para uso real, completa y revisa los datos y condiciones correspondientes.
 2. Asigna un valor nuevo a `LEGAL_VERSION`, por ejemplo una fecha con una revisión. Registra fuera del repositorio público quién aprobó el contenido y cuándo.
 3. Ejecuta `php artisan optimize:clear`. Abre los cuatro enlaces legales del login y verifica responsable, correo, retención y versión mostrada.
 4. Comunica los cambios relevantes a las personas afectadas por el medio previsto en el aviso. La aplicación no envía esa comunicación automáticamente. Un cambio de versión no supone que clientes antiguos hayan aceptado una nueva finalidad; las finalidades opcionales requieren su propia autorización.

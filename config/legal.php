@@ -3,7 +3,7 @@
 $dato = fn (string $variable, string $marcador) => env($variable) ?: '{{'.$marcador.'}}';
 
 return [
-    'version' => env('LEGAL_VERSION', '2026-10-04') ?: '2026-10-04',
+    'version' => env('LEGAL_VERSION', '2026-10-05-academico') ?: '2026-10-05-academico',
     'marcadores' => [
         'NOMBRE_RESPONSABLE' => $dato('LEGAL_NOMBRE_RESPONSABLE', 'NOMBRE_RESPONSABLE'),
         'DIRECCION_RESPONSABLE' => $dato('LEGAL_DIRECCION_RESPONSABLE', 'DIRECCION_RESPONSABLE'),

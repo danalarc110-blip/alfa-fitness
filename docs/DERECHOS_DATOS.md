@@ -1,6 +1,8 @@
 # Solicitudes sobre tus datos personales
 
-Versión: 2026-10-04. Base pendiente de revisión por un abogado. Responsable: {{NOMBRE_RESPONSABLE}}. Persona de contacto: {{PERSONA_CONTACTO_PRIVACIDAD}}.
+Versión: 2026-10-05-academico. Plantilla educativa de un proyecto estudiantil. Responsable: {{NOMBRE_RESPONSABLE}}. Persona de contacto: {{PERSONA_CONTACTO_PRIVACIDAD}}.
+
+El formulario permite demostrar la recepción privada y el seguimiento de solicitudes con datos ficticios, sin trámites externos ni contratación de un abogado para la exposición. No es una conexión con una autoridad. Si alguien registra datos personales reales, no se ignora su solicitud por tratarse de un proyecto académico; el equipo debe atenderla de forma segura.
 
 ## Cómo enviar una solicitud
 
@@ -40,4 +42,4 @@ Designar a {{PERSONA_CONTACTO_PRIVACIDAD}} y una suplencia. Revisar cada día h�
 
 La eliminación debe evaluarse según las relaciones y obligaciones vigentes, ejecutarse con respaldo controlado y dejar evidencia sin conservar innecesariamente el contenido eliminado. Este documento no habilita a borrar clientes o comprobantes indiscriminadamente ni concede acceso administrativo al solicitante.
 
-Referencia: [Decreto 144, texto oficial](https://www.ace.gob.sv/documentos/decretos/decreto_144_proteccion_datos.pdf), arts. 18–23 y 29–30. La organización y los períodos comerciales reales deben ser completados por el responsable y revisados por su abogado.
+Referencia educativa: [Decreto 144, texto oficial](https://www.ace.gob.sv/documentos/decretos/decreto_144_proteccion_datos.pdf), arts. 18–23 y 29–30. En una posible adopción real, la organización y los períodos comerciales deben ser definidos y revisados para ese contexto; no son requisitos de la exposición académica.

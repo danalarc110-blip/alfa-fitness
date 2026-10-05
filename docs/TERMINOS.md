@@ -1,6 +1,8 @@
 # Términos y condiciones de Alpha Fitness
 
-Versión: 2026-10-04. Base pendiente de completar y revisar por un abogado de El Salvador.
+Versión: 2026-10-05-academico. Plantilla educativa de un proyecto estudiantil.
+
+La demostración simula operaciones de un gimnasio, no cobra ni procesa pagos reales. No necesitas contratar un abogado para presentarla. Los términos siguientes ilustran cómo comunicar condiciones de servicio sin eliminar derechos; para un gimnasio real deben adaptarse y revisarse antes de utilizarlos.
 
 El servicio lo presta {{NOMBRE_RESPONSABLE}}, en {{DIRECCION_RESPONSABLE}}. Contacto para atención y reclamos: {{CORREO_PRIVACIDAD}}, teléfono {{TELEFONO_RESPONSABLE}}.
 
@@ -28,4 +30,4 @@ Se podrán aplicar medidas proporcionadas ante uso indebido, informando el motiv
 
 Los cambios en términos se publicarán con una versión nueva y se comunicarán cuando afecten condiciones contratadas. Las controversias pueden plantearse al contacto del gimnasio y ante las autoridades competentes de El Salvador. No se impone arbitraje obligatorio ni se limita el acceso a ellas.
 
-Nota para el responsable: revisar el contrato final, publicidad, atención de menores, requisitos tributarios y, si se contratan servicios por internet, las obligaciones de comercio electrónico. La [Ley de Protección al Consumidor publicada por la Defensoría](https://defensoria.gob.sv/wp-content/uploads/2015/10/ley_reglamento.pdf), art. 17, identifica como abusivas las cláusulas que limitan responsabilidades del proveedor o derechos del consumidor. La copia consultada es anterior a reformas posteriores y el abogado debe cotejar el texto vigente antes de aprobar este contrato.
+Referencia para una posible adopción real: revisar el contrato final, publicidad, atención de menores, requisitos tributarios y, si se contratan servicios por internet, las obligaciones de comercio electrónico. La [Ley de Protección al Consumidor publicada por la Defensoría](https://defensoria.gob.sv/wp-content/uploads/2015/10/ley_reglamento.pdf), art. 17, identifica como abusivas las cláusulas que limitan responsabilidades del proveedor o derechos del consumidor. La copia consultada es anterior a reformas posteriores; para contratar servicios reales debe cotejarse el texto vigente, no usar esta plantilla como contrato aprobado.

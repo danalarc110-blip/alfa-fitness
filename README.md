@@ -1,6 +1,8 @@
 # Alpha Fitness
 
-Aplicación Laravel 12 para gestionar entrenamiento y operaciones del gimnasio.
+Proyecto estudiantil en Laravel 12 que simula la gestión de entrenamiento y operaciones de un gimnasio, con controles de seguridad semejantes a una aplicación real.
+
+Para la presentación académica no necesitas contratar abogados ni configurar un servidor público. Las políticas, condiciones y solicitudes de datos son plantillas educativas; se conserva consentimiento explícito, privacidad por usuario, permisos, hash de contraseñas y protección de formularios. Usa datos y pagos ficticios, nunca tarjetas ni información médica reales.
 
 ## Uso local
 
@@ -63,7 +65,9 @@ El registro público crea clientes. Las cuentas de empleados se administran por 
 
 Los datos ficticios se agregan únicamente en local/testing mediante `php artisan alpha:datos-prueba`; las contraseñas aleatorias nuevas se muestran una vez. No utilizar en una instalación real: [DATOS_PRUEBA.md](docs/DATOS_PRUEBA.md).
 
-Antes de abrir al público, completar los marcadores de `.env.example` y revisar los documentos con un abogado de El Salvador. Si cambian los textos o los datos del responsable, publicar otra `LEGAL_VERSION`: [CONFIGURACION_LEGAL.md](docs/CONFIGURACION_LEGAL.md).
+Los marcadores de `.env.example` pueden mantenerse para la demostración: no representan una empresa real. Solo si se adopta para un gimnasio real hay que completar y revisar los documentos para ese contexto. Si cambian los textos o los datos del responsable, publicar otra `LEGAL_VERSION`; la revisión académica usa `2026-10-05-academico` y conserva archivos aceptados anteriormente: [CONFIGURACION_LEGAL.md](docs/CONFIGURACION_LEGAL.md).
+
+Si tu `.env` ya contiene una versión anterior, actualiza solo `LEGAL_VERSION=2026-10-05-academico` y ejecuta `php artisan optimize:clear`. No reemplaces `.env` completo ni regeneres `APP_KEY` al actualizar.
 
 Google requiere credenciales propias en las variables de `config/services.php`. El acceso por correo funciona sin Google. Para actualizar, conserva `.env` y `APP_KEY`, usa HTTPS en producción, apunta el servidor a `public/` y ejecuta `php artisan migrate --force`, `npm run build` y `php artisan optimize:clear`. No vuelvas a sembrar datos reales como parte de una actualización normal. En producción usa correo SMTP real y conserva `SESSION_ENCRYPT=true`.
 

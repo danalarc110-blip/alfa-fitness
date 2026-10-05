@@ -1,5 +1,9 @@
 # Instalación y actualización en Windows/XAMPP
 
+Escenario actual: proyecto estudiantil y demostración local. No requiere contratar un abogado ni publicar un servidor. Usa operaciones y datos ficticios; las plantillas institucionales son parte de la simulación. La sección de producción solo aplica si más adelante se adopta como servicio real.
+
+La actualización académica cambia los documentos: si `.env` contiene una versión anterior, cambia únicamente `LEGAL_VERSION=2026-10-05-academico` y ejecuta `php artisan optimize:clear`. No sustituyas claves ni documentos aceptados anteriormente. Para iniciar la demostración local: `php artisan serve --host=127.0.0.1 --port=8000`; abrir `http://127.0.0.1:8000`.
+
 No ejecutar `migrate:fresh`, `db:wipe` ni `migrate:reset` sobre una instalación con datos reales. No regenerar `APP_KEY` al actualizar: cifra sesiones y claves 2FA. Guardar una copia privada de `.env`, archivos subidos y base de datos antes de empezar.
 
 ## Instalación nueva
