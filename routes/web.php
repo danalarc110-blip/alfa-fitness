@@ -116,6 +116,7 @@ Route::middleware(['auth:cliente,web', 'auth.session'])->group(function () {
     Route::post('/ventas/{venta}/enviar-correo', [VentaController::class, 'enviarCorreo'])->middleware('can:inventario')->name('ventas.enviar-correo');
 
     Route::get('/progreso', [ProgresoController::class, 'index'])->middleware('can:progreso')->name('progreso.index');
+    Route::get('/progreso/estadisticas', [EstadisticaEjercicioController::class, 'index'])->middleware('can:progreso')->name('progreso.estadisticas');
     Route::post('/progreso', [ProgresoController::class, 'store'])->middleware('can:progreso')->name('progreso.store');
     Route::delete('/progreso/{personalRecord}', [ProgresoController::class, 'destroy'])->middleware('can:progreso')->name('progreso.destroy');
 
