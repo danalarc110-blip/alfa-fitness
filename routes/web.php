@@ -30,6 +30,14 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1')->name('login.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::post('/salir', [LoginController::class, 'salir'])->name('salir');
+Route::get('/verificar-acceso', [DosFactoresController::class, 'desafio'])->name('dos-factores.desafio');
+Route::post('/verificar-acceso', [DosFactoresController::class, 'verificar'])->middleware('throttle:5,1')->name('dos-factores.verificar');
+Route::middleware(['auth:cliente,web', 'auth.session', 'can:administrar'])->prefix('administracion/dos-factores')->name('dos-factores.')->group(function () {
+    Route::get('/', [DosFactoresController::class, 'configurar'])->name('configurar');
+    Route::post('/preparar', [DosFactoresController::class, 'preparar'])->middleware('throttle:5,1')->name('preparar');
+    Route::post('/activar', [DosFactoresController::class, 'activar'])->middleware('throttle:5,1')->name('activar');
+    Route::delete('/', [DosFactoresController::class, 'desactivar'])->middleware('throttle:5,1')->name('desactivar');
+});
 
 // Login (clientes)
 Route::post('/cliente/login', [ClienteLoginController::class, 'login'])->middleware('throttle:5,1')->name('cliente.login.submit');

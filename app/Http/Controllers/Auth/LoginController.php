@@ -54,6 +54,14 @@ class LoginController extends Controller
         Auth::guard('cliente')->logout();
         $request->session()->regenerate();
 
+        $user = Auth::guard('web')->user();
+        if ($user->rol === 'Administrador' && $user->two_factor_confirmed_at) {
+            Auth::guard('web')->logout();
+            $request->session()->put('two_factor_login', ['id' => $user->id, 'password_hash' => hash('sha256', $user->password), 'expires' => now()->addMinutes(5)->timestamp]);
+
+            return redirect()->route('dos-factores.desafio');
+        }
+
         return redirect()->intended(route('dashboard'));
     }
 

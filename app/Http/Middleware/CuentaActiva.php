@@ -34,7 +34,7 @@ class CuentaActiva
         $admin = Auth::guard('web')->user();
         if ($admin?->rol === 'Administrador' && $admin->two_factor_confirmed_at) {
             $verificacion = $request->session()->get('two_factor_verified');
-            if (! $verificacion || $verificacion['id'] !== $admin->id || $verificacion['confirmed_at'] !== $admin->two_factor_confirmed_at->timestamp || ! hash_equals($verificacion['password_hash'], hash('sha256', $admin->password))) {
+            if (! $verificacion || $verificacion['id'] !== $admin->id || $verificacion['confirmed_at'] !== $admin->two_factor_confirmed_at->timestamp || ! hash_equals($verificacion['password_hash'], hash('sha256', $admin->password)) || ! hash_equals($verificacion['factor_hash'] ?? '', hash('sha256', (string) $admin->two_factor_secret))) {
                 Auth::guard('web')->logout();
                 $request->session()->forget('two_factor_verified');
                 $request->session()->regenerate();
