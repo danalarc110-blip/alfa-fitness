@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -21,7 +22,13 @@ class Asistencia extends Model
         return [
             'fecha_hora' => 'datetime',
             'fecha_salida' => 'datetime',
+            'anulada_en' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope('vigentes', fn (Builder $query) => $query->whereNull($query->getModel()->qualifyColumn('anulada_en')));
     }
 
     public function cliente(): BelongsTo

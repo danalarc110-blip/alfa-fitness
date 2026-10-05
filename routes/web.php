@@ -159,3 +159,4 @@ Route::middleware(['auth:cliente,web', 'auth.session'])->prefix('ejercicios')->n
 });
 
 require __DIR__.'/gestion.php';
+require __DIR__.'/historial.php';

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,7 +24,13 @@ class Venta extends Model
     {
         return [
             'total' => 'decimal:2',
+            'anulada_en' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope('vigentes', fn (Builder $query) => $query->whereNull($query->getModel()->qualifyColumn('anulada_en')));
     }
 
     public function user(): BelongsTo

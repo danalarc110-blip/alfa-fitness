@@ -6,6 +6,7 @@ use App\Models\Asistencia;
 use App\Models\Cliente;
 use App\Models\Ejercicio;
 use App\Models\Membresia;
+use App\Models\PagoMembresia;
 use App\Models\PersonalRecord;
 use App\Models\Rutina;
 use App\Models\SolicitudMembresia;
@@ -45,7 +46,11 @@ class DashboardController extends Controller
             $actividad = Asistencia::with('cliente:id,nombre')->latest('fecha_hora')->limit(5)->get();
             $porVencer = Membresia::with('cliente:id,nombre')->where('cancelada', false)->whereBetween('fin', [today(), today()->addDays(7)])->limit(5)->get();
         } elseif ($perfil === 'administrador') {
-            $ingresosMembresiasMes = Membresia::where('cancelada', false)->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('importe');
+            // Cancelling future access does not erase a payment already received.
+            $ingresosMembresiasMes = PagoMembresia::whereBetween('pagado_en', [now()->startOfMonth(), now()->endOfMonth()])->sum('importe');
+            // Preserve historical display for rows created before a payment ledger existed.
+            $ingresosMembresiasMes += Membresia::whereDoesntHave('pago')->where('cancelada', false)
+                ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('importe');
             $ingresosVentasMes = Venta::whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('total');
             $totalIngresosMes = $ingresosMembresiasMes + $ingresosVentasMes;
 
