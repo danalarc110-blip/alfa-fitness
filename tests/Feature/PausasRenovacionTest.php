@@ -37,7 +37,7 @@ class PausasRenovacionTest extends TestCase
             'plan_nombre' => $plan->nombre, 'precio_acordado' => 25, 'duracion_dias' => $dias,
         ]);
         auth('cliente')->logout();
-        $this->actingAs($this->secretaria)->patch(route('membresias.activar', $solicitud), ['importe' => 25, 'metodo_pago' => 'efectivo'])
+        $this->actingAs($this->secretaria, 'web')->patch(route('membresias.activar', $solicitud), ['importe' => 25, 'metodo_pago' => 'efectivo'])
             ->assertRedirect()->assertSessionHasNoErrors();
 
         return Membresia::where('solicitud_id', $solicitud->id)->firstOrFail();
@@ -79,7 +79,7 @@ class PausasRenovacionTest extends TestCase
         $this->assertPeriodo($renovacion, today()->addDays(30), today()->addDays(59));
         auth('cliente')->logout();
         $pausa = PausaMembresia::firstOrFail();
-        $this->actingAs($this->secretaria)->patch(route('membresias.pausa.aprobar', $pausa))->assertRedirect()->assertSessionHasNoErrors();
+        $this->actingAs($this->secretaria, 'web')->patch(route('membresias.pausa.aprobar', $pausa))->assertRedirect()->assertSessionHasNoErrors();
         $this->assertPeriodo($actual, today(), today()->addDays(34));
         $this->assertPeriodo($renovacion, today()->addDays(35), today()->addDays(64));
         $this->assertSame('aprobada', $pausa->fresh()->estado);
@@ -119,7 +119,7 @@ class PausasRenovacionTest extends TestCase
         $this->actingAs($this->cliente, 'cliente');
         $this->pausar($actual);
         auth('cliente')->logout();
-        $this->actingAs($this->secretaria)->patch(route('membresias.pausa.rechazar', PausaMembresia::firstOrFail()))->assertRedirect()->assertSessionHasNoErrors();
+        $this->actingAs($this->secretaria, 'web')->patch(route('membresias.pausa.rechazar', PausaMembresia::firstOrFail()))->assertRedirect()->assertSessionHasNoErrors();
         $this->assertPeriodo($actual, today(), today()->addDays(29));
         $this->assertPeriodo($renovacion, today()->addDays(30), today()->addDays(59));
     }
@@ -146,7 +146,7 @@ class PausasRenovacionTest extends TestCase
         $iniciada = Membresia::create(['cliente_id' => $this->cliente->id, 'plan' => 'Usada', 'importe' => 25, 'inicio' => today()->subDay(), 'fin' => today()->addDays(28)]);
         $futura = Membresia::create(['cliente_id' => $this->cliente->id, 'plan' => 'Futura', 'importe' => 25, 'inicio' => today()->addDays(29), 'fin' => today()->addDays(58)]);
         PausaMembresia::create(['cliente_id' => $this->cliente->id, 'membresia_id' => $actual->id, 'dias' => 10, 'motivo' => 'Importada', 'estado' => 'aprobada', 'inicio_pausa' => today()->addDays(2), 'fin_pausa_estimada' => today()->addDays(11)]);
-        $this->actingAs($this->secretaria)->patch(route('membresias.reanudar', $actual))->assertRedirect()->assertSessionHasNoErrors();
+        $this->actingAs($this->secretaria, 'web')->patch(route('membresias.reanudar', $actual))->assertRedirect()->assertSessionHasNoErrors();
         $this->assertPeriodo($iniciada, today()->subDay(), today()->addDays(28));
         $this->assertPeriodo($futura, today()->addDays(29), today()->addDays(58));
     }

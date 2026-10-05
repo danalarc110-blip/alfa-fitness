@@ -10,6 +10,13 @@ class CuentaActiva
 {
     public function handle(Request $request, Closure $next)
     {
+        // A client identity never retains a parallel employee session from legacy flows.
+        if (Auth::guard('cliente')->check() && Auth::guard('web')->check()) {
+            Auth::guard('web')->logout();
+            if ($request->routeIs('dashboard')) {
+                return redirect()->route('cliente.dashboard');
+            }
+        }
         foreach (['web', 'cliente'] as $guard) {
             $usuario = Auth::guard($guard)->user();
             if ($usuario && (! $usuario->activo || ($guard === 'web' && ! $usuario->password_establecida))) {
