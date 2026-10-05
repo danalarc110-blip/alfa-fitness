@@ -69,7 +69,7 @@ Route::get('/informacion', function () {
 })->name('informacion');
 
 // Área protegida de empleados
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'auth.session'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth:web', 'auth.session'])->name('dashboard');
 Route::get('/cliente/dashboard', [DashboardController::class, 'index'])->middleware(['auth:cliente', 'auth.session'])->name('cliente.dashboard');
 
 Route::middleware(['auth:cliente,web', 'auth.session'])->group(function () {
@@ -158,3 +158,4 @@ Route::middleware(['auth:cliente,web', 'auth.session'])->prefix('ejercicios')->n
     Route::patch('/{ejercicio}/toggle', [EjercicioController::class, 'toggle'])->middleware('can:administrar')->name('toggle');
 });
 
+require __DIR__.'/gestion.php';
