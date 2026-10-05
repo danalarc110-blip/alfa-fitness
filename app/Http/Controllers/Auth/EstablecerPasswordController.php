@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Rules\PasswordSinTruncamiento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -21,7 +22,7 @@ class EstablecerPasswordController extends Controller
     {
         $data = $request->validate([
             'token' => ['required'], 'email' => ['required', 'email'],
-            'password' => ['required', 'confirmed', PasswordRule::min(12)->mixedCase()->numbers()->symbols()],
+            'password' => ['required', 'confirmed', PasswordRule::min(12)->mixedCase()->numbers()->symbols(), new PasswordSinTruncamiento],
         ]);
         $estado = Password::broker('users')->reset($data, function (User $user, string $password) {
             $user->forceFill(['password' => Hash::make($password), 'password_establecida' => true, 'remember_token' => Str::random(60)])->save();

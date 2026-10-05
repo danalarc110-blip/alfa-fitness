@@ -13,8 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [EncabezadosSeguros::class, CuentaActiva::class]);
+        // Redirect insecure production requests before starting a session or validating CSRF.
+        $middleware->prepend(EncabezadosSeguros::class);
+        $middleware->web(append: [CuentaActiva::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->dontFlash(['password_actual']);
+        $exceptions->dontFlash(['password_actual', 'codigo']);
     })->create();

@@ -4,10 +4,15 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Rules\PasswordSinTruncamiento;
+use App\Services\ConsentimientoLegal;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
@@ -24,7 +29,9 @@ class ClienteLoginController extends Controller
         $data = $request->validate([
             'nombre' => ['required', 'string', 'max:255'],
             'correo' => ['required', 'string', 'email', 'max:255', 'unique:clientes,correo'],
-            'password' => ['required', 'confirmed', Password::min(12)->mixedCase()->numbers()->symbols()],
+            'password' => ['required', 'confirmed', Password::min(12)->mixedCase()->numbers()->symbols(), new PasswordSinTruncamiento],
+            'aceptacion_legal' => ['required', 'accepted'],
+            'legal_version' => ['required', 'string', Rule::in([config('legal.version')])],
         ], [
             'nombre.required' => 'El nombre es obligatorio.',
             'correo.required' => 'El correo electrónico es obligatorio.',
@@ -33,15 +40,23 @@ class ClienteLoginController extends Controller
             'password.required' => 'La contraseña es obligatoria.',
             'password.min' => 'La contraseña debe tener al menos 12 caracteres.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
+            'aceptacion_legal.required' => 'Debes leer y aceptar los documentos del registro.',
+            'aceptacion_legal.accepted' => 'Debes leer y aceptar los documentos del registro.',
+            'legal_version.in' => 'Los documentos cambiaron. Vuelve a leerlos antes de aceptar.',
         ]);
 
-        $cliente = Cliente::create([
-            'nombre' => $data['nombre'],
-            'correo' => $data['correo'],
-            'password' => bcrypt($data['password']),
-            'activo' => true,
-        ]);
+        try {
+            $cliente = DB::transaction(function () use ($data) {
+                $cliente = new Cliente([
+                    'nombre' => $data['nombre'], 'correo' => $data['correo'],
+                    'password' => $data['password'], 'activo' => true,
+                ]);
 
+                return app(ConsentimientoLegal::class)->aceptar($cliente);
+            });
+        } catch (UniqueConstraintViolationException $exception) {
+            throw ValidationException::withMessages(['correo' => 'Ya existe una cuenta con ese correo.']);
+        }
         Auth::guard('cliente')->login($cliente, false);
 
         Auth::guard('web')->logout();
@@ -157,16 +172,62 @@ class ClienteLoginController extends Controller
 
             $cliente->update(['google_id' => $googleUser->getId()]);
         } else {
-            $cliente = Cliente::create([
+            $request->session()->put('google_registro_pendiente', [
                 'nombre' => $googleUser->getName() ?: 'Cliente Google',
                 'correo' => $googleUser->getEmail(),
                 'google_id' => $googleUser->getId(),
-                'activo' => true,
+                'expires' => now()->addMinutes(5)->timestamp,
             ]);
+
+            return redirect()->route('cliente.google.consentimiento');
         }
 
         Auth::guard('cliente')->login($cliente, false);
 
+        Auth::guard('web')->logout();
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('cliente.dashboard'));
+    }
+
+    public function consentimientoGoogle(Request $request)
+    {
+        $pendiente = $request->session()->get('google_registro_pendiente');
+        if (! $pendiente || $pendiente['expires'] < now()->timestamp) {
+            $request->session()->forget('google_registro_pendiente');
+
+            return redirect()->route('login')->withErrors(['correo' => 'El registro con Google expiró. Intenta nuevamente.']);
+        }
+
+        return response()->view('legal.google-consentimiento')->header('Cache-Control', 'no-store, private');
+    }
+
+    public function aceptarGoogle(Request $request): RedirectResponse
+    {
+        $request->validate(['aceptacion_legal' => ['required', 'accepted'], 'legal_version' => ['required', 'string', Rule::in([config('legal.version')])]], [
+            'aceptacion_legal.required' => 'Debes leer y aceptar los documentos del registro.',
+            'aceptacion_legal.accepted' => 'Debes leer y aceptar los documentos del registro.',
+            'legal_version.in' => 'Los documentos cambiaron. Vuelve a leerlos antes de aceptar.',
+        ]);
+        $pendiente = $request->session()->pull('google_registro_pendiente');
+        if (! $pendiente || $pendiente['expires'] < now()->timestamp) {
+            return redirect()->route('login')->withErrors(['correo' => 'El registro con Google expiró. Intenta nuevamente.']);
+        }
+        // A concurrent registration never silently links or authenticates an existing account.
+        if (Cliente::where('correo', $pendiente['correo'])->orWhere('google_id', $pendiente['google_id'])->exists()) {
+            return redirect()->route('login')->withErrors(['correo' => 'La cuenta ya existe. Inicia sesión nuevamente.']);
+        }
+        try {
+            $cliente = DB::transaction(function () use ($pendiente) {
+                $cliente = new Cliente(collect($pendiente)->only(['nombre', 'correo', 'google_id'])->all());
+                $cliente->activo = true;
+
+                return app(ConsentimientoLegal::class)->aceptar($cliente);
+            });
+        } catch (UniqueConstraintViolationException $exception) {
+            return redirect()->route('login')->withErrors(['correo' => 'La cuenta ya existe. Inicia sesión nuevamente.']);
+        }
+        Auth::guard('cliente')->login($cliente, false);
         Auth::guard('web')->logout();
         $request->session()->regenerate();
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Rules\PasswordSinTruncamiento;
 use App\Services\ImagenSegura;
 use App\Support\Apariencia;
 use Illuminate\Http\RedirectResponse;
@@ -73,7 +74,7 @@ class ConfiguracionController extends Controller
 
         $data = $request->validate([
             'password_actual' => ['required', 'string'],
-            'password' => ['required', 'confirmed', Password::min(12)->mixedCase()->numbers()->symbols()],
+            'password' => ['required', 'confirmed', Password::min(12)->mixedCase()->numbers()->symbols(), new PasswordSinTruncamiento],
         ], [
             'password_actual.required' => 'Ingresa tu contraseña actual.',
             'password.min' => 'La nueva contraseña debe tener al menos 12 caracteres.',

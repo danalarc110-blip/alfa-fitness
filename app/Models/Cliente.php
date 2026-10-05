@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -41,12 +42,19 @@ class Cliente extends Authenticatable
             'activo' => 'boolean',
             'baneado_en' => 'datetime',
             'apariencia' => 'array',
+            'legal_aceptado_en' => 'datetime',
+            'legal_requerido' => 'boolean',
         ];
     }
 
     public function personalRecords(): HasMany
     {
         return $this->hasMany(PersonalRecord::class);
+    }
+
+    public function entrenador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'entrenador_id');
     }
 
     public function asistencias(): HasMany

@@ -26,6 +26,24 @@ class CuentaActiva
             }
         }
 
+        $cliente = Auth::guard('cliente')->user();
+        if ($cliente?->legal_requerido && ! $cliente->legal_aceptado_en && ! $request->routeIs('cliente.legal.*', 'cliente.logout', 'cliente.salir', 'legal.*')) {
+            return redirect()->route('cliente.legal.mostrar');
+        }
+
+        $admin = Auth::guard('web')->user();
+        if ($admin?->rol === 'Administrador' && $admin->two_factor_confirmed_at) {
+            $verificacion = $request->session()->get('two_factor_verified');
+            if (! $verificacion || $verificacion['id'] !== $admin->id || $verificacion['confirmed_at'] !== $admin->two_factor_confirmed_at->timestamp || ! hash_equals($verificacion['password_hash'], hash('sha256', $admin->password))) {
+                Auth::guard('web')->logout();
+                $request->session()->forget('two_factor_verified');
+                $request->session()->regenerate();
+
+                // Password must be entered first even for legacy sessions and remember cookies.
+                return redirect()->route('login')->withErrors(['email' => 'Ingresa nuevamente para verificar el acceso en dos pasos.']);
+            }
+        }
+
         return $next($request);
     }
 }

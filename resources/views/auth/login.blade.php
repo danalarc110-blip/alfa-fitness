@@ -19,7 +19,7 @@
         <div class="alpha-login-inner">
             <p class="alpha-eyebrow">Bienvenido a Alpha Fitness</p><h1>Un nuevo día.<br>Una mejor versión.</h1><p class="alpha-login-subtitle">Ingresa a tu cuenta para continuar.</p>
             @include('partials.feedback')
-            @php($clientTab = $errors->has('correo') || $errors->has('nombre') || old('correo') || old('nombre'))
+            @php($clientTab = $errors->has('correo') || $errors->has('nombre') || $errors->has('aceptacion_legal') || old('correo') || old('nombre'))
             <div class="alpha-login-tabs" role="tablist" aria-label="Tipo de cuenta">
                 <button id="tab-btn-usuarios" type="button" role="tab" aria-controls="seccion-usuarios" aria-selected="{{ $clientTab ? 'false' : 'true' }}" tabindex="{{ $clientTab ? '-1' : '0' }}">Personal</button>
                 <button id="tab-btn-clientes" type="button" role="tab" aria-controls="seccion-clientes" aria-selected="{{ $clientTab ? 'true' : 'false' }}" tabindex="{{ $clientTab ? '0' : '-1' }}">Clientes</button>
@@ -50,11 +50,13 @@
                     <label>Contraseña<span class="alpha-password block"><input id="passwordRegistro" type="password" name="password" required minlength="12" autocomplete="new-password"><button type="button" data-password="passwordRegistro" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button></span></label>
                     <label>Confirmar contraseña<span class="alpha-password block"><input id="passwordRegistroConfirm" type="password" name="password_confirmation" required minlength="12" autocomplete="new-password"><button type="button" data-password="passwordRegistroConfirm" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button></span></label>
                     <p class="text-xs text-gray-400">Usa al menos 12 caracteres, mayúsculas, minúsculas, un número y un símbolo.</p>
+                    @include('partials.consentimiento')
                     <button type="submit" class="alpha-btn-primary px-4 py-3">Crear cuenta</button>
                     <p class="text-xs text-center text-gray-400">¿Ya tienes cuenta? <button id="btnMostrarLogin" type="button" class="text-yellow-400 font-semibold">Inicia sesión</button></p>
                 </form>
             </div>
             <div class="alpha-login-help"><span>¿Dudas sobre el club?</span><a href="{{ route('informacion') }}">Información y horarios ↗</a></div><p class="alpha-login-caption">ALPHA FITNESS · CADA DÍA CUENTA</p>
+            <nav aria-label="Información legal" class="text-xs mt-4 flex flex-wrap gap-3">@include('partials.legal-links')</nav>
         </div>
     </section>
 </main>

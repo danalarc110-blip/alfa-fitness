@@ -32,7 +32,7 @@ class SeguridadTest extends TestCase
     public function test_clients_self_register_with_a_strong_password(): void
     {
         $this->post(route('cliente.registro'), ['nombre' => 'Debil', 'correo' => 'debil@example.com', 'password' => 'password123', 'password_confirmation' => 'password123'])->assertSessionHasErrors('password');
-        $this->post(route('cliente.registro'), ['nombre' => 'Fuerte', 'correo' => 'fuerte@example.com', 'password' => 'Fuerte!2026Clave', 'password_confirmation' => 'Fuerte!2026Clave'])->assertSessionHasNoErrors();
+        $this->post(route('cliente.registro'), ['nombre' => 'Fuerte', 'correo' => 'fuerte@example.com', 'password' => 'Fuerte!2026Clave', 'password_confirmation' => 'Fuerte!2026Clave', 'aceptacion_legal' => 1, 'legal_version' => config('legal.version')])->assertSessionHasNoErrors();
         $this->assertDatabaseHas('clientes', ['correo' => 'fuerte@example.com', 'activo' => true]);
     }
 

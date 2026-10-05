@@ -98,9 +98,10 @@ class CaracterizacionFlujosTest extends TestCase
             'correo' => 'registro-base@example.test',
             'password' => self::PASSWORD,
             'password_confirmation' => self::PASSWORD,
-            // Campos anticipados por la ampliación legal solicitada; hoy se ignoran.
+            // La línea base conservada documenta el estado anterior a esta aceptación obligatoria.
             'consentimiento' => 1,
             'aceptacion_legal' => 1,
+            'legal_version' => config('legal.version'),
         ])->assertRedirect(route('cliente.dashboard'))->assertSessionHasNoErrors();
 
         $nuevo = Cliente::where('correo', 'registro-base@example.test')->firstOrFail();
@@ -151,6 +152,9 @@ class CaracterizacionFlujosTest extends TestCase
     {
         $this->google('google-nuevo', 'google-nuevo@example.test');
         $this->get(route('cliente.google.callback'))
+            ->assertRedirect(route('cliente.google.consentimiento'))->assertSessionHasNoErrors();
+        $this->assertDatabaseCount('clientes', 0);
+        $this->post(route('cliente.google.aceptar'), ['aceptacion_legal' => 1, 'legal_version' => config('legal.version')])
             ->assertRedirect(route('cliente.dashboard'))->assertSessionHasNoErrors();
 
         $cliente = Cliente::where('google_id', 'google-nuevo')->firstOrFail();

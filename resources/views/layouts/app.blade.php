@@ -25,7 +25,7 @@
             @endif
             @include('partials.feedback')
             @yield('content')
-            <footer class="mt-10 pt-5 border-t border-white/10 text-xs text-gray-400 flex justify-between gap-3"><span>Alpha Fitness · Cada día cuenta.</span><a href="{{ route('informacion') }}">Información del gimnasio ↗</a></footer>
+            <footer class="mt-10 pt-5 border-t border-white/10 text-xs text-gray-400 flex flex-wrap justify-between gap-3"><span>Alpha Fitness · Cada día cuenta.</span><a href="{{ route('informacion') }}">Información del gimnasio ↗</a>@include('partials.legal-links')</footer>
         </main>
         </div>
     </div>

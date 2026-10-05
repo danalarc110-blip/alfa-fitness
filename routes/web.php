@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\Auth\ClienteLoginController;
+use App\Http\Controllers\Auth\DosFactoresController;
 use App\Http\Controllers\Auth\EstablecerPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ConfiguracionController;
@@ -9,6 +10,8 @@ use App\Http\Controllers\CuentasController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EjercicioController;
 use App\Http\Controllers\EntrenadorController;
+use App\Http\Controllers\EstadisticaEjercicioController;
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\MembresiaController;
 use App\Http\Controllers\PlanMembresiaController;
 use App\Http\Controllers\ProductoController;
@@ -39,6 +42,18 @@ Route::post('/cliente/salir', [ClienteLoginController::class, 'salir'])->name('c
 // Google (clientes)
 Route::get('/cliente/google', [ClienteLoginController::class, 'redirectToGoogle'])->name('cliente.google');
 Route::get('/cliente/google/callback', [ClienteLoginController::class, 'handleGoogleCallback'])->name('cliente.google.callback');
+Route::get('/cliente/google/consentimiento', [ClienteLoginController::class, 'consentimientoGoogle'])->name('cliente.google.consentimiento');
+Route::post('/cliente/google/consentimiento', [ClienteLoginController::class, 'aceptarGoogle'])->middleware('throttle:5,1')->name('cliente.google.aceptar');
+Route::get('/legal/{documento}', [LegalController::class, 'documento'])->name('legal.documento');
+Route::post('/legal/solicitudes', [LegalController::class, 'guardarSolicitud'])->middleware('throttle:5,1')->name('legal.solicitud');
+Route::middleware(['auth:cliente', 'auth.session'])->group(function () {
+    Route::get('/cliente/aceptar-documentos', [LegalController::class, 'mostrarAceptacion'])->name('cliente.legal.mostrar');
+    Route::post('/cliente/aceptar-documentos', [LegalController::class, 'aceptarCliente'])->middleware('throttle:5,1')->name('cliente.legal.aceptar');
+});
+Route::middleware(['auth:cliente,web', 'auth.session', 'can:administrar'])->group(function () {
+    Route::get('/administracion/solicitudes-datos', [LegalController::class, 'solicitudes'])->name('legal.solicitudes');
+    Route::patch('/administracion/solicitudes-datos/{solicitud}', [LegalController::class, 'resolver'])->name('legal.resolver');
+});
 
 // Información del gimnasio (pública, no requiere login)
 Route::get('/informacion', function () {
@@ -134,3 +149,4 @@ Route::middleware(['auth:cliente,web', 'auth.session'])->prefix('ejercicios')->n
     Route::put('/{ejercicio}', [EjercicioController::class, 'update'])->middleware('can:administrar')->name('update');
     Route::patch('/{ejercicio}/toggle', [EjercicioController::class, 'toggle'])->middleware('can:administrar')->name('toggle');
 });
+
