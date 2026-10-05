@@ -96,13 +96,13 @@ class AsistenciaController extends Controller
             foreach ($asistencias as $a) {
                 fputcsv($handle, [
                     $a->id,
-                    $a->cliente->nombre ?? 'N/A',
-                    $a->cliente->correo ?? 'N/A',
+                    $this->textoCsv($a->cliente->nombre ?? 'N/A'),
+                    $this->textoCsv($a->cliente->correo ?? 'N/A'),
                     $a->fecha_hora->format('Y-m-d H:i:s'),
                     $a->fecha_salida ? $a->fecha_salida->format('Y-m-d H:i:s') : 'En curso',
                     $a->duracion ?? 'En gimnasio',
-                    $a->registrador->name ?? 'Sistema',
-                    $a->registradorSalida->name ?? ($a->fecha_salida ? 'Sistema' : ''),
+                    $this->textoCsv($a->registrador->name ?? 'Sistema'),
+                    $this->textoCsv($a->registradorSalida->name ?? ($a->fecha_salida ? 'Sistema' : '')),
                 ]);
             }
             fclose($handle);
@@ -112,6 +112,12 @@ class AsistenciaController extends Controller
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
+    }
+
+    private function textoCsv(string $valor): string
+    {
+        // Quoting a CSV cell does not stop Excel from interpreting it as a formula.
+        return preg_match('/^[\s\x00-\x1F]*[=+\-@]|^[\t\r\n]/u', $valor) ? "'".$valor : $valor;
     }
 
     public function cerrarHuerfanas(Request $request)

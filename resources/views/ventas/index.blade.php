@@ -272,7 +272,7 @@
 @push('scripts')
 <script>
     let filaIndex = 1;
-    const catalogoProductos = @json($productos);
+    const catalogoProductos = {{ \Illuminate\Support\Js::from($productos) }};
 
     function abrirModalVenta() {
         document.getElementById('modal-nueva-venta').classList.remove('hidden');
@@ -318,17 +318,11 @@
         const nuevaFila = document.createElement('div');
         nuevaFila.className = 'item-fila flex items-center gap-2 bg-black/40 border border-white/10 p-2.5 rounded-xl';
 
-        let opcionesHtml = '<option value="" data-precio="0" data-stock="0">-- Seleccionar producto --</option>';
-        catalogoProductos.forEach(p => {
-            const stockLabel = p.stock <= 3 ? `⚠️ (¡Stock crítico: ${p.stock}!)` : `(Stock: ${p.stock})`;
-            opcionesHtml += `<option value="${p.id}" data-precio="${p.precio}" data-stock="${p.stock}">${p.nombre} - $${Number(p.precio).toFixed(2)} ${stockLabel}</option>`;
-        });
-
         nuevaFila.innerHTML = `
             <div class="flex-1">
                 <select name="items[${filaIndex}][producto_id]" required onchange="actualizarPrecioFila(this)"
                     class="select-producto w-full bg-black/60 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-yellow-400/60 outline-none">
-                    ${opcionesHtml}
+                    <option value="" data-precio="0" data-stock="0">-- Seleccionar producto --</option>
                 </select>
             </div>
             <div class="w-20">
@@ -344,6 +338,17 @@
                 &times;
             </button>
         `;
+
+        const selector = nuevaFila.querySelector('.select-producto');
+        catalogoProductos.forEach(p => {
+            const opcion = document.createElement('option');
+            opcion.value = p.id;
+            opcion.dataset.precio = p.precio;
+            opcion.dataset.stock = p.stock;
+            const stockLabel = p.stock <= 3 ? `⚠️ (¡Stock crítico: ${p.stock}!)` : `(Stock: ${p.stock})`;
+            opcion.textContent = `${p.nombre} - $${Number(p.precio).toFixed(2)} ${stockLabel}`;
+            selector.appendChild(opcion);
+        });
 
         contenedor.appendChild(nuevaFila);
         filaIndex++;

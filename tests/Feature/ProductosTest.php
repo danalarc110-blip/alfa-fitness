@@ -85,7 +85,9 @@ class ProductosTest extends TestCase
         $secretaria = User::factory()->create(['rol' => 'Secretaria']);
         $this->actingAs($secretaria)->post(route('productos.store'), ['nombre' => 'Agua', 'precio' => 1.25, 'categoria' => 'Bebidas', 'stock' => 10])->assertSessionHasNoErrors();
         $producto = Producto::firstOrFail();
-        $this->actingAs($secretaria)->put(route('productos.update', $producto), ['nombre' => 'Agua fria', 'precio' => 1.5, 'categoria' => 'Bebidas', 'stock' => 8, 'activo' => 1])->assertSessionHasNoErrors();
+        // Restricción administrativa de precios solicitada expresamente en esta auditoría.
+        $admin = User::factory()->create(['rol' => 'Administrador']);
+        $this->actingAs($admin)->put(route('productos.update', $producto), ['nombre' => 'Agua fria', 'precio' => 1.5, 'categoria' => 'Bebidas', 'stock' => 8, 'activo' => 1])->assertSessionHasNoErrors();
         $this->assertDatabaseHas('productos', ['id' => $producto->id, 'nombre' => 'Agua fria', 'precio' => 1.5, 'stock' => 8]);
         $this->post(route('productos.store'), ['nombre' => 'Invalido', 'precio' => -1, 'stock' => 0])->assertSessionHasErrors('precio');
     }

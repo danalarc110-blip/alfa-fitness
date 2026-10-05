@@ -77,6 +77,9 @@ class ProductoController extends Controller
         try {
             DB::transaction(function () use ($producto, $data, $request, $nuevo, &$anterior) {
                 $producto = Producto::whereKey($producto->id)->lockForUpdate()->firstOrFail();
+                if ((int) round((float) $data['precio'] * 100) !== (int) round((float) $producto->precio * 100)) {
+                    Gate::authorize('administrar');
+                }
                 $anterior = $producto->imagen;
                 $producto->update([
                     'nombre' => $data['nombre'], 'precio' => $data['precio'], 'categoria' => $data['categoria'] ?? null,

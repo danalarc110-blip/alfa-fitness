@@ -156,7 +156,7 @@
                                         @method('PUT')
 
                                         <label>Nombre<input name="nombre" value="{{ $producto->nombre }}" maxlength="255" required></label>
-                                        <label>Precio<input type="number" name="precio" min="0" max="999999" step="0.01" value="{{ $producto->precio }}" required></label>
+                                        <label>Precio<input type="number" name="precio" min="0" max="999999" step="0.01" value="{{ $producto->precio }}" required @readonly(!\Illuminate\Support\Facades\Gate::allows('administrar'))></label>
                                         <label>Categoría<input name="categoria" value="{{ $producto->categoria }}" maxlength="100"></label>
                                         <label>Stock<input type="number" name="stock" min="0" max="999999" value="{{ $producto->stock }}" required></label>
 

@@ -1,8 +1,9 @@
 <?php
 
 use App\Providers\AppServiceProvider;
+use App\Providers\AuditoriaSeguridadServiceProvider;
 
 return [
     AppServiceProvider::class,
-    \App\Providers\AuditoriaSeguridadServiceProvider::class,
+    AuditoriaSeguridadServiceProvider::class,
 ];

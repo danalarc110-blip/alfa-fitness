@@ -111,8 +111,8 @@ class EjercicioController extends Controller
             'nombre' => ['required', 'string', 'max:100', 'unique:ejercicios,nombre'],
             'grupo_muscular' => ['required', 'string', 'max:50'],
             'subgrupo' => ['nullable', 'string', 'max:50'],
-            'imagen' => ['nullable', 'image', 'max:8192'],
-            'imagen_musculos' => ['nullable', 'image', 'max:8192'],
+            'imagen' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192', 'dimensions:max_width=5000,max_height=5000'],
+            'imagen_musculos' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192', 'dimensions:max_width=5000,max_height=5000'],
         ]);
 
         $ejercicio = null;
@@ -165,8 +165,8 @@ class EjercicioController extends Controller
             'nombre' => ['required', 'string', 'max:100', 'unique:ejercicios,nombre,'.$ejercicio->id],
             'grupo_muscular' => ['required', 'string', 'max:50'],
             'subgrupo' => ['nullable', 'string', 'max:50'],
-            'imagen' => ['nullable', 'image', 'max:8192'],
-            'imagen_musculos' => ['nullable', 'image', 'max:8192'],
+            'imagen' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192', 'dimensions:max_width=5000,max_height=5000'],
+            'imagen_musculos' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192', 'dimensions:max_width=5000,max_height=5000'],
             'eliminar_imagen' => ['nullable', 'boolean'],
             'eliminar_imagen_musculos' => ['nullable', 'boolean'],
         ]);
@@ -178,7 +178,10 @@ class EjercicioController extends Controller
         $nuevoMusc = null;
 
         try {
-            DB::transaction(function () use ($data, $request, $ejercicio, $imagenSegura, &$nuevoImg, &$nuevoMusc) {
+            DB::transaction(function () use ($data, $request, $ejercicio, $imagenSegura, &$nuevoImg, &$nuevoMusc, &$anteriorImg, &$anteriorMusc) {
+                $ejercicio = Ejercicio::whereKey($ejercicio->id)->lockForUpdate()->firstOrFail();
+                $anteriorImg = $ejercicio->imagen;
+                $anteriorMusc = $ejercicio->imagen_musculos;
                 $actualizar = [
                     'nombre' => trim($data['nombre']),
                     'grupo_muscular' => trim($data['grupo_muscular']),

@@ -358,6 +358,7 @@ class RutinaController extends Controller
     {
         ['guard' => $guard, 'user' => $user] = $this->actual();
         abort_unless($guard === 'web', 403);
+        $this->autorizarPropietario($rutina);
 
         $data = $request->validate([
             'cliente_id' => ['required', 'exists:clientes,id'],

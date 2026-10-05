@@ -18,7 +18,8 @@ class EntrenadorController extends Controller
             'q' => ['nullable', 'string', 'max:100'],
         ]);
         $busqueda = $filtros['q'] ?? '';
-        $esAdmin = auth('web')->user()?->rol === 'Administrador';
+        ['guard' => $guard, 'user' => $user] = $this->actual();
+        $esAdmin = $guard === 'web' && $user?->rol === 'Administrador';
         $query = User::where('rol', 'Entrenador')->orderBy('name');
         if (! $esAdmin) {
             $query->where('activo', true);
@@ -39,7 +40,7 @@ class EntrenadorController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth('web')->user()?->rol === 'Administrador', 403);
+        abort_unless(! auth('cliente')->check() && auth('web')->user()?->rol === 'Administrador', 403);
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
@@ -70,7 +71,7 @@ class EntrenadorController extends Controller
 
     public function update(Request $request, User $entrenador)
     {
-        abort_unless(auth('web')->user()?->rol === 'Administrador' && $entrenador->rol === 'Entrenador', 403);
+        abort_unless(! auth('cliente')->check() && auth('web')->user()?->rol === 'Administrador' && $entrenador->rol === 'Entrenador', 403);
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($entrenador->id)],

@@ -6,6 +6,7 @@ use App\Mail\ComprobanteVentaMail;
 use App\Models\Cliente;
 use App\Models\Producto;
 use App\Models\Venta;
+use App\Rules\SinDatosTarjeta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -21,8 +22,12 @@ class VentaController extends Controller
         Gate::authorize('inventario');
         ['guard' => $guard, 'user' => $user] = $this->actual();
 
-        $desde = $request->input('desde');
-        $hasta = $request->input('hasta');
+        $filtros = $request->validate([
+            'desde' => ['nullable', 'date_format:Y-m-d'],
+            'hasta' => ['nullable', 'date_format:Y-m-d', ...($request->filled('desde') ? ['after_or_equal:desde'] : [])],
+        ]);
+        $desde = $filtros['desde'] ?? null;
+        $hasta = $filtros['hasta'] ?? null;
 
         $query = Venta::with(['user', 'cliente', 'detalles.producto'])->latest();
 
@@ -66,10 +71,15 @@ class VentaController extends Controller
         $data = $request->validate([
             'cliente_id' => ['nullable', 'integer', Rule::exists('clientes', 'id')->where('activo', true)],
             'metodo_pago' => ['required', 'string', 'in:Efectivo,Tarjeta,Transferencia'],
-            'notas' => ['nullable', 'string', 'max:255'],
-            'items' => ['required', 'array', 'min:1'],
+            'notas' => ['nullable', 'string', 'max:255', new SinDatosTarjeta],
+            'items' => ['required', 'array', 'min:1', 'max:100'],
             'items.*.producto_id' => ['required', 'exists:productos,id'],
             'items.*.cantidad' => ['required', 'integer', 'min:1', 'max:999'],
+            'numero_tarjeta' => ['prohibited'],
+            'card_number' => ['prohibited'],
+            'pan' => ['prohibited'],
+            'cvv' => ['prohibited'],
+            'cvc' => ['prohibited'],
         ]);
 
         $venta = null;
@@ -168,9 +178,7 @@ class VentaController extends Controller
         } catch (\Throwable $e) {
             Log::warning('Fallo al enviar comprobante de venta por correo.', [
                 'venta_id' => $venta->id,
-                'correo' => $data['correo'],
                 'exception' => get_class($e),
-                'error' => $e->getMessage(),
             ]);
 
             return back()->with('error', "No se pudo enviar el correo a {$data['correo']} en este momento. Verifique la conexión o intente más tarde.");
