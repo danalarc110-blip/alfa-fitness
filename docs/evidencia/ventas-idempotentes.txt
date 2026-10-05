@@ -1,0 +1,33 @@
+**********************
+PowerShell transcript start
+Start time: 20261004202543
+Username: EDUARDOCUELLAR\MINEDUCYT
+RunAs User: EDUARDOCUELLAR\MINEDUCYT
+Configuration Name:
+Machine: EDUARDOCUELLAR (Microsoft Windows NT 10.0.19045.0)
+Host Application: C:\Users\MINEDUCYT\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.dll -Command try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}
+git add app/Http/Controllers/VentaController.php app/Models/Venta.php resources/views/ventas/index.blade.php database/migrations/2026_10_04_500000_add_sale_request_uid.php tests/Feature/VentasIdempotenciaTest.php tools/verify_additive_migrations.php
+git commit -m "fix: prevent duplicate sales and decimal amount overflow"
+& 'C:\Users\MINEDUCYT\Documents\Codex\2026-10-04\qu\work\verificar.ps1' -Etapa ventas-idempotentes
+Process ID: 12848
+PSVersion: 7.6.5
+PSEdition: Core
+GitCommitId: 7.6.5
+OS: Microsoft Windows 10.0.19045
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+
+
+COMMAND: php artisan test --no-ansi
+
+COMMAND: php artisan route:list --json
+Rutas registradas: 133
+EXIT: 0
+**********************
+PowerShell transcript end
+End time: 20261004202602
+**********************

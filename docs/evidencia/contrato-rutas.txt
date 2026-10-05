@@ -1,0 +1,1 @@
+PASS: las 82 rutas originales conservan método, dominio, URI y nombre; 51 rutas adicionales; total 133.

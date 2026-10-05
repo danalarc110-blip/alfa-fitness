@@ -1,0 +1,5 @@
+Public legal documents, mandatory unchecked consent and private new client modules: passed.
+administrador: new modules, both themes, responsive layout and permissions passed.
+secretaria: new modules, both themes, responsive layout and permissions passed.
+entrenador: new modules, both themes, responsive layout and permissions passed.
+Audit browser checks passed. No JavaScript exceptions.

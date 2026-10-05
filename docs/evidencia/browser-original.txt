@@ -1,0 +1,6 @@
+Three themes, invalid contrast, persistence, client modules and CSRF: passed.
+Mobile menu, routine saving, reduced motion and logout persistence: passed.
+administrador routes and mobile layout: passed.
+secretaria routes and mobile layout: passed.
+entrenador routes and mobile layout: passed.
+Browser checks passed. No JavaScript exceptions.

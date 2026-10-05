@@ -1,0 +1,34 @@
+**********************
+PowerShell transcript start
+Start time: 20261004200643
+Username: EDUARDOCUELLAR\MINEDUCYT
+RunAs User: EDUARDOCUELLAR\MINEDUCYT
+Configuration Name:
+Machine: EDUARDOCUELLAR (Microsoft Windows NT 10.0.19045.0)
+Host Application: C:\Users\MINEDUCYT\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.dll -Command try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}
+node C:\Users\MINEDUCYT\Documents\Codex\2026-10-04\qu\work\stage_routes.cjs legal
+git add .env.example app/Http/Controllers/Auth/ClienteLoginController.php app/Http/Controllers/Auth/EstablecerPasswordController.php app/Http/Controllers/ConfiguracionController.php app/Http/Controllers/LegalController.php app/Http/Middleware/CuentaActiva.php app/Models/Cliente.php app/Models/SolicitudDatos.php app/Models/VersionLegal.php app/Rules/PasswordSinTruncamiento.php app/Services/ConsentimientoLegal.php bootstrap/app.php config/legal.php database/migrations/2026_10_04_100000_add_consent_and_data_requests.php database/migrations/2026_10_04_110000_create_versiones_legales.php resources/views/auth/login.blade.php resources/views/informacion.blade.php resources/views/layouts/app.blade.php resources/views/legal resources/views/partials/consentimiento.blade.php resources/views/partials/legal-links.blade.php tests/Feature/CaracterizacionFlujosTest.php tests/Feature/SeguridadTest.php tests/Feature/ConsentimientoLegalTest.php tests/Feature/VersionLegalTest.php docs/PRIVACIDAD.md docs/TERMINOS.md docs/LESIONES.md docs/DERECHOS_DATOS.md docs/RESPUESTA_BRECHAS.md docs/LICENCIAS.md docs/CONFIGURACION_LEGAL.md
+git commit -m "legal: record explicit consent and archive accepted privacy terms"
+& 'C:\Users\MINEDUCYT\Documents\Codex\2026-10-04\qu\work\verificar.ps1' -Etapa legal
+Process ID: 7684
+PSVersion: 7.6.5
+PSEdition: Core
+GitCommitId: 7.6.5
+OS: Microsoft Windows 10.0.19045
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+
+
+COMMAND: php artisan test --no-ansi
+
+COMMAND: php artisan route:list --json
+Rutas registradas: 133
+EXIT: 0
+**********************
+PowerShell transcript end
+End time: 20261004200716
+**********************

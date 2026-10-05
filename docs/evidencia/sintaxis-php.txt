@@ -1,0 +1,1 @@
+PASS: 160 archivos PHP sin errores de sintaxis

@@ -20,8 +20,11 @@ npm run build
 php artisan serve
 ```
 
-Abre http://127.0.0.1:8000. En este espacio de trabajo ya se aplicó la migración de membresías.
+Abre http://127.0.0.1:8000. Para crear tu primer administrador: `php artisan alpha:crear-admin`.
 No ejecutes `migrate:fresh` sobre una base con datos que quieras conservar.
+
+Guía paso a paso para Windows/XAMPP: [INSTALACION_XAMPP.md](docs/INSTALACION_XAMPP.md).
+Resultados y límites de la auditoría: [INFORME_FINAL.md](docs/INFORME_FINAL.md).
 
 ## Funciones
 
@@ -30,10 +33,15 @@ No ejecutes `migrate:fresh` sobre una base con datos que quieras conservar.
 - Constructor de rutinas, catálogo de ejercicios y calificaciones.
 - Membresías: registro, importe en USD, fechas, detección de superposiciones, búsqueda, historial y cancelación. La renovación se registra como un nuevo periodo; no procesa pagos en línea.
 - Entrenadores: directorio con búsqueda; el administrador puede crear, invitar y editar entrenadores.
-- Asistencia: entrada, salida e historial. Los clientes solo consultan y registran sus propias visitas; los empleados gestionan el conjunto.
+- Asistencia: secretaría registra entradas y salidas; el cliente ve sus visitas en su panel. Correcciones y anulaciones conservan una bitácora y no borran registros.
 - Productos e inventario: cinco productos iniciales editables y un máximo de cinco en el catálogo.
 - Administrar cuentas: solo el administrador puede buscar clientes, ver su fecha de registro y banear o restaurar su acceso; la acción pide confirmación y conserva el historial.
 - Perfil, avatar, diseños Elegante y Verde, modos claro/oscuro/personalizado y navegación móvil accesible por teclado.
+- Gestión complementaria: usuarios por invitación, clientes, planes y sesiones con entrenador; búsqueda, paginación, bajas lógicas y agenda sin solapamientos.
+- Ventas con inventario transaccional; el administrador puede anular registros erróneos restituyendo existencias una sola vez. No procesa ni reembolsa tarjetas.
+- Estadísticas privadas por ejercicio, volumen y estimación orientativa, sin publicar datos de otros clientes.
+- Documentos legales, consentimiento de nuevas cuentas con fecha/versión y archivo del texto aceptado, solicitudes sobre datos y procedimiento de brechas.
+- Verificación TOTP opcional del administrador, con claves cifradas y códigos de recuperación. [Seguridad](docs/SEGURIDAD.md).
 
 ## Diseño y apariencia
 
@@ -53,16 +61,22 @@ Las fuentes originales se conservan y el navegador recibe copias WebP ligeras. S
 
 El registro público crea clientes. Las cuentas de empleados se administran por invitación y cada persona establece su propia contraseña. El seeder no crea usuarios ni credenciales conocidas.
 
-Google requiere credenciales propias en las variables de `config/services.php`. El acceso por correo funciona sin Google. Para desplegar, configura `.env`, desactiva `APP_DEBUG`, usa HTTPS, apunta el servidor a `public/` y ejecuta `php artisan migrate --force --seed`, `npm run build` y `php artisan optimize`. En producción usa correo SMTP real y conserva `SESSION_ENCRYPT=true`.
+Los datos ficticios se agregan únicamente en local/testing mediante `php artisan alpha:datos-prueba`; las contraseñas aleatorias nuevas se muestran una vez. No utilizar en una instalación real: [DATOS_PRUEBA.md](docs/DATOS_PRUEBA.md).
+
+Antes de abrir al público, completar los marcadores de `.env.example` y revisar los documentos con un abogado de El Salvador. Si cambian los textos o los datos del responsable, publicar otra `LEGAL_VERSION`: [CONFIGURACION_LEGAL.md](docs/CONFIGURACION_LEGAL.md).
+
+Google requiere credenciales propias en las variables de `config/services.php`. El acceso por correo funciona sin Google. Para actualizar, conserva `.env` y `APP_KEY`, usa HTTPS en producción, apunta el servidor a `public/` y ejecuta `php artisan migrate --force`, `npm run build` y `php artisan optimize:clear`. No vuelvas a sembrar datos reales como parte de una actualización normal. En producción usa correo SMTP real y conserva `SESSION_ENCRYPT=true`.
 
 ## Verificación
 
 ```sh
 php artisan test
+php artisan route:list
+php tools/verify_additive_migrations.php
 npm run build
 php artisan view:cache
 composer audit
 npm audit
 ```
 
-Las pruebas usan SQLite en memoria y cubren membresías, privacidad de asistencia, permisos de entrenadores, productos, progreso y rankings.
+Las pruebas usan SQLite en memoria. El verificador de migraciones crea una base temporal propia y la retira al terminar; nunca utiliza la base configurada de la instalación. Google/SMTP/TLS/MySQL reales requieren sus propias credenciales y una verificación de despliegue.

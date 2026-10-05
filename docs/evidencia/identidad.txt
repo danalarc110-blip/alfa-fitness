@@ -1,0 +1,31 @@
+**********************
+PowerShell transcript start
+Start time: 20261004203033
+Username: EDUARDOCUELLAR\MINEDUCYT
+RunAs User: EDUARDOCUELLAR\MINEDUCYT
+Configuration Name:
+Machine: EDUARDOCUELLAR (Microsoft Windows NT 10.0.19045.0)
+Host Application: C:\Users\MINEDUCYT\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.dll -Command try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}
+git add app/Http/Middleware/CuentaActiva.php tests/Feature/CierreIntegracionTest.php tests/Feature/PausasRenovacionTest.php; git commit -m "fix: isolate legacy dual-guard sessions and verify integration"; & ..\work\verificar.ps1 -Etapa identidad
+Process ID: 10876
+PSVersion: 7.6.5
+PSEdition: Core
+GitCommitId: 7.6.5
+OS: Microsoft Windows 10.0.19045
+Platform: Win32NT
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1, 6.0, 7.0
+PSRemotingProtocolVersion: 2.4
+SerializationVersion: 1.1.0.1
+WSManStackVersion: 3.0
+**********************
+
+
+COMMAND: php artisan test --no-ansi
+
+COMMAND: php artisan route:list --json
+Rutas registradas: 133
+EXIT: 0
+**********************
+PowerShell transcript end
+End time: 20261004203054
+**********************
