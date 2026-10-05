@@ -9,7 +9,7 @@ class PagoMembresia extends Model
 {
     protected $table = 'pagos_membresia';
 
-    protected $fillable = ['membresia_id', 'solicitud_id', 'registrado_por', 'importe', 'pagado_en', 'referencia'];
+    protected $fillable = ['membresia_id', 'solicitud_id', 'registrado_por', 'importe', 'pagado_en', 'referencia', 'metodo_pago'];
 
     protected function casts(): array
     {
