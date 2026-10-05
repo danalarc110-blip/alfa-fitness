@@ -37,7 +37,8 @@
             <div id="seccion-clientes" role="tabpanel" aria-labelledby="tab-btn-clientes" @class(['hidden' => !$clientTab])>
                 <form id="form-cliente-login" method="POST" action="{{ route('cliente.login.submit') }}" @class(['alpha-login-form', 'hidden' => old('nombre')])>
                     @csrf
-                    @if(config('services.google.client_id') && config('services.google.client_secret'))<a href="{{ route('cliente.google') }}" class="alpha-btn-secondary px-4 py-3">Continuar con Google</a><p class="text-xs text-gray-400 text-center">o ingresa con tu correo</p>@endif
+                    <a href="{{ route('cliente.google') }}" class="alpha-btn-secondary px-4 py-3">Continuar con Google</a>
+                    <p class="text-xs text-gray-400 text-center">o ingresa con tu correo</p>
                     <label>Correo del cliente<input type="email" name="correo" value="{{ old('correo') }}" placeholder="tu@correo.com" required autocomplete="username"></label>
                     <label>Contraseña<span class="alpha-password block"><input id="passwordCliente" type="password" name="password" required autocomplete="current-password" placeholder="Ingresa tu contraseña"><button type="button" data-password="passwordCliente" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button></span></label>
                     <button class="alpha-btn-primary px-4 py-3" type="submit">Iniciar Sesión como Cliente <span aria-hidden="true">→</span></button>

@@ -1,0 +1,32 @@
+Alpha Fitness — cierre de restauración del botón Google
+Fecha: 2026-10-05
+Rama: auditoria-y-cierre
+Base del lote: 2bec4a43ba2e91d32f56d8584dc28ecc337d9849
+Alcance funcional: resources/views/auth/login.blade.php y cuatro pruebas nuevas en tests/Feature/GoogleTest.php.
+Entorno: Windows, PHP portable oficial 8.2.34; dependencias del lockfile sin cambios.
+
+Comandos ejecutados desde la raíz del repositorio mediante el ejecutable portable y PHPRC privado local:
+php vendor/bin/pint --test tests/Feature/GoogleTest.php
+Resultado: PASS, código 0.
+
+php artisan test --no-ansi --log-junit docs/evidencia/google-cierre-junit.xml
+Resultado: 177 passed, 1466 assertions, 0 errors, 0 failures, 0 skipped; código 0.
+Google: botón presente sin configuración, error sin autenticar, URL real del proveedor con state de sesión, callback con state inválido rechazado, identidad/correo verificados y vinculación protegida.
+
+php artisan route:list --json
+Resultado: 133 rutas; código 0. Salida en google-cierre-rutas.json.
+
+php artisan migrate:fresh --seed --database=sqlite --force --no-ansi
+Resultado: DONE, código 0. DB_DATABASE apuntaba a un archivo NUEVO con nombre aleatorio dentro de work y APP_ENV=testing. Nunca se utilizó database/database.sqlite.
+
+php composer.phar audit --no-interaction
+Resultado: No security vulnerability advisories found; código 0. Se utilizó el Composer instalado, invocado con el runtime portable.
+
+php artisan serve --host=127.0.0.1 --port=8000 --tries=1 --no-reload
+Resultado: proceso local en segundo plano; GET http://127.0.0.1:8000/login respondió 200 y contenía Continuar con Google y /cliente/google.
+GET /cliente/google sin configuración volvió al login, respondió 200 después de la redirección y mostró el mensaje controlado; sin error 500.
+
+Revisión independiente de diff/controlador/rutas/proveedor: sin pérdida de state, verificación de correo, guards ni consentimiento. Solo lectura; no reemplaza las pruebas ejecutadas.
+
+Límite: no existe configuración Google efectiva en esta copia. No se verificó OAuth real ni se fabricaron claves. El acceso por correo sigue disponible.
+La ejecución inicial del mismo cambio con el runtime anterior se conserva en google-visible-junit.xml y google-visible-rutas.json; el cierre vigente usa PHP 8.2.34.

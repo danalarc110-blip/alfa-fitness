@@ -69,7 +69,9 @@ Los marcadores de `.env.example` pueden mantenerse para la demostración: no rep
 
 Si tu `.env` ya contiene una versión anterior, actualiza solo `LEGAL_VERSION=2026-10-05-academico` y ejecuta `php artisan optimize:clear`. No reemplaces `.env` completo ni regeneres `APP_KEY` al actualizar.
 
-Google requiere credenciales propias en las variables de `config/services.php`. El acceso por correo funciona sin Google. Para actualizar, conserva `.env` y `APP_KEY`, usa HTTPS en producción, apunta el servidor a `public/` y ejecuta `php artisan migrate --force`, `npm run build` y `php artisan optimize:clear`. No vuelvas a sembrar datos reales como parte de una actualización normal. En producción usa correo SMTP real y conserva `SESSION_ENCRYPT=true`.
+En el acceso, elige **Clientes → Continuar con Google**. El botón permanece visible; para autenticar realmente necesita `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GOOGLE_REDIRECT_URI` en el `.env` privado. La URI local es `http://127.0.0.1:8000/cliente/google/callback` y debe estar autorizada exactamente en el cliente OAuth. Sin credenciales, se muestra un error controlado y el acceso por correo sigue funcionando; no se simula una sesión de Google.
+
+Para actualizar, conserva `.env` y `APP_KEY`, usa HTTPS en producción, apunta el servidor a `public/` y ejecuta `php artisan migrate --force`, `npm run build` y `php artisan optimize:clear`. No vuelvas a sembrar datos reales como parte de una actualización normal. En producción usa correo SMTP real y conserva `SESSION_ENCRYPT=true`.
 
 ## Verificación
 

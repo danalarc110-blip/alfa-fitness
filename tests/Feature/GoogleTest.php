@@ -12,6 +12,48 @@ class GoogleTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_google_button_remains_available_when_credentials_are_not_configured(): void
+    {
+        config(['services.google.client_id' => null, 'services.google.client_secret' => null, 'services.google.redirect' => null]);
+        $this->get(route('login'))->assertOk()->assertSee('Continuar con Google')
+            ->assertSee('href="'.route('cliente.google').'"', false);
+    }
+
+    public function test_unconfigured_google_reports_an_error_without_authenticating_or_calling_provider(): void
+    {
+        config(['services.google.client_id' => null, 'services.google.client_secret' => null]);
+        Socialite::shouldReceive('driver')->never();
+        $this->get(route('cliente.google'))->assertRedirect(route('login'))->assertSessionHasErrors('correo');
+        $this->assertGuest('cliente');
+        $this->assertGuest('web');
+        $this->assertDatabaseCount('clientes', 0);
+    }
+
+    public function test_configured_google_redirect_uses_session_state_and_original_callback(): void
+    {
+        config(['services.google.client_id' => 'synthetic-client-id', 'services.google.client_secret' => 'synthetic-not-a-real-secret', 'services.google.redirect' => 'http://127.0.0.1:8000/cliente/google/callback']);
+        // Construct the actual provider URL locally; this never contacts Google.
+        $response = $this->get(route('cliente.google'))->assertStatus(302)->assertSessionHas('state');
+        $url = $response->headers->get('Location');
+        $this->assertSame('https', parse_url($url, PHP_URL_SCHEME));
+        $this->assertSame('accounts.google.com', parse_url($url, PHP_URL_HOST));
+        parse_str(parse_url($url, PHP_URL_QUERY), $parametros);
+        $this->assertSame('synthetic-client-id', $parametros['client_id']);
+        $this->assertSame('http://127.0.0.1:8000/cliente/google/callback', $parametros['redirect_uri']);
+        $this->assertSame(session('state'), $parametros['state']);
+        $this->assertNotEmpty($parametros['state']);
+        $this->assertGuest('cliente');
+    }
+
+    public function test_google_callback_with_invalid_state_cannot_authenticate(): void
+    {
+        config(['services.google.client_id' => 'synthetic-client-id', 'services.google.client_secret' => 'synthetic-not-a-real-secret', 'services.google.redirect' => 'http://127.0.0.1:8000/cliente/google/callback']);
+        $this->withSession(['state' => 'expected-state'])->get(route('cliente.google.callback', ['state' => 'wrong-state', 'code' => 'synthetic-code']))
+            ->assertRedirect(route('login'))->assertSessionHasErrors('correo');
+        $this->assertGuest('cliente');
+        $this->assertDatabaseCount('clientes', 0);
+    }
+
     private function provider(string $id, string $email, bool $verified = true): void
     {
         $user = (new User)->setRaw(['email_verified' => $verified])->map(['id' => $id, 'email' => $email, 'name' => 'Google User', 'avatar' => null]);
