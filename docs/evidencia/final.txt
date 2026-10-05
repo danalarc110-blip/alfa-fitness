@@ -1,13 +1,13 @@
 **********************
 PowerShell transcript start
-Start time: 20261004203207
+Start time: 20261004204024
 Username: EDUARDOCUELLAR\MINEDUCYT
 RunAs User: EDUARDOCUELLAR\MINEDUCYT
 Configuration Name:
 Machine: EDUARDOCUELLAR (Microsoft Windows NT 10.0.19045.0)
 Host Application: C:\Users\MINEDUCYT\.cache\codex-runtimes\codex-primary-runtime\dependencies\native\powershell\pwsh.dll -Command try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}
-& ..\work\verificar.ps1 -Etapa final -Fresh
-Process ID: 16304
+Get-ChildItem docs/evidencia -Filter '*.txt' | Where-Object Name -ne 'linea-base.txt' | ForEach-Object { $normalizado = Get-Content -LiteralPath $_.FullName | ForEach-Object { $_.TrimEnd() }; $normalizado | Set-Content -LiteralPath $_.FullName -Encoding utf8 }; git add docs/evidencia; git diff --cached --check; if ($LASTEXITCODE -ne 0) { throw 'Diff inválido' }; git commit -m "docs: deliver audit report rollout guide and verification evidence"; if ($LASTEXITCODE -ne 0) { throw 'Commit falló' }; & ..\work\verificar.ps1 -Etapa final -Fresh
+Process ID: 8892
 PSVersion: 7.6.5
 PSEdition: Core
 GitCommitId: 7.6.5
@@ -29,5 +29,5 @@ Rutas registradas: 133
 EXIT: 0
 **********************
 PowerShell transcript end
-End time: 20261004203230
+End time: 20261004204052
 **********************
