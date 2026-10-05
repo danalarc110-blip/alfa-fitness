@@ -181,6 +181,7 @@
         </div>
 
         <form method="POST" action="{{ route('ventas.store') }}" id="form-venta" class="space-y-4">
+            <input type="hidden" name="request_uid" value="{{ old('request_uid', (string) \Illuminate\Support\Str::uuid()) }}">
             @csrf
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">

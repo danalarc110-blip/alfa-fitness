@@ -7,6 +7,7 @@ use App\Models\Cliente;
 use App\Models\Producto;
 use App\Models\Venta;
 use App\Rules\SinDatosTarjeta;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -75,6 +76,7 @@ class VentaController extends Controller
             'items' => ['required', 'array', 'min:1', 'max:100'],
             'items.*.producto_id' => ['required', 'exists:productos,id'],
             'items.*.cantidad' => ['required', 'integer', 'min:1', 'max:999'],
+            'request_uid' => ['nullable', 'uuid'],
             'numero_tarjeta' => ['prohibited'],
             'card_number' => ['prohibited'],
             'pan' => ['prohibited'],
@@ -84,69 +86,98 @@ class VentaController extends Controller
 
         $venta = null;
 
-        DB::transaction(function () use ($data, $user, &$venta) {
-            $totalVenta = 0;
-            $detallesParaCrear = [];
+        try {
+            DB::transaction(function () use ($data, $user, &$venta) {
+                $totalVenta = 0;
+                $detallesParaCrear = [];
 
-            $cantidadesPorProducto = [];
-            foreach ($data['items'] as $item) {
-                $pid = (int) $item['producto_id'];
-                $cantidadesPorProducto[$pid] = ($cantidadesPorProducto[$pid] ?? 0) + (int) $item['cantidad'];
-            }
-
-            $productIds = array_keys($cantidadesPorProducto);
-            sort($productIds);
-
-            $productos = Producto::whereIn('id', $productIds)
-                ->orderBy('id')
-                ->lockForUpdate()
-                ->get()
-                ->keyBy('id');
-
-            foreach ($cantidadesPorProducto as $productoId => $cantidad) {
-                $producto = $productos->get($productoId);
-
-                if (! $producto || ! $producto->activo) {
-                    throw ValidationException::withMessages([
-                        'items' => 'El producto seleccionado no está disponible para venta.',
-                    ]);
+                $cantidadesPorProducto = [];
+                foreach ($data['items'] as $item) {
+                    $pid = (int) $item['producto_id'];
+                    $cantidadesPorProducto[$pid] = ($cantidadesPorProducto[$pid] ?? 0) + (int) $item['cantidad'];
                 }
 
-                if ($producto->stock < $cantidad) {
-                    throw ValidationException::withMessages([
-                        'items' => "Stock insuficiente para \"{$producto->nombre}\". Disponible: {$producto->stock}.",
-                    ]);
+                $productIds = array_keys($cantidadesPorProducto);
+                sort($productIds);
+
+                $productos = Producto::whereIn('id', $productIds)
+                    ->orderBy('id')
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('id');
+
+                if (! empty($data['request_uid'])) {
+                    $existente = Venta::withoutGlobalScope('vigentes')->where('request_uid', $data['request_uid'])->lockForUpdate()->first();
+                    if ($existente) {
+                        $this->validarReintento($existente, $user->id);
+                        $venta = $existente;
+
+                        return;
+                    }
                 }
 
-                $subtotal = round($producto->precio * $cantidad, 2);
-                $totalVenta += $subtotal;
+                foreach ($cantidadesPorProducto as $productoId => $cantidad) {
+                    $producto = $productos->get($productoId);
 
-                $producto->decrement('stock', $cantidad);
+                    if (! $producto || ! $producto->activo) {
+                        throw ValidationException::withMessages([
+                            'items' => 'El producto seleccionado no está disponible para venta.',
+                        ]);
+                    }
 
-                $detallesParaCrear[] = [
-                    'producto_id' => $producto->id,
-                    'cantidad' => $cantidad,
-                    'precio_unitario' => $producto->precio,
-                    'subtotal' => $subtotal,
-                ];
+                    if ($producto->stock < $cantidad) {
+                        throw ValidationException::withMessages([
+                            'items' => "Stock insuficiente para \"{$producto->nombre}\". Disponible: {$producto->stock}.",
+                        ]);
+                    }
+
+                    $subtotal = round($producto->precio * $cantidad, 2);
+                    $totalVenta += $subtotal;
+                    if ($subtotal > 99999999.99 || $totalVenta > 99999999.99) {
+                        throw ValidationException::withMessages(['items' => 'El importe supera el máximo permitido. Divide la operación antes de registrar la venta.']);
+                    }
+
+                    $producto->decrement('stock', $cantidad);
+
+                    $detallesParaCrear[] = [
+                        'producto_id' => $producto->id,
+                        'cantidad' => $cantidad,
+                        'precio_unitario' => $producto->precio,
+                        'subtotal' => $subtotal,
+                    ];
+                }
+
+                $venta = Venta::create([
+                    'user_id' => $user->id,
+                    'cliente_id' => $data['cliente_id'] ?? null,
+                    'total' => $totalVenta,
+                    'metodo_pago' => $data['metodo_pago'],
+                    'notas' => $data['notas'] ?? null,
+                    'request_uid' => $data['request_uid'] ?? null,
+                ]);
+
+                foreach ($detallesParaCrear as $detalle) {
+                    $venta->detalles()->create($detalle);
+                }
+            }, 3);
+        } catch (UniqueConstraintViolationException $exception) {
+            $venta = ! empty($data['request_uid']) ? Venta::withoutGlobalScope('vigentes')->where('request_uid', $data['request_uid'])->first() : null;
+            if (! $venta) {
+                throw $exception;
             }
-
-            $venta = Venta::create([
-                'user_id' => $user->id,
-                'cliente_id' => $data['cliente_id'] ?? null,
-                'total' => $totalVenta,
-                'metodo_pago' => $data['metodo_pago'],
-                'notas' => $data['notas'] ?? null,
-            ]);
-
-            foreach ($detallesParaCrear as $detalle) {
-                $venta->detalles()->create($detalle);
-            }
-        });
+            $this->validarReintento($venta, $user->id);
+        }
 
         return back()
             ->with('status', "Venta #{$venta->id} registrada exitosamente por \${$venta->total}.")
             ->with('venta_creada_id', $venta->id);
+    }
+
+    private function validarReintento(Venta $venta, int $actorId): void
+    {
+        if ($venta->user_id !== $actorId || $venta->anulada_en) {
+            throw ValidationException::withMessages(['items' => 'Ese identificador ya pertenece a otra operación o a una venta anulada. Abre un formulario nuevo.']);
+        }
     }
 
     public function comprobante(Venta $venta)
