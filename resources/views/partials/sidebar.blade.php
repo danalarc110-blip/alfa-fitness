@@ -27,6 +27,25 @@
     ];
 
     $navItems[] = ['key' => 'cuentas', 'label' => 'Administrar cuentas', 'href' => route('cuentas.index'), 'icon' => 'users'];
+    if (\App\Support\Acceso::permite($userActual, 'administrar')) {
+        $navItems[] = ['key' => 'gestion', 'label' => 'Gestión administrativa', 'href' => route('gestion.usuarios.index'), 'icon' => 'settings'];
+        $navItems[] = ['key' => 'gestion-clientes', 'label' => 'Gestión de clientes', 'href' => route('gestion.clientes.index'), 'icon' => 'users'];
+        $navItems[] = ['key' => 'gestion-planes', 'label' => 'Gestión de planes', 'href' => route('gestion.planes.index'), 'icon' => 'badge'];
+        $navItems[] = ['key' => 'solicitudes-datos', 'label' => 'Solicitudes de datos', 'href' => route('legal.solicitudes'), 'icon' => 'users'];
+        $navItems[] = ['key' => 'dos-factores', 'label' => 'Verificación en dos pasos', 'href' => route('dos-factores.configurar'), 'icon' => 'settings'];
+    } elseif ($guardActual === 'web' && $userActual?->rol === 'Secretaria') {
+        $navItems[] = ['key' => 'gestion-clientes', 'label' => 'Gestión de clientes', 'href' => route('gestion.clientes.index'), 'icon' => 'users'];
+    }
+    if ($guardActual === 'web' && in_array($userActual?->rol, ['Administrador', 'Secretaria'], true)) {
+        $navItems[] = ['key' => 'historial-ventas', 'label' => 'Historial de ventas', 'href' => route('gestion.historial.ventas.index'), 'icon' => 'cart'];
+        $navItems[] = ['key' => 'historial-asistencia', 'label' => 'Corregir asistencia', 'href' => route('gestion.historial.asistencias.index'), 'icon' => 'check-circle'];
+    }
+    if ($userActual) {
+        $navItems[] = ['key' => 'sesiones', 'label' => 'Sesiones con entrenador', 'href' => route('gestion.sesiones.index'), 'icon' => 'activity'];
+    }
+    if (\App\Support\Acceso::permite($userActual, 'progreso')) {
+        $navItems[] = ['key' => 'estadisticas', 'label' => 'Estadísticas por ejercicio', 'href' => route('progreso.estadisticas'), 'icon' => 'bar-chart'];
+    }
     $permisosNav = ['cuentas' => 'administrar', 'asistencia' => 'asistencia', 'membresias' => 'membresias', 'progreso' => 'progreso', 'estadisticas' => 'progreso', 'ventas' => 'inventario'];
     $navItems = array_filter($navItems, fn ($item) => !isset($permisosNav[$item['key']]) || \App\Support\Acceso::permite($userActual, $permisosNav[$item['key']]));
 

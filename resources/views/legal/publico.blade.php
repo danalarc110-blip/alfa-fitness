@@ -5,7 +5,7 @@
     <title>@yield('title', 'Información legal') · Alpha Fitness</title>
     @include('partials.appearance')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <style>.alpha-legal h1{font-size:1.65rem}.alpha-legal h2{font-size:1.25rem}.alpha-legal h1,.alpha-legal h2,.alpha-legal h3{font-weight:700;margin:1.5rem 0 .75rem}.alpha-legal p,.alpha-legal ul,.alpha-legal ol{margin-bottom:1rem}.alpha-legal ul,.alpha-legal ol{padding-left:1.5rem;list-style:revert}.alpha-legal a{text-decoration:underline}.alpha-legal table{display:block;overflow:auto}.alpha-legal td,.alpha-legal th{padding:.5rem;border:1px solid #8884}</style>
+    <style>.alpha-legal{overflow-wrap:anywhere;min-width:0}.alpha-legal pre{white-space:pre-wrap;overflow-wrap:anywhere}.alpha-legal h1{font-size:1.65rem}.alpha-legal h2{font-size:1.25rem}.alpha-legal h1,.alpha-legal h2,.alpha-legal h3{font-weight:700;margin:1.5rem 0 .75rem}.alpha-legal p,.alpha-legal ul,.alpha-legal ol{margin-bottom:1rem}.alpha-legal ul,.alpha-legal ol{padding-left:1.5rem;list-style:revert}.alpha-legal a{text-decoration:underline}.alpha-legal table{display:block;overflow:auto}.alpha-legal td,.alpha-legal th{padding:.5rem;border:1px solid #8884}</style>
 </head>
 <body class="alpha-app">
     <main class="max-w-4xl mx-auto p-4 sm:p-8">
