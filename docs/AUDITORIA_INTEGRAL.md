@@ -255,6 +255,8 @@ Las pruebas de base utilizan SQLite en memoria. Verifican migraciones, reglas y 
 
 Los resultados de grupos parciales no se suman a la suite como si fueran pruebas distintas; la fila final de `php artisan test` es la referencia de conteos.
 
+Validación posterior a la integración de `origin/main` para publicar en GitHub: la suite volvió a pasar con **166 pruebas y 1095 aserciones**, código 0, en 77,45 segundos de consola (`output/hardening/phpunit-publish.xml`). Build y Pint aprobaron; Composer y npm mantuvieron cero avisos de seguridad. `composer validate` y `npm ci --ignore-scripts --dry-run` comprobaron los manifiestos y lockfiles integrados. Se verificó que ningún archivo de agentes ni dato local privado permaneciera en el árbol versionado.
+
 ## 20. Frontend
 
 `npm run build`: **PASS**, salida verificada por integración. El proyecto conserva Vite y los assets existentes. No se declara compilación fallida como tarea terminada.
@@ -287,7 +289,9 @@ Los logs de `MAIL_MAILER=log` pueden contener enlaces privados de recuperación 
 
 Fuente: `git status --short`, `git diff --stat` y recuento de archivos no rastreados. `git diff --stat` no incorpora archivos nuevos sin indexar; se informa ese límite para no ocultarlos ni inflar cifras. Los números incluyen cambios anteriores existentes al comenzar.
 
-No se hizo commit, push ni `git reset --hard`. El usuario conserva el árbol de trabajo para revisar. La reversión de cambios requiere su instrucción expresa; no se hizo una reversión general por iniciativa propia.
+Durante la auditoría inicial no se hizo commit, push ni `git reset --hard`. Los conteos de esta tabla corresponden a ese cierre antes de la publicación. No se hizo una reversión general por iniciativa propia.
+
+El usuario autorizó posteriormente publicar en `danalarc110-blip/alfa-fitness`, excluyendo los agentes. Se integraron los cambios nuevos de `origin/main`, se conservaron las mejoras de recuperación de ambos proveedores y se preparó la publicación sin `.env`, bases locales, logs, cachés ni archivos de agentes. `AGENTS.md`, `.agents/`, `agentes/` y `agentes.zip` se retiraron del índice de Git y se añadieron a `.gitignore`; sus archivos locales se conservaron. Esta exclusión afecta a la versión actual y no reescribe commits históricos.
 
 ## 23. Riesgos restantes
 
