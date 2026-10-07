@@ -3,6 +3,8 @@
 .env
 .env.backup
 .env.production
+.env.*
+!.env.example
 .phpactor.json
 .phpunit.result.cache
 /.fleet
@@ -19,6 +21,8 @@
 /public/.qa-alpha
 /public/images/productos/*
 !/public/images/productos/.gitkeep
+/public/images/avatars/*
+!/public/images/avatars/.gitkeep
 /storage/*.key
 /storage/pail
 /vendor
@@ -29,3 +33,7 @@ Thumbs.db
 /output
 /report_captures
 /scripts
+/AGENTS.md
+/.agents/
+/agentes/
+/agentes.zip

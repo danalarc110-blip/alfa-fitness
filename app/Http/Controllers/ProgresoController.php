@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cliente;
 use App\Models\Ejercicio;
 use App\Models\PersonalRecord;
+use App\Models\Rutina;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -19,23 +21,41 @@ class ProgresoController extends Controller
         $clienteId = $user->id;
         $clientes = collect();
 
+        $filtros = $request->validate([
+            'ejercicio_id' => ['nullable', 'integer', 'exists:ejercicios,id'],
+        ]);
+        $ejercicioIdFiltro = $filtros['ejercicio_id'] ?? null;
+
         $ejercicios = Ejercicio::where('activo', true)->orderBy('nombre')->get();
 
         $query = PersonalRecord::with(['cliente', 'ejercicio'])
             ->where('cliente_id', $clienteId)
+            ->when($ejercicioIdFiltro, fn ($q) => $q->where('ejercicio_id', $ejercicioIdFiltro))
             ->latest();
         $records = (clone $query)->paginate(20)->withQueryString();
 
-        $mejoresMarcas = (clone $query)->whereNotExists(function ($sub) {
-            $sub->selectRaw('1')->from('personal_records as mejor')
-                ->whereColumn('mejor.cliente_id', 'personal_records.cliente_id')
-                ->whereColumn('mejor.ejercicio_id', 'personal_records.ejercicio_id')
-                ->whereRaw('(mejor.peso_kg * mejor.repeticiones > personal_records.peso_kg * personal_records.repeticiones OR (mejor.peso_kg * mejor.repeticiones = personal_records.peso_kg * personal_records.repeticiones AND mejor.id > personal_records.id))');
-        })->reorder()->orderByRaw('peso_kg * repeticiones DESC')->limit(4)->get();
+        $mejoresMarcas = PersonalRecord::with(['cliente', 'ejercicio'])
+            ->where('cliente_id', $clienteId)
+            ->when($ejercicioIdFiltro, fn ($q) => $q->where('ejercicio_id', $ejercicioIdFiltro))
+            ->whereNotExists(function ($sub) {
+                $sub->selectRaw('1')->from('personal_records as mejor')
+                    ->whereColumn('mejor.cliente_id', 'personal_records.cliente_id')
+                    ->whereColumn('mejor.ejercicio_id', 'personal_records.ejercicio_id')
+                    ->whereRaw('(mejor.peso_kg * mejor.repeticiones > personal_records.peso_kg * personal_records.repeticiones OR (mejor.peso_kg * mejor.repeticiones = personal_records.peso_kg * personal_records.repeticiones AND mejor.id > personal_records.id))');
+            })->reorder()->orderByRaw('peso_kg * repeticiones DESC')->limit(4)->get();
 
-        $totalVolumenKg = (float) PersonalRecord::where('cliente_id', $clienteId)->selectRaw('COALESCE(SUM(peso_kg * repeticiones), 0) as total')->value('total');
-        $maximoRecord = PersonalRecord::with('ejercicio')->where('cliente_id', $clienteId)->orderByDesc('peso_kg')->first();
-        $ultimosLevantamientos = PersonalRecord::with('ejercicio')->where('cliente_id', $clienteId)->latest()->limit(8)->get()->reverse()->values();
+        $totalVolumenKg = (float) PersonalRecord::where('cliente_id', $clienteId)
+            ->when($ejercicioIdFiltro, fn ($q) => $q->where('ejercicio_id', $ejercicioIdFiltro))
+            ->selectRaw('COALESCE(SUM(peso_kg * repeticiones), 0) as total')
+            ->value('total');
+        $maximoRecord = PersonalRecord::with('ejercicio')
+            ->where('cliente_id', $clienteId)
+            ->when($ejercicioIdFiltro, fn ($q) => $q->where('ejercicio_id', $ejercicioIdFiltro))
+            ->orderByDesc('peso_kg')
+            ->first();
+        $ultimosLevantamientos = (clone $query)->limit(8)->get()->reverse()->values();
+
+        $ejercicioSeleccionadoObj = $ejercicioIdFiltro ? $ejercicios->firstWhere('id', (int) $ejercicioIdFiltro) : null;
 
         return view('progreso.index', [
             'guard' => $guard,
@@ -45,6 +65,8 @@ class ProgresoController extends Controller
             'clientes' => $clientes,
             'clienteSeleccionado' => $clienteId,
             'ejercicios' => $ejercicios,
+            'ejercicioFiltro' => $ejercicioIdFiltro,
+            'ejercicioSeleccionadoObj' => $ejercicioSeleccionadoObj,
             'records' => $records,
             'mejoresMarcas' => $mejoresMarcas,
             'totalVolumenKg' => $totalVolumenKg,
@@ -87,5 +109,76 @@ class ProgresoController extends Controller
         return redirect()
             ->route('progreso.index')
             ->with('status', 'Registro eliminado.');
+    }
+
+    /**
+     * Permite a un entrenador o administrador consultar el progreso de un cliente asignado.
+     */
+    public function clienteProgreso(Request $request, Cliente $cliente): View
+    {
+        ['guard' => $guard, 'user' => $user] = $this->actual();
+        abort_unless($guard === 'web', 403);
+        abort_unless(in_array($user->rol, ['Administrador', 'Entrenador'], true), 403);
+
+        if ($user->rol === 'Entrenador') {
+            $asignado = Rutina::where('user_type', 'cliente')
+                ->where('user_id', $cliente->id)
+                ->where('asignado_por_id', $user->id)
+                ->exists();
+            abort_unless($asignado, 403, 'No tienes asignado a este cliente.');
+        }
+
+        $filtros = $request->validate([
+            'ejercicio_id' => ['nullable', 'integer', 'exists:ejercicios,id'],
+        ]);
+        $ejercicioIdFiltro = $filtros['ejercicio_id'] ?? null;
+
+        $ejercicios = Ejercicio::where('activo', true)->orderBy('nombre')->get();
+
+        $query = PersonalRecord::with(['ejercicio'])
+            ->where('cliente_id', $cliente->id)
+            ->when($ejercicioIdFiltro, fn ($q) => $q->where('ejercicio_id', $ejercicioIdFiltro))
+            ->latest();
+        $records = (clone $query)->paginate(15)->withQueryString();
+
+        $mejoresMarcas = PersonalRecord::with(['ejercicio'])
+            ->where('cliente_id', $cliente->id)
+            ->when($ejercicioIdFiltro, fn ($q) => $q->where('ejercicio_id', $ejercicioIdFiltro))
+            ->whereNotExists(function ($sub) {
+                $sub->selectRaw('1')->from('personal_records as mejor')
+                    ->whereColumn('mejor.cliente_id', 'personal_records.cliente_id')
+                    ->whereColumn('mejor.ejercicio_id', 'personal_records.ejercicio_id')
+                    ->whereRaw('(mejor.peso_kg * mejor.repeticiones > personal_records.peso_kg * personal_records.repeticiones OR (mejor.peso_kg * mejor.repeticiones = personal_records.peso_kg * personal_records.repeticiones AND mejor.id > personal_records.id))');
+            })->reorder()->orderByRaw('peso_kg * repeticiones DESC')->limit(4)->get();
+
+        $totalVolumenKg = (float) PersonalRecord::where('cliente_id', $cliente->id)
+            ->when($ejercicioIdFiltro, fn ($q) => $q->where('ejercicio_id', $ejercicioIdFiltro))
+            ->selectRaw('COALESCE(SUM(peso_kg * repeticiones), 0) as total')
+            ->value('total');
+
+        $maximoRecord = PersonalRecord::with('ejercicio')
+            ->where('cliente_id', $cliente->id)
+            ->when($ejercicioIdFiltro, fn ($q) => $q->where('ejercicio_id', $ejercicioIdFiltro))
+            ->orderByDesc('peso_kg')
+            ->first();
+
+        $ultimosLevantamientos = (clone $query)->limit(8)->get()->reverse()->values();
+        $ejercicioSeleccionadoObj = $ejercicioIdFiltro ? $ejercicios->firstWhere('id', (int) $ejercicioIdFiltro) : null;
+
+        return view('progreso.entrenador', [
+            'guard' => $guard,
+            'nombre' => $this->nombreActual($guard, $user),
+            'rolEtiqueta' => $user->rol,
+            'avatarUrl' => $user->avatar_url,
+            'cliente' => $cliente,
+            'ejercicios' => $ejercicios,
+            'ejercicioFiltro' => $ejercicioIdFiltro,
+            'ejercicioSeleccionadoObj' => $ejercicioSeleccionadoObj,
+            'records' => $records,
+            'mejoresMarcas' => $mejoresMarcas,
+            'totalVolumenKg' => $totalVolumenKg,
+            'maximoRecord' => $maximoRecord,
+            'ultimosLevantamientos' => $ultimosLevantamientos,
+        ]);
     }
 }

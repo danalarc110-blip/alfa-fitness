@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Cliente;
 use App\Models\Ejercicio;
 use App\Models\PersonalRecord;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -60,5 +59,58 @@ class ProgresoTest extends TestCase
         $this->actingAs($uno, 'cliente')->get(route('progreso.index', ['cliente_id' => $dos->id]))->assertOk()->assertDontSee('Dos Privado')->assertDontSee('99 kg');
         $this->delete(route('progreso.destroy', $record))->assertForbidden();
         $this->assertDatabaseHas('personal_records', ['id' => $record->id]);
+    }
+
+    public function test_cliente_can_filter_records_and_evolution_by_exercise(): void
+    {
+        $cliente = Cliente::create([
+            'nombre' => 'Atleta Filtros',
+            'correo' => 'filtros@example.com',
+            'password' => 'Password!123',
+            'activo' => true,
+        ]);
+
+        $ejercicio1 = Ejercicio::create([
+            'nombre' => 'Press de banca',
+            'grupo_muscular' => 'Pecho',
+            'activo' => true,
+        ]);
+
+        $ejercicio2 = Ejercicio::create([
+            'nombre' => 'Sentadilla con barra',
+            'grupo_muscular' => 'Piernas',
+            'activo' => true,
+        ]);
+
+        PersonalRecord::create([
+            'cliente_id' => $cliente->id,
+            'ejercicio_id' => $ejercicio1->id,
+            'peso_kg' => 100,
+            'repeticiones' => 5,
+        ]);
+
+        PersonalRecord::create([
+            'cliente_id' => $cliente->id,
+            'ejercicio_id' => $ejercicio2->id,
+            'peso_kg' => 140,
+            'repeticiones' => 3,
+        ]);
+
+        // Sin filtro: ambos ejercicios aparecen
+        $this->actingAs($cliente, 'cliente')
+            ->get(route('progreso.index'))
+            ->assertOk()
+            ->assertSee('Press de banca')
+            ->assertSee('100')
+            ->assertSee('Sentadilla con barra')
+            ->assertSee('140');
+
+        // Filtrado por ejercicio1: aparece 100 kg de Press de banca y no aparece 140 kg de Sentadilla
+        $this->actingAs($cliente, 'cliente')
+            ->get(route('progreso.index', ['ejercicio_id' => $ejercicio1->id]))
+            ->assertOk()
+            ->assertSee('Press de banca')
+            ->assertSee('100 kg')
+            ->assertDontSee('140 kg');
     }
 }

@@ -7,11 +7,10 @@ use App\Services\ImagenSegura;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\ValidationException;
 
 class ProductoController extends Controller
 {
-    public const LIMITE_CATALOGO = 5;
+    public const ELEMENTOS_POR_PAGINA = 5;
 
     public function index(Request $request)
     {
@@ -21,7 +20,7 @@ class ProductoController extends Controller
         $productos = Producto::query()
             ->when(! Gate::allows('inventario'), fn ($q) => $q->where('activo', true))
             ->when($busqueda, fn ($q) => $q->where(fn ($s) => $s->where('nombre', 'like', "%{$busqueda}%")->orWhere('categoria', 'like', "%{$busqueda}%")))
-            ->orderBy('orden')->orderBy('nombre')->paginate(self::LIMITE_CATALOGO)->withQueryString();
+            ->orderBy('orden')->orderBy('nombre')->paginate(self::ELEMENTOS_POR_PAGINA)->withQueryString();
 
         $totalCatalogo = Gate::allows('inventario') ? Producto::count() : null;
 
@@ -32,7 +31,6 @@ class ProductoController extends Controller
             'avatarUrl' => $user->avatar_url,
             'productos' => $productos,
             'busqueda' => $busqueda,
-            'limiteCatalogo' => self::LIMITE_CATALOGO,
             'totalCatalogo' => $totalCatalogo,
         ]);
     }
@@ -46,12 +44,6 @@ class ProductoController extends Controller
         $producto = null;
         try {
             DB::transaction(function () use ($data, $request, &$producto, &$nuevo) {
-                $existentes = Producto::query()->lockForUpdate()->get(['id']);
-                if ($existentes->count() >= self::LIMITE_CATALOGO) {
-                    throw ValidationException::withMessages([
-                        'nombre' => 'El catálogo admite un máximo de '.self::LIMITE_CATALOGO.' productos. Edita uno de los existentes.',
-                    ]);
-                }
                 $producto = Producto::create($data + ['activo' => true]);
                 if ($request->hasFile('imagen')) {
                     $nuevo = app(ImagenSegura::class)->guardar($request->file('imagen'), 'productos', 'producto_'.$producto->id);

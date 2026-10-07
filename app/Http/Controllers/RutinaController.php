@@ -7,20 +7,17 @@ use App\Models\Ejercicio;
 use App\Models\Rutina;
 use App\Models\RutinaDia;
 use App\Models\RutinaEjercicio;
+use App\Models\SesionEntrenamiento;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class RutinaController extends Controller
 {
-    /**
-     * Devuelve ['guard' => 'web'|'cliente', 'user' => modelo autenticado].
-     * Mismo patrón que ConfiguracionController.
-     */
-
     /**
      * Listado de rutinas del usuario actual.
      */
@@ -33,8 +30,8 @@ class RutinaController extends Controller
             ->latest()
             ->paginate(18);
 
-        $clientes = $guard === 'web'
-            ? Cliente::where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'correo'])
+        $clientes = $guard === 'web' && Gate::allows('asignar_rutinas')
+            ? Cliente::where('activo', true)->orderBy('nombre')->get(['id', 'nombre'])
             : collect();
 
         return view('entrenamientos.index', [
@@ -356,6 +353,8 @@ class RutinaController extends Controller
      */
     public function asignar(Request $request, Rutina $rutina): RedirectResponse
     {
+        Gate::authorize('asignar_rutinas');
+        $this->autorizarPropietario($rutina);
         ['guard' => $guard, 'user' => $user] = $this->actual();
         abort_unless($guard === 'web', 403);
 
@@ -380,6 +379,7 @@ class RutinaController extends Controller
                 'dias_por_semana' => $rutina->dias_por_semana,
                 'activa' => true,
                 'asignado_por' => $user->name,
+                'asignado_por_id' => $user->id,
             ]);
 
             $rutina->load(['dias.ejercicios']);
@@ -449,6 +449,102 @@ class RutinaController extends Controller
             'nombre' => $this->nombreActual($guard, $user),
             'rolEtiqueta' => $guard === 'web' ? $user->rol : 'Miembro',
             'rutina' => $rutina,
+        ]);
+    }
+
+    /**
+     * Registra la finalización de una sesión de entrenamiento interactiva.
+     */
+    public function finalizarSesion(Request $request, Rutina $rutina)
+    {
+        $this->autorizarPropietario($rutina);
+        ['guard' => $guard, 'user' => $user] = $this->actual();
+
+        $data = $request->validate([
+            'dia_id' => ['nullable', 'integer', Rule::exists('rutina_dias', 'id')->where('rutina_id', $rutina->id)],
+            'duracion_segundos' => ['nullable', 'integer', 'min:0', 'max:86400'],
+            'series_completadas' => ['nullable', 'integer', 'min:0', 'max:500'],
+            'total_series' => ['nullable', 'integer', 'min:0', 'max:500'],
+            'notas' => ['nullable', 'string', 'max:500'],
+            'sesion_uuid' => ['nullable', 'uuid'],
+        ]);
+
+        if (($data['series_completadas'] ?? 0) > ($data['total_series'] ?? 0)) {
+            throw ValidationException::withMessages(['series_completadas' => 'Las series completadas no pueden superar el total de series.']);
+        }
+
+        $rutina->load(['dias']);
+
+        $dia = null;
+        if (! empty($data['dia_id'])) {
+            $dia = $rutina->dias->firstWhere('id', (int) $data['dia_id']);
+        }
+        $diaTitulo = $dia ? $dia->titulo : ($rutina->dias->first()?->titulo ?? 'Entrenamiento');
+
+        $duracion = (int) ($data['duracion_segundos'] ?? 0);
+        $ahora = now();
+        $iniciado = $duracion > 0 ? (clone $ahora)->subSeconds($duracion) : $ahora;
+
+        $atributos = [
+            'user_id' => $user->id,
+            'user_type' => $guard,
+            'rutina_id' => $rutina->id,
+            'rutina_nombre' => $rutina->nombre,
+            'dia_id' => $dia?->id,
+            'dia_titulo' => $diaTitulo,
+            'iniciado_en' => $iniciado,
+            'finalizado_en' => $ahora,
+            'duracion_segundos' => $duracion,
+            'series_completadas' => (int) ($data['series_completadas'] ?? 0),
+            'total_series' => (int) ($data['total_series'] ?? 0),
+            'estado' => 'completado',
+            'notas' => $data['notas'] ?? null,
+        ];
+
+        if (! empty($data['sesion_uuid'])) {
+            $data['sesion_uuid'] = strtolower($data['sesion_uuid']);
+            $sesion = SesionEntrenamiento::firstOrCreate(['sesion_uuid' => $data['sesion_uuid']], $atributos);
+            abort_unless($sesion->user_type === $guard && $sesion->user_id === $user->id && $sesion->rutina_id === $rutina->id, 403);
+        } else {
+            $sesion = SesionEntrenamiento::create($atributos);
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'ok' => true,
+                'mensaje' => '¡Entrenamiento registrado con éxito!',
+                'sesion' => $sesion,
+            ]);
+        }
+
+        return redirect()
+            ->route('entrenamientos.historial')
+            ->with('status', '¡Entrenamiento guardado en tu historial!');
+    }
+
+    /**
+     * Historial de sesiones de entrenamiento completadas por el usuario.
+     */
+    public function historial(Request $request)
+    {
+        ['guard' => $guard, 'user' => $user] = $this->actual();
+
+        $query = SesionEntrenamiento::deUsuario($guard, $user->id)->latest('finalizado_en');
+
+        $sesiones = (clone $query)->paginate(15);
+        $totalSesiones = SesionEntrenamiento::deUsuario($guard, $user->id)->count();
+        $totalMinutos = (int) round(SesionEntrenamiento::deUsuario($guard, $user->id)->sum('duracion_segundos') / 60);
+        $totalSeries = (int) SesionEntrenamiento::deUsuario($guard, $user->id)->sum('series_completadas');
+
+        return view('entrenamientos.historial', [
+            'guard' => $guard,
+            'nombre' => $this->nombreActual($guard, $user),
+            'rolEtiqueta' => $guard === 'web' ? $user->rol : 'Miembro',
+            'avatarUrl' => $user->avatar_url,
+            'sesiones' => $sesiones,
+            'totalSesiones' => $totalSesiones,
+            'totalMinutos' => $totalMinutos,
+            'totalSeries' => $totalSeries,
         ]);
     }
 }

@@ -6,9 +6,9 @@ use App\Models\Asistencia;
 use App\Models\Cliente;
 use App\Models\Ejercicio;
 use App\Models\Membresia;
-use App\Models\PlanMembresia;
 use App\Models\Producto;
 use App\Models\User;
+use Database\Seeders\EjercicioSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -92,7 +92,7 @@ class AuditoriaSistemaTest extends TestCase
 
     public function test_all_seeded_exercises_have_muscle_images_available(): void
     {
-        $this->seed(\Database\Seeders\EjercicioSeeder::class);
+        $this->seed(EjercicioSeeder::class);
 
         $ejercicios = Ejercicio::where('activo', true)->get();
         $this->assertGreaterThan(0, $ejercicios->count());
@@ -104,5 +104,36 @@ class AuditoriaSistemaTest extends TestCase
             );
             $this->assertNotEmpty($ejercicio->imagen_musculos_url);
         }
+    }
+
+    public function test_administrador_and_entrenador_dashboards_render_specialized_panels(): void
+    {
+        $admin = User::factory()->create(['rol' => 'Administrador']);
+        $entrenador = User::factory()->create(['rol' => 'Entrenador']);
+
+        // Crear una membresía que vence en 3 días para verificar la alerta
+        $cliente = Cliente::create(['nombre' => 'Socio Vencimiento', 'correo' => 'socio@test.com', 'password' => 'Password!123', 'activo' => true]);
+        Membresia::create([
+            'cliente_id' => $cliente->id,
+            'plan' => 'Plan Mensual',
+            'importe' => 30,
+            'inicio' => today()->subDays(25),
+            'fin' => today()->addDays(3),
+            'cancelada' => false,
+        ]);
+
+        // Dashboard de Administrador: ve sección de ventas y planes por vencer
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Últimas ventas (TPV)')
+            ->assertSee('Planes que vencen en los próximos 7 días');
+
+        // Dashboard de Entrenador: ve ejercicios populares y no ve ventas de TPV
+        $this->actingAs($entrenador)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Ejercicios populares')
+            ->assertDontSee('Últimas ventas (TPV)');
     }
 }

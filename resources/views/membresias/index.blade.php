@@ -23,7 +23,7 @@
         @else
             <h3 class="font-semibold">{{ $solicitud->estado === 'activada' ? 'Solicitud activada' : 'Solicitud cancelada' }}</h3><p class="text-sm text-gray-400 mt-3">Consulta la vigencia y el importe en el historial de membresías.</p>
         @endif
-        @if($solicitud->estado === 'pendiente' && ($guard === 'cliente' || auth('web')->user()?->rol === 'Secretaria'))<form method="POST" action="{{ route('membresias.solicitudes.cancelar', $solicitud) }}" class="mt-4">@csrf @method('PATCH')<button class="text-sm text-red-300">Cancelar solicitud</button></form>@endif
+        @if($solicitud->estado === 'pendiente' && ($guard === 'cliente' || auth('web')->user()?->rol === 'Secretaria'))<form method="POST" action="{{ route('membresias.solicitudes.cancelar', $solicitud) }}" data-confirm="¿Deseas cancelar esta solicitud de membresía?" class="mt-4">@csrf @method('PATCH')<button class="text-sm text-red-300">Cancelar solicitud</button></form>@endif
         @if($solicitud->membresia?->pago)<p class="text-xs text-gray-400 mt-4">Cobrado {{ $solicitud->membresia->pago->pagado_en->format('d/m/Y H:i') }} por {{ $solicitud->membresia->pago->registrador?->name ?? 'Personal anterior' }}</p>@endif
         </div>
     </article>
@@ -79,7 +79,7 @@
                                     Aprobar Pausa
                                 </button>
                             </form>
-                            <form method="POST" action="{{ route('membresias.pausa.rechazar', $pausa) }}" class="flex-1">
+                            <form method="POST" action="{{ route('membresias.pausa.rechazar', $pausa) }}" data-confirm="¿Rechazar esta solicitud de pausa de membresía?" class="flex-1">
                                 @csrf
                                 @method('PATCH')
                                 <button type="submit" class="alpha-btn-secondary w-full py-2 rounded-xl text-xs font-semibold text-red-300 hover:text-red-200">
@@ -178,35 +178,35 @@
 <div class="mt-5">{{ $membresias->links() }}</div>
 
 {{-- MODAL SOLICITAR PAUSA --}}
-<div id="modal-pausa-membresia" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="alpha-card border border-white/10 rounded-2xl max-w-md w-full p-6 bg-[#101216] shadow-2xl">
+<div id="modal-pausa-membresia" aria-labelledby="titulo-pausa-membresia" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="alpha-card border border-white/10 rounded-2xl max-w-md w-full p-6 bg-[#101216] shadow-2xl max-h-[92vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-4 pb-3 border-b border-white/10">
             <div>
-                <h3 class="font-bold text-white text-base">Congelar / Pausar Membresía</h3>
+                <h3 id="titulo-pausa-membresia" class="font-bold text-white text-base">Congelar / Pausar Membresía</h3>
                 <p class="text-xs text-gray-400" id="pausa-cliente-nombre"></p>
             </div>
-            <button type="button" onclick="document.getElementById('modal-pausa-membresia').classList.add('hidden')" class="text-gray-400 hover:text-white">&times;</button>
+            <button type="button" onclick="window.alphaAnimateModalClose('#modal-pausa-membresia')" aria-label="Cerrar pausa de membresía" class="text-gray-400 hover:text-white">&times;</button>
         </div>
         <form id="form-pausa-membresia" method="POST" action="" class="space-y-4">
             @csrf
             <div>
-                <label class="block text-xs font-semibold text-gray-400 mb-1">Fecha de inicio</label>
+                <label for="pausa-inicio-pausa" class="block text-xs font-semibold text-gray-400 mb-1">Fecha de inicio</label>
                 <input type="date" name="inicio_pausa" id="pausa-inicio-pausa" value="{{ date('Y-m-d') }}" min="{{ date('Y-m-d') }}" required class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-yellow-400/60 outline-none">
             </div>
             <div>
                 <div class="flex justify-between items-center mb-1">
-                    <label class="text-xs font-semibold text-gray-400">Días a pausar</label>
+                    <label for="pausa-dias" class="text-xs font-semibold text-gray-400">Días a pausar</label>
                     <span class="text-[11px] text-amber-400 font-mono" id="pausa-max-dias-label">Máx 30 días</span>
                 </div>
                 <input type="number" name="dias" id="pausa-dias" min="3" max="30" value="7" required class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-yellow-400/60 outline-none">
                 <p class="text-[11px] text-gray-500 mt-1">Límite estricto de 30 días acumulados por membresía (mínimo 3 días). Durante la pausa el acceso al gimnasio queda congelado.</p>
             </div>
             <div>
-                <label class="block text-xs font-semibold text-gray-400 mb-1">Motivo (médico, viaje, etc.)</label>
-                <input type="text" name="motivo" maxlength="255" placeholder="Ej: Reposo médico, viaje de trabajo" required class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-yellow-400/60 outline-none">
+                <label for="pausa-motivo" class="block text-xs font-semibold text-gray-400 mb-1">Motivo (médico, viaje, etc.)</label>
+                <input id="pausa-motivo" type="text" name="motivo" maxlength="255" placeholder="Ej: Reposo médico, viaje de trabajo" required class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-yellow-400/60 outline-none">
             </div>
             <div class="flex justify-end gap-3 pt-3">
-                <button type="button" onclick="document.getElementById('modal-pausa-membresia').classList.add('hidden')" class="alpha-btn-secondary px-4 py-2 text-sm">Cancelar</button>
+                <button type="button" onclick="window.alphaAnimateModalClose('#modal-pausa-membresia')" class="alpha-btn-secondary px-4 py-2 text-sm">Cancelar</button>
                 <button type="submit" class="alpha-btn-primary px-5 py-2 text-sm font-semibold">Confirmar Pausa</button>
             </div>
         </form>
@@ -215,7 +215,6 @@
 
 <script>
     function abrirModalPausa(membresiaId, clienteNombre, maxDias) {
-        const modal = document.getElementById('modal-pausa-membresia');
         const form = document.getElementById('form-pausa-membresia');
         const label = document.getElementById('pausa-cliente-nombre');
         const maxLabel = document.getElementById('pausa-max-dias-label');
@@ -226,7 +225,7 @@
         maxLabel.textContent = `Disponibles: ${maxDias} días`;
         inputDias.max = maxDias;
         inputDias.value = Math.min(7, maxDias);
-        modal.classList.remove('hidden');
+        window.alphaAnimateModalOpen('#modal-pausa-membresia');
     }
 </script>
 
@@ -237,7 +236,7 @@
             <h2 class="text-xl font-bold text-white">Configuración de Planes de Membresía</h2>
             <p class="text-xs text-gray-400 mt-1">Crea nuevas tarifas, modifica precios o activa/desactiva planes para los socios.</p>
         </div>
-        <button type="button" onclick="document.getElementById('modal-nuevo-plan').classList.remove('hidden')" class="alpha-btn-primary px-4 py-2.5 text-sm font-semibold flex items-center gap-2">
+        <button type="button" onclick="window.alphaAnimateModalOpen('#modal-nuevo-plan')" class="alpha-btn-primary px-4 py-2.5 text-sm font-semibold flex items-center gap-2">
             <span>+ Nuevo Plan</span>
         </button>
     </div>
@@ -262,7 +261,7 @@
                     <button type="button" onclick="abrirEditarPlan({{ \Illuminate\Support\Js::from($p) }})" class="alpha-btn-secondary px-3 py-1.5 text-xs font-semibold flex-1">
                         Editar
                     </button>
-                    <form method="POST" action="{{ route('planes.toggle', $p) }}">
+                    <form method="POST" action="{{ route('planes.toggle', $p) }}" data-confirm="{{ $p->activo ? '¿Deseas desactivar este plan de membresía?' : '¿Deseas activar este plan de membresía?' }}">
                         @csrf
                         @method('PATCH')
                         <button type="submit" class="px-3 py-1.5 text-xs font-semibold rounded-xl border border-white/10 hover:border-white/20 text-gray-300 transition-colors">
@@ -276,11 +275,11 @@
 </section>
 
 {{-- Modales Nuevo / Editar Plan --}}
-<div id="modal-nuevo-plan" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="alpha-card border border-white/10 rounded-2xl max-w-md w-full p-6 bg-[#101216] shadow-2xl">
+<div id="modal-nuevo-plan" aria-labelledby="titulo-nuevo-plan" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="alpha-card border border-white/10 rounded-2xl max-w-md w-full p-6 bg-[#101216] shadow-2xl max-h-[92vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-4 pb-3 border-b border-white/10">
-            <h3 class="font-bold text-white text-base">Crear Nuevo Plan de Membresía</h3>
-            <button type="button" onclick="document.getElementById('modal-nuevo-plan').classList.add('hidden')" class="text-gray-400 hover:text-white">&times;</button>
+            <h3 id="titulo-nuevo-plan" class="font-bold text-white text-base">Crear Nuevo Plan de Membresía</h3>
+            <button type="button" onclick="window.alphaAnimateModalClose('#modal-nuevo-plan')" aria-label="Cerrar nuevo plan" class="text-gray-400 hover:text-white">&times;</button>
         </div>
         <form method="POST" action="{{ route('planes.store') }}" class="space-y-4">
             @csrf
@@ -303,18 +302,18 @@
                 <input type="text" name="condiciones" placeholder="Ej: Acceso libre a pesas y cardio" class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:border-yellow-400/60 outline-none">
             </div>
             <div class="flex justify-end gap-3 pt-3">
-                <button type="button" onclick="document.getElementById('modal-nuevo-plan').classList.add('hidden')" class="alpha-btn-secondary px-4 py-2 text-sm">Cancelar</button>
+                <button type="button" onclick="window.alphaAnimateModalClose('#modal-nuevo-plan')" class="alpha-btn-secondary px-4 py-2 text-sm">Cancelar</button>
                 <button type="submit" class="alpha-btn-primary px-5 py-2 text-sm font-semibold">Guardar Plan</button>
             </div>
         </form>
     </div>
 </div>
 
-<div id="modal-editar-plan" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="alpha-card border border-white/10 rounded-2xl max-w-md w-full p-6 bg-[#101216] shadow-2xl">
+<div id="modal-editar-plan" aria-labelledby="titulo-editar-plan" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="alpha-card border border-white/10 rounded-2xl max-w-md w-full p-6 bg-[#101216] shadow-2xl max-h-[92vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-4 pb-3 border-b border-white/10">
-            <h3 class="font-bold text-white text-base">Editar Plan de Membresía</h3>
-            <button type="button" onclick="document.getElementById('modal-editar-plan').classList.add('hidden')" class="text-gray-400 hover:text-white">&times;</button>
+            <h3 id="titulo-editar-plan" class="font-bold text-white text-base">Editar Plan de Membresía</h3>
+            <button type="button" onclick="window.alphaAnimateModalClose('#modal-editar-plan')" aria-label="Cerrar edición de plan" class="text-gray-400 hover:text-white">&times;</button>
         </div>
         <form id="form-editar-plan" method="POST" action="" class="space-y-4">
             @csrf
@@ -345,7 +344,7 @@
                 </select>
             </div>
             <div class="flex justify-end gap-3 pt-3">
-                <button type="button" onclick="document.getElementById('modal-editar-plan').classList.add('hidden')" class="alpha-btn-secondary px-4 py-2 text-sm">Cancelar</button>
+                <button type="button" onclick="window.alphaAnimateModalClose('#modal-editar-plan')" class="alpha-btn-secondary px-4 py-2 text-sm">Cancelar</button>
                 <button type="submit" class="alpha-btn-primary px-5 py-2 text-sm font-semibold">Actualizar</button>
             </div>
         </form>
@@ -360,7 +359,7 @@
         document.getElementById('edit-duracion').value = plan.duracion_dias;
         document.getElementById('edit-condiciones').value = plan.condiciones || '';
         document.getElementById('edit-activo').value = plan.activo ? '1' : '0';
-        document.getElementById('modal-editar-plan').classList.remove('hidden');
+        window.alphaAnimateModalOpen('#modal-editar-plan');
     }
 </script>
 @endcan

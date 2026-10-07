@@ -8,6 +8,7 @@ abstract class Controller
     {
         // If both guards ever coexist, choose the least-privileged client identity.
         $guard = auth('cliente')->check() ? 'cliente' : 'web';
+
         return ['guard' => $guard, 'user' => auth($guard)->user()];
     }
 

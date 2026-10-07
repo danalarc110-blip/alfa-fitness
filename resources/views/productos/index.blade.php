@@ -6,7 +6,7 @@
     <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
         <div>
             <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Productos</h1>
-            <p class="text-gray-400 text-xs mt-1">Un catálogo breve de hasta {{ $limiteCatalogo }} productos, con precio y existencias al día.</p>
+            <p class="text-gray-400 text-xs mt-1">Catálogo de productos y suplementos, con precio y existencias al día.</p>
         </div>
 
         <div class="flex items-center gap-3">
@@ -43,52 +43,45 @@
             </form>
 
             @if ($puedeGestionar)
-                @if ($totalCatalogo < $limiteCatalogo)
-                    <form method="POST" action="{{ route('productos.store') }}" enctype="multipart/form-data" class="alpha-card rounded-2xl p-5 sm:p-6" data-animate="card">
-                        @csrf
-                        <div class="flex items-center justify-between gap-3 mb-4">
-                            <h2 class="text-base font-bold text-white">Nuevo producto</h2>
-                            <span class="text-[11px] font-semibold text-gray-400">{{ $totalCatalogo }}/{{ $limiteCatalogo }}</span>
-                        </div>
-
-                        <div class="space-y-4">
-                            <label>
-                                Nombre
-                                <input type="text" name="nombre" value="{{ old('nombre') }}" maxlength="255" required>
-                            </label>
-
-                            <label>
-                                Imagen opcional
-                                <input type="file" name="imagen" accept="image/jpeg,image/png,image/webp" data-image-preview="producto-nuevo-preview">
-                                <span class="block mt-1 text-[11px] text-gray-500">JPG, PNG o WebP · máximo 2 MB</span>
-                            </label>
-                            <img id="producto-nuevo-preview" class="hidden w-full h-36 object-cover rounded-xl" alt="Vista previa de la imagen seleccionada">
-
-                            <div class="grid grid-cols-2 gap-3">
-                                <label>
-                                    Precio
-                                    <input type="number" name="precio" min="0" max="999999" step="0.01" value="{{ old('precio') }}" required>
-                                </label>
-                                <label>
-                                    Stock
-                                    <input type="number" name="stock" min="0" max="999999" value="{{ old('stock', 0) }}" required>
-                                </label>
-                            </div>
-
-                            <label>
-                                Categoría
-                                <input type="text" name="categoria" value="{{ old('categoria') }}" maxlength="100" placeholder="Opcional">
-                            </label>
-
-                            <button type="submit" class="alpha-btn-primary w-full rounded-xl px-4 py-2.5 text-sm font-semibold">Guardar producto</button>
-                        </div>
-                    </form>
-                @else
-                    <div class="alpha-card rounded-2xl p-5 text-sm text-gray-400" data-animate="card">
-                        <p class="font-semibold text-white">Catálogo completo: {{ $limiteCatalogo }}/{{ $limiteCatalogo }}</p>
-                        <p class="mt-1">Para mantenerlo breve, edita uno de los productos existentes.</p>
+                <form method="POST" action="{{ route('productos.store') }}" enctype="multipart/form-data" class="alpha-card rounded-2xl p-5 sm:p-6" data-animate="card">
+                    @csrf
+                    <div class="flex items-center justify-between gap-3 mb-4">
+                        <h2 class="text-base font-bold text-white">Nuevo producto</h2>
+                        <span class="text-[11px] font-semibold text-gray-400">{{ $totalCatalogo }} {{ $totalCatalogo === 1 ? 'producto' : 'productos' }}</span>
                     </div>
-                @endif
+
+                    <div class="space-y-4">
+                        <label>
+                            Nombre
+                            <input type="text" name="nombre" value="{{ old('nombre') }}" maxlength="255" required>
+                        </label>
+
+                        <label>
+                            Imagen opcional
+                            <input type="file" name="imagen" accept="image/jpeg,image/png,image/webp" data-image-preview="producto-nuevo-preview">
+                            <span class="block mt-1 text-[11px] text-gray-500">JPG, PNG o WebP · máximo 2 MB</span>
+                        </label>
+                        <img id="producto-nuevo-preview" class="hidden w-full h-36 object-cover rounded-xl" alt="Vista previa de la imagen seleccionada">
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <label>
+                                Precio
+                                <input type="number" name="precio" min="0" max="999999" step="0.01" value="{{ old('precio') }}" required>
+                            </label>
+                            <label>
+                                Stock
+                                <input type="number" name="stock" min="0" max="999999" value="{{ old('stock', 0) }}" required>
+                            </label>
+                        </div>
+
+                        <label>
+                            Categoría
+                            <input type="text" name="categoria" value="{{ old('categoria') }}" maxlength="100" placeholder="Opcional">
+                        </label>
+
+                        <button type="submit" class="alpha-btn-primary w-full rounded-xl px-4 py-2.5 text-sm font-semibold">Guardar producto</button>
+                    </div>
+                </form>
             @endif
         </aside>
 

@@ -19,9 +19,20 @@ class Membresia extends Model
         return $this->belongsTo(Cliente::class);
     }
 
-    public function solicitud(): BelongsTo { return $this->belongsTo(SolicitudMembresia::class); }
-    public function activadora(): BelongsTo { return $this->belongsTo(User::class, 'activada_por'); }
-    public function pago() { return $this->hasOne(PagoMembresia::class); }
+    public function solicitud(): BelongsTo
+    {
+        return $this->belongsTo(SolicitudMembresia::class);
+    }
+
+    public function activadora(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'activada_por');
+    }
+
+    public function pago()
+    {
+        return $this->hasOne(PagoMembresia::class);
+    }
 
     public function pausas()
     {
@@ -49,9 +60,16 @@ class Membresia extends Model
 
     public function getEstadoAttribute(): string
     {
-        if ($this->cancelada) return 'Cancelada';
-        if ($this->pausaVigente()) return 'En Pausa';
-        if ($this->inicio->isAfter(today())) return 'Programada';
+        if ($this->cancelada) {
+            return 'Cancelada';
+        }
+        if ($this->pausaVigente()) {
+            return 'En Pausa';
+        }
+        if ($this->inicio->isAfter(today())) {
+            return 'Programada';
+        }
+
         return $this->fin->isBefore(today()) ? 'Vencida' : 'Vigente';
     }
 }

@@ -65,7 +65,7 @@
             <div>
                 <h2 class="text-base font-bold text-white flex items-center gap-2">
                     <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg>
-                    Evolución de Fuerza en Sesiones Recientes
+                    Evolución de Fuerza {{ $ejercicioSeleccionadoObj ? 'en ' . $ejercicioSeleccionadoObj->nombre : 'en Sesiones Recientes' }}
                 </h2>
                 <p class="text-xs text-gray-400 mt-0.5">Tendencia de peso levantado (kg) a lo largo del tiempo</p>
             </div>
@@ -213,9 +213,25 @@
 
         {{-- HISTORIAL DE LEVANTAMIENTOS --}}
         <section class="alpha-card rounded-2xl p-5 sm:p-6" data-animate="card">
-            <div class="flex items-center justify-between gap-3 mb-4">
-                <h2 class="text-base font-bold text-white">Historial de levantamientos</h2>
-                <span class="text-xs font-semibold text-gray-500">{{ $records->total() }} registros</span>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/5">
+                <div>
+                    <h2 class="text-base font-bold text-white">Historial de levantamientos</h2>
+                    <span class="text-xs font-semibold text-gray-500">{{ $records->total() }} registros{{ $ejercicioSeleccionadoObj ? ' para ' . $ejercicioSeleccionadoObj->nombre : '' }}</span>
+                </div>
+
+                <form method="GET" action="{{ route('progreso.index') }}" class="flex items-center gap-2">
+                    <select name="ejercicio_id" onchange="this.form.submit()" class="bg-black/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-yellow-400/60">
+                        <option value="">Todos los ejercicios</option>
+                        @foreach ($ejercicios as $ej)
+                            <option value="{{ $ej->id }}" @selected(($ejercicioFiltro ?? '') == $ej->id)>
+                                {{ $ej->nombre }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @if($ejercicioFiltro)
+                        <a href="{{ route('progreso.index') }}" class="alpha-btn-secondary px-2.5 py-1.5 rounded-xl text-xs">Limpiar</a>
+                    @endif
+                </form>
             </div>
 
             @if ($records->isNotEmpty())
@@ -256,7 +272,7 @@
                                     </td>
                                     <td class="py-3 px-3 text-gray-400">{{ $record->created_at->format('d/m/Y') }}</td>
                                     <td class="py-3 pl-3 text-right">
-                                        <form method="POST" action="{{ route('progreso.destroy', $record) }}" onsubmit="return confirm('¿Eliminar este registro?')">
+                                        <form method="POST" action="{{ route('progreso.destroy', $record) }}" data-confirm="¿Deseas eliminar este registro de marca personal?">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="w-8 h-8 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Eliminar">

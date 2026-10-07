@@ -14,7 +14,7 @@ class AsistenciaController extends Controller
 {
     public function index(Request $request)
     {
-        abort_unless(auth('web')->user()?->rol === 'Secretaria', 403);
+        abort_unless(auth('web')->user()?->can('asistencia'), 403);
         $filtros = $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
             'cliente_id' => ['nullable', 'integer', 'exists:clientes,id'],
@@ -48,7 +48,7 @@ class AsistenciaController extends Controller
 
     public function store(Request $request)
     {
-        abort_unless(auth('web')->user()?->rol === 'Secretaria', 403);
+        abort_unless(auth('web')->user()?->can('asistencia'), 403);
         $data = $request->validate(['cliente_id' => ['required', 'exists:clientes,id']]);
         app(RegistroAsistencia::class)->registrar((int) $data['cliente_id'], auth('web')->id(), false);
 
@@ -57,7 +57,7 @@ class AsistenciaController extends Controller
 
     public function salida(Request $request)
     {
-        abort_unless(auth('web')->user()?->rol === 'Secretaria', 403);
+        abort_unless(auth('web')->user()?->can('asistencia'), 403);
         $data = $request->validate(['cliente_id' => ['required', 'exists:clientes,id']]);
         app(RegistroAsistencia::class)->registrar((int) $data['cliente_id'], auth('web')->id(), true);
 
@@ -66,17 +66,17 @@ class AsistenciaController extends Controller
 
     public function exportar(Request $request)
     {
-        abort_unless(auth('web')->user()?->rol === 'Secretaria', 403);
+        abort_unless(auth('web')->user()?->can('asistencia'), 403);
         $filtros = $request->validate([
             'q' => ['nullable', 'string', 'max:100'],
             'cliente_id' => ['nullable', 'integer', 'exists:clientes,id'],
             'desde' => ['nullable', 'date_format:Y-m-d'],
-            'hasta' => ['nullable', 'date_format:Y-m-d'],
+            'hasta' => ['nullable', 'date_format:Y-m-d', ...($request->filled('desde') ? ['after_or_equal:desde'] : [])],
             'estado' => ['nullable', Rule::in(['abierta', 'cerrada'])],
         ]);
         $busqueda = $filtros['q'] ?? '';
 
-        $asistencias = Asistencia::with(['cliente:id,nombre,correo', 'registrador:id,name', 'registradorSalida:id,name'])
+        $asistencias = Asistencia::with(['cliente:id,nombre', 'registrador:id,name', 'registradorSalida:id,name'])
             ->when($filtros['cliente_id'] ?? null, fn ($q, $id) => $q->where('cliente_id', $id))
             ->when($busqueda, fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
             ->when($filtros['desde'] ?? null, fn ($q, $fecha) => $q->where('fecha_hora', '>=', $fecha.' 00:00:00'))
@@ -84,26 +84,35 @@ class AsistenciaController extends Controller
             ->when(($filtros['estado'] ?? '') === 'abierta', fn ($q) => $q->whereNull('fecha_salida'))
             ->when(($filtros['estado'] ?? '') === 'cerrada', fn ($q) => $q->whereNotNull('fecha_salida'))
             ->latest('fecha_hora')
-            ->get();
+            ->orderByDesc('id');
 
         $filename = 'asistencias_'.now()->format('Y-m-d_His').'.csv';
 
         $callback = function () use ($asistencias) {
             $handle = fopen('php://output', 'w');
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
-            fputcsv($handle, ['ID', 'Cliente', 'Correo', 'Fecha Entrada', 'Fecha Salida', 'Duración', 'Registrado Por', 'Salida Por']);
+            fputcsv($handle, ['ID', 'Cliente', 'Fecha Entrada', 'Fecha Salida', 'Duración', 'Registrado Por', 'Salida Por'], ',', '"', '');
 
-            foreach ($asistencias as $a) {
-                fputcsv($handle, [
+            // Eager-load relations per bounded batch without materializing the full history.
+            foreach ($asistencias->lazy(500) as $a) {
+                $fila = [
                     $a->id,
                     $a->cliente->nombre ?? 'N/A',
-                    $a->cliente->correo ?? 'N/A',
                     $a->fecha_hora->format('Y-m-d H:i:s'),
                     $a->fecha_salida ? $a->fecha_salida->format('Y-m-d H:i:s') : 'En curso',
                     $a->duracion ?? 'En gimnasio',
                     $a->registrador->name ?? 'Sistema',
                     $a->registradorSalida->name ?? ($a->fecha_salida ? 'Sistema' : ''),
-                ]);
+                ];
+                // CSV quoting alone does not prevent spreadsheet formula execution.
+                $fila = array_map(static function ($valor) {
+                    if (is_string($valor) && preg_match('/^[\x00-\x20]*[=+\-@]|^[\t\r\n]/u', $valor)) {
+                        return "'".$valor;
+                    }
+
+                    return $valor;
+                }, $fila);
+                fputcsv($handle, $fila, ',', '"', '');
             }
             fclose($handle);
         };
@@ -116,7 +125,7 @@ class AsistenciaController extends Controller
 
     public function cerrarHuerfanas(Request $request)
     {
-        abort_unless(auth('web')->user()?->rol === 'Secretaria', 403);
+        abort_unless(auth('web')->user()?->can('asistencia'), 403);
 
         $cerradas = 0;
         DB::transaction(function () use (&$cerradas) {
@@ -139,5 +148,26 @@ class AsistenciaController extends Controller
         return back()->with('status', $cerradas > 0
             ? "Se cerraron exitosamente {$cerradas} visitas huérfanas de días anteriores."
             : 'No se encontraron visitas huérfanas pendientes.');
+    }
+
+    /**
+     * Consulta el historial privado de asistencia del cliente autenticado.
+     */
+    public function miAsistencia(Request $request)
+    {
+        abort_unless(auth('cliente')->check(), 403);
+        $cliente = auth('cliente')->user();
+
+        $asistencias = Asistencia::where('cliente_id', $cliente->id)
+            ->latest('fecha_hora')
+            ->paginate(15);
+
+        $totalVisitas = Asistencia::where('cliente_id', $cliente->id)->count();
+        $visitaActual = Asistencia::where('cliente_id', $cliente->id)
+            ->whereNull('fecha_salida')
+            ->latest('fecha_hora')
+            ->first();
+
+        return view('cliente.asistencia', compact('cliente', 'asistencias', 'totalVisitas', 'visitaActual'));
     }
 }

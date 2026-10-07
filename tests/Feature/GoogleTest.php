@@ -56,4 +56,12 @@ class GoogleTest extends TestCase
         $this->get(route('cliente.google.callback'))->assertSessionHasErrors('correo');
         $this->assertDatabaseCount('clientes', 0);
     }
+
+    public function test_login_view_renders_google_login_button(): void
+    {
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('Continuar con Google')
+            ->assertSee(route('cliente.google'));
+    }
 }

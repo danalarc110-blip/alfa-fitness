@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 
 class LoginController extends Controller
 {
@@ -15,7 +16,7 @@ class LoginController extends Controller
      * Si ya hay una sesión activa (empleado o cliente), lo mandamos
      * directo a su panel en vez de pedirle iniciar sesión de nuevo.
      */
-    public function showLoginForm(): \Illuminate\View\View|RedirectResponse
+    public function showLoginForm(): View|RedirectResponse
     {
         if (Auth::guard('web')->check()) {
             return redirect()->route('dashboard');
@@ -36,11 +37,11 @@ class LoginController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email'    => ['required', 'string', 'email'],
+            'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ], [
-            'email.required'    => 'El correo electrónico es obligatorio.',
-            'email.email'       => 'Ingresa un correo electrónico válido.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'Ingresa un correo electrónico válido.',
             'password.required' => 'La contraseña es obligatoria.',
         ]);
 

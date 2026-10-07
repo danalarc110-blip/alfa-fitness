@@ -88,4 +88,58 @@ class VentasTest extends TestCase
         $this->assertSame(3, $producto->fresh()->stock);
         $this->assertDatabaseCount('ventas', 0);
     }
+
+    public function test_sales_filtering_by_search_query_and_payment_method(): void
+    {
+        $secretaria = User::factory()->create(['rol' => 'Secretaria']);
+        $clienteA = Cliente::create(['nombre' => 'Carlos López', 'correo' => 'carlos@test.com', 'activo' => true]);
+        $clienteB = Cliente::create(['nombre' => 'María Gómez', 'correo' => 'maria@test.com', 'activo' => true]);
+
+        $productoA = Producto::create(['nombre' => 'Proteína Vainilla', 'precio' => 30.00, 'stock' => 10, 'activo' => true]);
+        $productoB = Producto::create(['nombre' => 'Creatina Monohidrato', 'precio' => 20.00, 'stock' => 10, 'activo' => true]);
+
+        // Venta A: Carlos López, Efectivo, Proteína Vainilla
+        $ventaA = Venta::create([
+            'user_id' => $secretaria->id,
+            'cliente_id' => $clienteA->id,
+            'total' => 30.00,
+            'metodo_pago' => 'Efectivo',
+            'notas' => 'Venta rápida cliente Carlos',
+        ]);
+        $ventaA->detalles()->create([
+            'producto_id' => $productoA->id,
+            'cantidad' => 1,
+            'precio_unitario' => 30.00,
+            'subtotal' => 30.00,
+        ]);
+
+        // Venta B: María Gómez, Tarjeta, Creatina Monohidrato
+        $ventaB = Venta::create([
+            'user_id' => $secretaria->id,
+            'cliente_id' => $clienteB->id,
+            'total' => 20.00,
+            'metodo_pago' => 'Tarjeta',
+            'notas' => 'Pago por terminal María',
+        ]);
+        $ventaB->detalles()->create([
+            'producto_id' => $productoB->id,
+            'cantidad' => 1,
+            'precio_unitario' => 20.00,
+            'subtotal' => 20.00,
+        ]);
+
+        // Buscar por texto q="Carlos": aparece la nota de la venta A y no la de la venta B
+        $this->actingAs($secretaria)
+            ->get(route('ventas.index', ['q' => 'Carlos']))
+            ->assertOk()
+            ->assertSee('Venta rápida cliente Carlos')
+            ->assertDontSee('Pago por terminal María');
+
+        // Filtrar por método de pago "Tarjeta": aparece la venta B y no la venta A
+        $this->actingAs($secretaria)
+            ->get(route('ventas.index', ['metodo' => 'Tarjeta']))
+            ->assertOk()
+            ->assertSee('Pago por terminal María')
+            ->assertDontSee('Venta rápida cliente Carlos');
+    }
 }

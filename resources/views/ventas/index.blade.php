@@ -89,6 +89,18 @@
 
         <form method="GET" action="{{ route('ventas.index') }}" class="flex flex-wrap items-center gap-2">
             <div class="flex items-center gap-1.5 bg-black/40 border border-white/10 rounded-xl px-3 py-1.5">
+                <svg class="w-3.5 h-3.5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="text" name="q" value="{{ $busqueda ?? '' }}" placeholder="Buscar #ticket, cliente..." class="bg-transparent text-xs text-white placeholder-gray-500 focus:outline-none w-36 sm:w-44">
+            </div>
+            <div class="flex items-center gap-1.5 bg-black/40 border border-white/10 rounded-xl px-2.5 py-1.5">
+                <select name="metodo" class="bg-transparent text-xs text-white focus:outline-none">
+                    <option value="" class="bg-[#141416]">Todos los métodos</option>
+                    <option value="Efectivo" class="bg-[#141416]" @selected(($metodoSeleccionado ?? '') === 'Efectivo')>Efectivo</option>
+                    <option value="Tarjeta" class="bg-[#141416]" @selected(($metodoSeleccionado ?? '') === 'Tarjeta')>Tarjeta</option>
+                    <option value="Transferencia" class="bg-[#141416]" @selected(($metodoSeleccionado ?? '') === 'Transferencia')>Transferencia</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-1.5 bg-black/40 border border-white/10 rounded-xl px-3 py-1.5">
                 <span class="text-[11px] text-gray-400 font-medium">Desde:</span>
                 <input type="date" name="desde" value="{{ $desde }}" class="bg-transparent text-xs text-white focus:outline-none">
             </div>
@@ -97,7 +109,7 @@
                 <input type="date" name="hasta" value="{{ $hasta }}" class="bg-transparent text-xs text-white focus:outline-none">
             </div>
             <button type="submit" class="alpha-btn-primary px-3.5 py-1.5 rounded-xl text-xs font-semibold">Filtrar</button>
-            @if($desde || $hasta)
+            @if($desde || $hasta || !empty($busqueda) || !empty($metodoSeleccionado))
                 <a href="{{ route('ventas.index') }}" class="alpha-btn-secondary px-3 py-1.5 rounded-xl text-xs">Limpiar</a>
             @endif
         </form>
@@ -129,6 +141,9 @@
                                     <span class="font-semibold text-white">{{ $v->cliente->nombre }}</span>
                                 @else
                                     <span class="text-gray-500 italic">Público General</span>
+                                @endif
+                                @if($v->notas)
+                                    <p class="text-[10px] text-gray-400 italic mt-0.5 truncate max-w-xs" title="{{ $v->notas }}">{{ $v->notas }}</p>
                                 @endif
                             </td>
                             <td class="py-3 px-3">
@@ -170,23 +185,24 @@
 </div>
 
 {{-- MODAL NUEVA VENTA (TPV) --}}
-<div id="modal-nueva-venta" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
+<div id="modal-nueva-venta" aria-labelledby="titulo-nueva-venta" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
     <div class="alpha-card bg-[#141416] border border-white/10 rounded-2xl w-full max-w-xl p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-5 pb-3 border-b border-white/10">
-            <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <h3 id="titulo-nueva-venta" class="text-base font-bold text-white flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
                 Registrar Venta de Mostrador
             </h3>
-            <button type="button" onclick="cerrarModalVenta()" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
+            <button type="button" onclick="cerrarModalVenta()" aria-label="Cerrar registro de venta" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
         </div>
 
         <form method="POST" action="{{ route('ventas.store') }}" id="form-venta" class="space-y-4">
             @csrf
+            <input type="hidden" name="venta_uuid" value="{{ old('venta_uuid', (string) \Illuminate\Support\Str::uuid()) }}">
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-300 mb-1">Cliente (Opcional)</label>
-                    <select name="cliente_id" class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-yellow-400/60 outline-none">
+                    <label for="venta-cliente" class="block text-xs font-semibold text-gray-300 mb-1">Cliente (Opcional)</label>
+                    <select id="venta-cliente" name="cliente_id" class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-yellow-400/60 outline-none">
                         <option value="">-- Público General --</option>
                         @foreach($clientes as $cli)
                             <option value="{{ $cli->id }}">{{ $cli->nombre }} ({{ $cli->correo }})</option>
@@ -194,8 +210,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-300 mb-1">Método de Pago *</label>
-                    <select name="metodo_pago" required class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-yellow-400/60 outline-none">
+                    <label for="venta-metodo" class="block text-xs font-semibold text-gray-300 mb-1">Método de Pago *</label>
+                    <select id="venta-metodo" name="metodo_pago" required class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-yellow-400/60 outline-none">
                         <option value="Efectivo">Efectivo</option>
                         <option value="Tarjeta">Tarjeta de Débito / Crédito</option>
                         <option value="Transferencia">Transferencia Bancaria</option>
@@ -210,7 +226,7 @@
                     {{-- Fila inicial --}}
                     <div class="item-fila flex items-center gap-2 bg-black/40 border border-white/10 p-2.5 rounded-xl">
                         <div class="flex-1">
-                            <select name="items[0][producto_id]" required onchange="actualizarPrecioFila(this)"
+                            <select name="items[0][producto_id]" aria-label="Producto" required onchange="actualizarPrecioFila(this)"
                                 class="select-producto w-full bg-black/60 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-yellow-400/60 outline-none">
                                 <option value="" data-precio="0" data-stock="0">-- Seleccionar producto --</option>
                                 @foreach($productos as $prod)
@@ -226,7 +242,7 @@
                             </select>
                         </div>
                         <div class="w-20">
-                            <input type="number" name="items[0][cantidad]" value="1" min="1" max="999" required
+                            <input type="number" name="items[0][cantidad]" aria-label="Cantidad" value="1" min="1" max="999" required
                                 oninput="recalcularTotal()"
                                 class="input-cantidad w-full bg-black/60 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-center text-white focus:border-yellow-400/60 outline-none">
                         </div>
@@ -248,8 +264,8 @@
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-gray-300 mb-1">Notas / Observaciones</label>
-                <input type="text" name="notas" maxlength="255" placeholder="Ej: Pago exacto, voucher #1234"
+                <label for="venta-notas" class="block text-xs font-semibold text-gray-300 mb-1">Notas / Observaciones</label>
+                <input id="venta-notas" type="text" name="notas" maxlength="255" placeholder="Ej: Pago exacto, voucher #1234"
                     class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:border-yellow-400/60 outline-none">
             </div>
 
@@ -275,11 +291,11 @@
     const catalogoProductos = @json($productos);
 
     function abrirModalVenta() {
-        document.getElementById('modal-nueva-venta').classList.remove('hidden');
+        window.alphaAnimateModalOpen('#modal-nueva-venta');
     }
 
     function cerrarModalVenta() {
-        document.getElementById('modal-nueva-venta').classList.add('hidden');
+        window.alphaAnimateModalClose('#modal-nueva-venta');
     }
 
     function actualizarPrecioFila(selectEl) {
@@ -318,21 +334,15 @@
         const nuevaFila = document.createElement('div');
         nuevaFila.className = 'item-fila flex items-center gap-2 bg-black/40 border border-white/10 p-2.5 rounded-xl';
 
-        let opcionesHtml = '<option value="" data-precio="0" data-stock="0">-- Seleccionar producto --</option>';
-        catalogoProductos.forEach(p => {
-            const stockLabel = p.stock <= 3 ? `⚠️ (¡Stock crítico: ${p.stock}!)` : `(Stock: ${p.stock})`;
-            opcionesHtml += `<option value="${p.id}" data-precio="${p.precio}" data-stock="${p.stock}">${p.nombre} - $${Number(p.precio).toFixed(2)} ${stockLabel}</option>`;
-        });
-
         nuevaFila.innerHTML = `
             <div class="flex-1">
-                <select name="items[${filaIndex}][producto_id]" required onchange="actualizarPrecioFila(this)"
+                <select name="items[${filaIndex}][producto_id]" aria-label="Producto" required onchange="actualizarPrecioFila(this)"
                     class="select-producto w-full bg-black/60 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-yellow-400/60 outline-none">
-                    ${opcionesHtml}
+                    <option value="" data-precio="0" data-stock="0">-- Seleccionar producto --</option>
                 </select>
             </div>
             <div class="w-20">
-                <input type="number" name="items[${filaIndex}][cantidad]" value="1" min="1" max="999" required
+                <input type="number" name="items[${filaIndex}][cantidad]" aria-label="Cantidad" value="1" min="1" max="999" required
                     oninput="recalcularTotal()"
                     class="input-cantidad w-full bg-black/60 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-center text-white focus:border-yellow-400/60 outline-none">
             </div>
@@ -344,6 +354,17 @@
                 &times;
             </button>
         `;
+
+        const select = nuevaFila.querySelector('.select-producto');
+        catalogoProductos.forEach(producto => {
+            const option = document.createElement('option');
+            option.value = producto.id;
+            option.dataset.precio = producto.precio;
+            option.dataset.stock = producto.stock;
+            const stockLabel = producto.stock <= 3 ? `⚠️ (¡Stock crítico: ${producto.stock}!)` : `(Stock: ${producto.stock})`;
+            option.textContent = `${producto.nombre} - $${Number(producto.precio).toFixed(2)} ${stockLabel}`;
+            select.append(option);
+        });
 
         contenedor.appendChild(nuevaFila);
         filaIndex++;

@@ -66,9 +66,9 @@ document.addEventListener('keydown', event => {
     if (!modalState) return;
     if (event.key === 'Escape') { window.alphaAnimateModalClose('#' + modalState.modal.id); return; }
     if (event.key !== 'Tab') return;
-    const items = [...modalState.modal.querySelectorAll('button:not(:disabled), a[href], input:not(:disabled)')].filter(el => el.getClientRects().length);
+    const items = [...modalState.modal.querySelectorAll('button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])')].filter(el => el.tabIndex >= 0 && el.getClientRects().length);
     const first = items[0], last = items.at(-1);
     if (!first) { event.preventDefault(); modalState.modal.focus(); }
-    else if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    else if (event.shiftKey && (document.activeElement === first || !modalState.modal.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && (document.activeElement === last || !modalState.modal.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
 });

@@ -125,6 +125,7 @@ class MembresiaController extends Controller
         abort_unless(auth('web')->user()?->rol === 'Secretaria', 403);
         DB::transaction(function () use ($membresia) {
             Cliente::whereKey($membresia->cliente_id)->lockForUpdate()->firstOrFail();
+            $membresia = Membresia::whereKey($membresia->id)->lockForUpdate()->firstOrFail();
             $membresia->update(['cancelada' => true]);
             $membresia->pausas()->whereIn('estado', ['pendiente', 'aprobada'])->update(['estado' => 'rechazada']);
         });
@@ -145,8 +146,8 @@ class MembresiaController extends Controller
         ]);
 
         DB::transaction(function () use ($membresia, $data, $esStaff) {
+            $cliente = Cliente::whereKey($membresia->cliente_id)->lockForUpdate()->firstOrFail();
             $membresiaBloqueada = Membresia::whereKey($membresia->id)->lockForUpdate()->firstOrFail();
-            $cliente = Cliente::whereKey($membresiaBloqueada->cliente_id)->lockForUpdate()->firstOrFail();
 
             if (! $cliente->activo) {
                 throw ValidationException::withMessages(['dias' => 'No se puede gestionar pausas de un socio inactivo o bloqueado.']);
@@ -159,6 +160,9 @@ class MembresiaController extends Controller
             }
 
             $inicio = Carbon::parse($data['inicio_pausa']);
+            if ($inicio->isBefore($membresiaBloqueada->inicio)) {
+                throw ValidationException::withMessages(['inicio_pausa' => 'La pausa no puede comenzar antes de la membresía.']);
+            }
             if ($inicio->isAfter($membresiaBloqueada->fin)) {
                 throw ValidationException::withMessages([
                     'inicio_pausa' => "La fecha de inicio de la pausa ({$inicio->format('d/m/Y')}) no puede ser posterior al vencimiento de la membresía ({$membresiaBloqueada->fin->format('d/m/Y')}).",
@@ -176,6 +180,7 @@ class MembresiaController extends Controller
             }
 
             $finEstimada = $inicio->copy()->addDays($data['dias'] - 1);
+            $nuevoFin = $esStaff ? $this->finExtendidoSinSolapamiento($membresiaBloqueada, $data['dias'], 'dias') : null;
 
             $pausa = PausaMembresia::create([
                 'membresia_id' => $membresiaBloqueada->id,
@@ -189,7 +194,7 @@ class MembresiaController extends Controller
             ]);
 
             if ($esStaff) {
-                $membresiaBloqueada->fin = $membresiaBloqueada->fin->copy()->addDays($data['dias']);
+                $membresiaBloqueada->fin = $nuevoFin;
                 $membresiaBloqueada->save();
             }
         });
@@ -206,9 +211,14 @@ class MembresiaController extends Controller
         abort_unless(auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true), 403);
 
         DB::transaction(function () use ($pausa) {
-            // Estandarización de orden de bloqueo: Membresia primero, Pausa después (prevención de deadlocks)
+            // Todas las operaciones toman cliente, membresía y pausa en ese orden.
+            $cliente = Cliente::whereKey($pausa->cliente_id)->lockForUpdate()->firstOrFail();
             $membresia = Membresia::whereKey($pausa->membresia_id)->lockForUpdate()->firstOrFail();
             $pausaBloqueada = PausaMembresia::whereKey($pausa->id)->lockForUpdate()->firstOrFail();
+
+            if (! $cliente->activo) {
+                throw ValidationException::withMessages(['pausa' => 'No se puede aprobar una pausa de una cuenta desactivada.']);
+            }
 
             if ($pausaBloqueada->estado !== 'pendiente') {
                 throw ValidationException::withMessages(['pausa' => 'Esta pausa ya fue resuelta anteriormente.']);
@@ -229,17 +239,35 @@ class MembresiaController extends Controller
             if ($membresia->diasPausadosAcumulados() + $pausaBloqueada->dias > 30) {
                 throw ValidationException::withMessages(['pausa' => 'La aprobación excede el tope de 30 días de congelamiento permitido.']);
             }
+            $nuevoFin = $this->finExtendidoSinSolapamiento($membresia, $pausaBloqueada->dias, 'pausa');
 
             $pausaBloqueada->update([
                 'estado' => 'aprobada',
                 'aprobada_por' => auth('web')->id(),
             ]);
 
-            $membresia->fin = $membresia->fin->copy()->addDays($pausaBloqueada->dias);
+            $membresia->fin = $nuevoFin;
             $membresia->save();
         });
 
         return back()->with('status', 'Pausa aprobada. Fecha de vencimiento postergada exitosamente.');
+    }
+
+    private function finExtendidoSinSolapamiento(Membresia $membresia, int $dias, string $campo): Carbon
+    {
+        // El cliente ya está bloqueado: activaciones y pausas comparten ese bloqueo.
+        $nuevoFin = $membresia->fin->copy()->addDays($dias);
+        $hayConflicto = Membresia::where('cliente_id', $membresia->cliente_id)
+            ->whereKeyNot($membresia->id)
+            ->where('cancelada', false)
+            ->whereDate('inicio', '<=', $nuevoFin->toDateString())
+            ->whereDate('fin', '>=', $membresia->fin->copy()->addDay()->toDateString())
+            ->exists();
+        if ($hayConflicto) {
+            throw ValidationException::withMessages([$campo => 'La pausa extendería la vigencia sobre otra membresía ya registrada. Las fechas de ambos períodos se conservan.']);
+        }
+
+        return $nuevoFin;
     }
 
     public function rechazarPausa(Request $request, PausaMembresia $pausa)
@@ -265,6 +293,7 @@ class MembresiaController extends Controller
         abort_unless($esPropietario || $esStaff, 403);
 
         DB::transaction(function () use ($membresia) {
+            Cliente::whereKey($membresia->cliente_id)->lockForUpdate()->firstOrFail();
             $membresiaBloqueada = Membresia::whereKey($membresia->id)->lockForUpdate()->firstOrFail();
 
             if ($membresiaBloqueada->cancelada) {

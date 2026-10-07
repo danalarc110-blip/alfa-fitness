@@ -32,6 +32,7 @@ class Cliente extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'google_id',
     ];
 
     protected function casts(): array
@@ -42,6 +43,16 @@ class Cliente extends Authenticatable
             'baneado_en' => 'datetime',
             'apariencia' => 'array',
         ];
+    }
+
+    public function getEmailForPasswordReset(): string
+    {
+        return $this->correo;
+    }
+
+    public function routeNotificationForMail(): string
+    {
+        return $this->correo;
     }
 
     public function personalRecords(): HasMany

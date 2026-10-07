@@ -80,8 +80,57 @@
             <div class="p-8 text-center"><p class="font-medium mb-2">Tu primera rutina te espera</p><p class="text-sm text-gray-400 mb-5">Organiza tus ejercicios y días de entrenamiento.</p><form method="POST" action="{{ route('entrenamientos.crear') }}">@csrf<button class="alpha-btn-primary px-5 py-3">Crear mi rutina</button></form></div>
         @endforelse
     </section>
-    @if($guard === 'cliente' || auth('web')->user()?->can('asistencia'))
-    <section class="alpha-card overflow-hidden">
+    @if($perfil === 'administrador')
+    <section class="alpha-card overflow-hidden" data-animate="card">
+        <div class="alpha-panel-heading">
+            <h2>Últimas ventas (TPV)</h2>
+            <a href="{{ route('ventas.index') }}">Ver mostrador →</a>
+        </div>
+        @forelse($actividad as $venta)
+            <a class="alpha-list-row" href="{{ route('ventas.comprobante', $venta) }}">
+                <div class="min-w-0">
+                    <strong class="text-sm font-semibold text-white">
+                        #{{ str_pad($venta->id, 5, '0', STR_PAD_LEFT) }} · {{ $venta->cliente?->nombre ?? 'Público general' }}
+                    </strong>
+                    <p class="text-xs text-gray-400 mt-1">
+                        {{ $venta->created_at->format('d/m/Y · H:i') }} · {{ $venta->metodo_pago }}
+                    </p>
+                </div>
+                <div class="text-right shrink-0">
+                    <span class="text-sm font-bold text-yellow-400">${{ number_format($venta->total, 2) }}</span>
+                </div>
+            </a>
+        @empty
+            <div class="p-8 text-center">
+                <p class="text-sm text-gray-400">No hay ventas registradas aún.</p>
+                <a href="{{ route('ventas.index') }}" class="alpha-btn-primary px-4 py-2 text-xs font-semibold inline-block mt-3">Registrar primera venta</a>
+            </div>
+        @endforelse
+    </section>
+    @elseif($perfil === 'entrenador')
+    <section class="alpha-card overflow-hidden" data-animate="card">
+        <div class="alpha-panel-heading">
+            <h2>Ejercicios populares</h2>
+            <a href="{{ route('ejercicios.index') }}">Catálogo completo →</a>
+        </div>
+        @forelse($actividad as $ej)
+            <div class="alpha-list-row">
+                <div class="min-w-0">
+                    <strong class="text-sm font-semibold text-white truncate block">{{ $ej->nombre }}</strong>
+                    <p class="text-xs text-gray-400 mt-1">{{ $ej->grupo_muscular }} · {{ $ej->conteo_votos }} {{ $ej->conteo_votos === 1 ? 'voto' : 'votos' }}</p>
+                </div>
+                <span class="alpha-status alpha-status-active shrink-0">
+                    ★ {{ number_format($ej->promedio_estrellas, 1) }}
+                </span>
+            </div>
+        @empty
+            <div class="p-8 text-center">
+                <p class="text-sm text-gray-400">No hay calificaciones de ejercicios registradas aún.</p>
+            </div>
+        @endforelse
+    </section>
+    @else
+    <section class="alpha-card overflow-hidden" data-animate="card">
         <div class="alpha-panel-heading">
             <h2>{{ $guard === 'cliente' ? 'Mis visitas recientes' : 'Actividad reciente' }}</h2>
             @can('asistencia')<a href="{{ route('asistencia.index') }}">Ver historial →</a>@endcan

@@ -55,7 +55,7 @@ class ProductosTest extends TestCase
         $this->assertDatabaseCount('productos', 7);
     }
 
-    public function test_catalog_rejects_a_sixth_product_counting_inactive_products(): void
+    public function test_catalog_allows_more_than_five_products_without_artificial_cap(): void
     {
         $secretaria = User::factory()->create(['rol' => 'Secretaria']);
 
@@ -74,10 +74,10 @@ class ProductosTest extends TestCase
                 'precio' => 6,
                 'stock' => 1,
             ])
-            ->assertSessionHasErrors('nombre');
+            ->assertSessionHasNoErrors();
 
-        $this->assertDatabaseCount('productos', 5);
-        $this->assertDatabaseMissing('productos', ['nombre' => 'Producto sexto']);
+        $this->assertDatabaseCount('productos', 6);
+        $this->assertDatabaseHas('productos', ['nombre' => 'Producto sexto']);
     }
 
     public function test_authorized_staff_can_create_and_fully_update_products(): void

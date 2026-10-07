@@ -6,11 +6,13 @@ use App\Models\Asistencia;
 use App\Models\Cliente;
 use App\Models\Ejercicio;
 use App\Models\Membresia;
+use App\Models\PagoMembresia;
 use App\Models\PersonalRecord;
 use App\Models\Rutina;
 use App\Models\SolicitudMembresia;
 use App\Models\User;
 use App\Models\Venta;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -24,7 +26,7 @@ class DashboardController extends Controller
         };
         $titulo = ['cliente' => 'Mi entrenamiento', 'administrador' => 'Administración del gimnasio', 'recepcion' => 'Secretaria · Hoy', 'entrenador' => 'Espacio de entrenamiento'][$perfil];
         $acciones = match ($perfil) {
-            'administrador' => [['cuentas.index', 'Gestionar cuentas'], ['productos.index', 'Gestionar productos'], ['ventas.index', 'Punto de Venta (TPV)']],
+            'administrador' => [['cuentas.index', 'Gestionar cuentas'], ['productos.index', 'Gestionar productos'], ['ventas.index', 'Punto de Venta (TPV)'], ['analitica.index', 'Analítica']],
             'recepcion' => [['asistencia.index', 'Registrar entrada o salida'], ['membresias.index', 'Cobros y membresías'], ['ventas.index', 'Ventas mostrador']],
             'entrenador' => [['entrenamientos.index', 'Mis rutinas'], ['ejercicios.index', 'Ejercicios']],
             default => [['entrenamientos.index', 'Mis entrenamientos'], ['progreso.index', 'Progreso y marcas personales']],
@@ -44,8 +46,11 @@ class DashboardController extends Controller
             $actividad = Asistencia::with('cliente:id,nombre')->latest('fecha_hora')->limit(5)->get();
             $porVencer = Membresia::with('cliente:id,nombre')->where('cancelada', false)->whereBetween('fin', [today(), today()->addDays(7)])->limit(5)->get();
         } elseif ($perfil === 'administrador') {
-            $ingresosMembresiasMes = Membresia::where('cancelada', false)->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('importe');
-            $ingresosVentasMes = Venta::whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('total');
+            $ingresosMembresiasMes = (float) PagoMembresia::whereBetween('pagado_en', [now()->startOfMonth(), now()->endOfMonth()])->sum('importe');
+            if ($ingresosMembresiasMes <= 0) {
+                $ingresosMembresiasMes = (float) Membresia::where('cancelada', false)->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('importe');
+            }
+            $ingresosVentasMes = (float) Venta::whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('total');
             $totalIngresosMes = $ingresosMembresiasMes + $ingresosVentasMes;
 
             $metricas = [
@@ -55,8 +60,21 @@ class DashboardController extends Controller
                 ['Ventas mostrador', '$'.number_format($ingresosVentasMes, 2)],
                 ['Personal activo', User::where('activo', true)->count()],
             ];
+            $actividad = Venta::with(['cliente:id,nombre', 'user:id,name'])->latest()->limit(5)->get();
+            $porVencer = Membresia::with('cliente:id,nombre')->where('cancelada', false)->whereBetween('fin', [today(), today()->addDays(7)])->limit(5)->get();
         } else {
-            $metricas = [['Mis rutinas', Rutina::deUsuario($guard, $user->id)->count()], ['Ejercicios disponibles', Ejercicio::where('activo', true)->count()]];
+            $metricas = [
+                ['Mis rutinas', Rutina::deUsuario($guard, $user->id)->count()],
+                ['Ejercicios disponibles', Ejercicio::where('activo', true)->count()],
+                ['Total entrenadores', User::where('rol', 'Entrenador')->where('activo', true)->count()],
+            ];
+            $actividad = Ejercicio::where('activo', true)
+                ->withAvg('calificaciones as promedio_estrellas', 'estrellas')
+                ->withCount('calificaciones as conteo_votos')
+                ->orderByDesc('promedio_estrellas')
+                ->orderByDesc('conteo_votos')
+                ->limit(5)
+                ->get();
         }
 
         $capacidadMaxima = 80;
@@ -85,7 +103,7 @@ class DashboardController extends Controller
             $horasDistribucion[$h] = 0;
         }
         foreach ($asistencias30d as $fh) {
-            $hora = (int) \Carbon\Carbon::parse($fh)->format('G');
+            $hora = (int) Carbon::parse($fh)->format('G');
             if (isset($horasDistribucion[$hora])) {
                 $horasDistribucion[$hora]++;
             }

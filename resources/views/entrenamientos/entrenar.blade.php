@@ -108,7 +108,7 @@
             @endforeach
 
             <div class="pt-4 text-center">
-                <button type="button" onclick="finalizarEntrenamiento()" class="alpha-btn-primary px-8 py-3 rounded-2xl text-sm font-bold shadow-xl shadow-yellow-400/20 active:scale-95 transition-transform">
+                <button type="button" id="btn-finalizar-entrenamiento" onclick="finalizarEntrenamiento()" class="alpha-btn-primary px-8 py-3 rounded-2xl text-sm font-bold shadow-xl shadow-yellow-400/20 active:scale-95 transition-transform">
                     ¡Finalizar Entrenamiento!
                 </button>
             </div>
@@ -183,24 +183,28 @@
 </div>
 
 {{-- MODAL CELEBRACIÓN FINAL --}}
-<div id="modal-fin-entrenamiento" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
+<div id="modal-fin-entrenamiento" aria-labelledby="titulo-fin-entrenamiento" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
     <div class="alpha-card bg-[#141416] border border-white/10 rounded-2xl w-full max-w-md p-6 text-center shadow-2xl relative">
         <div class="w-16 h-16 rounded-full bg-yellow-400/20 text-yellow-400 flex items-center justify-center mx-auto mb-4 text-3xl">
             🏆
         </div>
-        <h3 class="text-xl font-black text-white mb-1">¡Entrenamiento Completado!</h3>
-        <p class="text-gray-400 text-xs mb-5">Excelente disciplina. Todas las series planificadas para hoy han sido registradas con éxito.</p>
+        <h3 id="titulo-fin-entrenamiento" class="text-xl font-black text-white mb-1">¡Entrenamiento registrado!</h3>
+        <p id="resumen-fin-entrenamiento" class="text-gray-400 text-xs mb-5">Tu sesión se guardó en el historial.</p>
         <div class="bg-black/40 rounded-xl p-4 border border-white/5 mb-5 text-left text-xs space-y-1">
             <p class="text-gray-400">Rutina: <strong class="text-white">{{ $rutina->nombre }}</strong></p>
             <p class="text-gray-400">Día: <strong class="text-white">{{ $diaSeleccionado?->titulo ?? 'Entrenamiento' }}</strong></p>
             <p class="text-gray-400">Fecha: <strong class="text-yellow-400">{{ now()->format('d/m/Y H:i') }}</strong></p>
         </div>
-        <div class="flex justify-center gap-3">
-            <a href="{{ route('progreso.index') }}" class="alpha-btn-primary px-5 py-2.5 rounded-xl text-xs font-semibold">
-                Registrar mis PRs
+        <div class="flex flex-col sm:flex-row justify-center gap-2">
+            <button type="button" onclick="window.alphaAnimateModalClose('#modal-fin-entrenamiento')" class="alpha-btn-secondary px-4 py-2.5 rounded-xl text-xs font-semibold">Cerrar resumen</button>
+            <a href="{{ route('entrenamientos.historial') }}" class="alpha-btn-primary px-4 py-2.5 rounded-xl text-xs font-semibold">
+                Ver mi Historial
             </a>
-            <a href="{{ route('entrenamientos.index') }}" class="alpha-btn-secondary px-5 py-2.5 rounded-xl text-xs font-semibold">
-                Volver al menú
+            <a href="{{ route('progreso.index') }}" class="alpha-btn-secondary px-4 py-2.5 rounded-xl text-xs font-semibold">
+                Registrar PRs
+            </a>
+            <a href="{{ route('entrenamientos.index') }}" class="alpha-btn-secondary px-4 py-2.5 rounded-xl text-xs font-semibold">
+                Volver a rutinas
             </a>
         </div>
     </div>
@@ -213,7 +217,9 @@
     let segundosRestantes = 60;
     let tiempoBase = 60;
     let timerInterval = null;
-    let sonidoHabilitado = localStorage.getItem('alfa_timer_sonido') !== 'false';
+    let sonidoHabilitado = true;
+    try { sonidoHabilitado = localStorage.getItem('alfa_timer_sonido') !== 'false'; }
+    catch (error) { /* El cronómetro funciona aunque el navegador no permita guardar preferencias. */ }
     let sharedAudioCtx = null;
 
     function obtenerAudioCtx() {
@@ -245,7 +251,8 @@
 
     function alphaToggleSonidoTimer() {
         sonidoHabilitado = !sonidoHabilitado;
-        localStorage.setItem('alfa_timer_sonido', sonidoHabilitado ? 'true' : 'false');
+        try { localStorage.setItem('alfa_timer_sonido', sonidoHabilitado ? 'true' : 'false'); }
+        catch (error) { window.showAlphaToast?.('La preferencia de sonido se aplicará solo durante esta visita.', 'info'); }
         actualizarIconoSonido();
         if (sonidoHabilitado) {
             obtenerAudioCtx();
@@ -262,7 +269,7 @@
         if (navigator.vibrate) {
             try {
                 navigator.vibrate([180, 80, 180, 80, 250]);
-            } catch (e) {}
+            } catch (error) { window.showAlphaToast?.('La vibración no está disponible en este dispositivo.', 'info'); }
         }
 
         // Tono armónico elegante con Web Audio API (D5 y A5)
@@ -283,8 +290,8 @@
             };
             playBell(587.33, 0, 0.4);
             playBell(880.00, 0.2, 0.6);
-        } catch (e) {
-            console.warn('AudioContext bloqueado o no soportado:', e);
+        } catch (error) {
+            window.showAlphaToast?.('El sonido no está disponible en este navegador. El cronómetro sigue funcionando.', 'info');
         }
     }
 
@@ -370,9 +377,56 @@
         document.getElementById('progreso-texto').textContent = `${hechas} / ${total} series completadas (${pct}%)`;
     }
 
-    function finalizarEntrenamiento() {
+    const sesionIniciadaTimestamp = Date.now();
+    const sesionUuid = '{{ (string) \Illuminate\Support\Str::uuid() }}';
+    let sesionGuardada = false;
+    let guardandoSesion = false;
+
+    async function finalizarEntrenamiento() {
+        if (guardandoSesion) return;
         pausarTimer();
-        document.getElementById('modal-fin-entrenamiento').classList.remove('hidden');
+        const total = document.querySelectorAll('.serie-btn').length;
+        const hechas = document.querySelectorAll('.serie-btn[data-completada="true"]').length;
+        const duracionSegundos = Math.max(1, Math.round((Date.now() - sesionIniciadaTimestamp) / 1000));
+
+        if (!sesionGuardada) {
+            const button = document.getElementById('btn-finalizar-entrenamiento');
+            guardandoSesion = true;
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+            try {
+                const response = await fetch("{{ route('entrenamientos.finalizar', $rutina) }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        sesion_uuid: sesionUuid,
+                        dia_id: {{ $diaSeleccionado ? $diaSeleccionado->id : 'null' }},
+                        duracion_segundos: duracionSegundos,
+                        series_completadas: hechas,
+                        total_series: total
+                    })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || data.ok !== true) {
+                    throw new Error(response.status === 401 || response.status === 419 ? 'Tu sesión expiró. Inicia sesión de nuevo para guardar tu entrenamiento.' : Object.values(data.errors || {}).flat()[0] || 'No se pudo registrar tu entrenamiento. Intenta nuevamente.');
+                }
+                sesionGuardada = true;
+                document.getElementById('resumen-fin-entrenamiento').textContent = `Tu sesión se guardó con ${hechas} de ${total} series completadas.`;
+            } catch (error) {
+                window.showAlphaToast?.(error.message || 'Revisa tu conexión e intenta guardar nuevamente.', 'error');
+                return;
+            } finally {
+                guardandoSesion = false;
+                button.disabled = false;
+                button.removeAttribute('aria-busy');
+            }
+        }
+
+        window.alphaAnimateModalOpen('#modal-fin-entrenamiento');
     }
 
     // Inicializar progreso al cargar

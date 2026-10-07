@@ -140,7 +140,9 @@
 
 <style>
 @media print {
-    .no-print, .alpha-topbar, .alpha-shell > header, nav, footer, .alpha-skip {
+    .no-print, .alpha-topbar, .alpha-shell > header, nav, footer, .alpha-skip,
+    #alpha-mobile-header, #alpha-mobile-drawer, #alpha-mobile-backdrop, #alpha-sidebar-desktop,
+    aside, .sidebar-alpha, header:not(#ticket-imprimible header) {
         display: none !important;
     }
     body, .alpha-workspace, .alpha-content, .alpha-shell {
@@ -148,20 +150,22 @@
         color: #000000 !important;
         padding: 0 !important;
         margin: 0 !important;
+        min-height: auto !important;
     }
     #ticket-imprimible {
-        border: 1px solid #ddd !important;
+        border: 1px dashed #666 !important;
         background: #ffffff !important;
         color: #000000 !important;
         box-shadow: none !important;
-        padding: 20px !important;
+        padding: 24px !important;
         width: 100% !important;
         max-width: 480px !important;
         margin: 0 auto !important;
+        border-radius: 8px !important;
     }
     #ticket-imprimible * {
         color: #000000 !important;
-        border-color: #eee !important;
+        border-color: #ddd !important;
     }
 }
 </style>

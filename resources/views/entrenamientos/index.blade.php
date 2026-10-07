@@ -2,7 +2,7 @@
 @section('title', 'Entrenamientos')
 
 @section('page-header')
-<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
+<header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
     <div>
         <div class="flex items-center gap-2">
             <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Entrenamientos</h1>
@@ -13,7 +13,11 @@
         <p class="text-gray-400 text-xs mt-1">Gestiona, crea y entrena tus planes de acondicionamiento físico.</p>
     </div>
 
-    <div class="flex items-center gap-3 self-end sm:self-auto">
+    <div class="flex flex-wrap items-center gap-3 self-end lg:self-auto">
+        <a href="{{ route('entrenamientos.historial') }}" class="alpha-btn-secondary px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Mi Historial
+        </a>
         <form method="POST" action="{{ route('entrenamientos.crear') }}">
             @csrf
             <button type="submit" class="alpha-btn-primary px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-yellow-400/15">
@@ -30,6 +34,31 @@
 @endsection
 
 @section('content')
+@if($guard === 'web' && \App\Support\Acceso::permite(auth('web')->user(), 'asignar_rutinas') && $clientes->isNotEmpty())
+<div class="alpha-card rounded-2xl p-4 sm:p-5 border border-white/10 mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4" data-animate="card">
+    <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+            <h3 class="text-sm font-bold text-white">Monitoreo de Progreso de Clientes</h3>
+            <p class="text-xs text-gray-400">Consulta los récords personales (PRs) y evolución física de los atletas.</p>
+        </div>
+    </div>
+    <div class="flex items-center gap-2">
+        <select id="select-progreso-cliente" class="bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-yellow-400/60 max-w-xs">
+            <option value="">-- Ver progreso de un cliente --</option>
+            @foreach($clientes as $cli)
+                <option value="{{ route('entrenador.cliente.progreso', $cli) }}">{{ $cli->nombre }} · #{{ $cli->id }}</option>
+            @endforeach
+        </select>
+        <button type="button" onclick="const url = document.getElementById('select-progreso-cliente').value; if(url) window.location.href = url;" class="alpha-btn-primary px-3 py-2 rounded-xl text-xs font-semibold">
+            Consultar
+        </button>
+    </div>
+</div>
+@endif
+
 <div class="flex justify-between items-center mb-5">
     <h2 class="text-base font-bold text-white">Mis rutinas</h2>
     <span class="text-xs text-gray-400">{{ $rutinas->total() }} {{ $rutinas->total() === 1 ? 'rutina' : 'rutinas' }}</span>
@@ -75,7 +104,7 @@
                 </a>
 
                 <div class="flex items-center gap-2">
-                    @if($guard === 'web')
+                    @if($guard === 'web' && \App\Support\Acceso::permite(auth('web')->user(), 'asignar_rutinas'))
                         <button type="button" onclick="abrirModalAsignar({{ $rutina->id }}, {{ json_encode($rutina->nombre) }})"
                             title="Asignar a un cliente"
                             class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-gray-300 hover:text-yellow-400 border border-white/10 transition-colors">
@@ -112,26 +141,26 @@
 </div>
 <div class="mt-5">{{ $rutinas->links() }}</div>
 
-@if($guard === 'web')
+@if($guard === 'web' && \App\Support\Acceso::permite(auth('web')->user(), 'asignar_rutinas'))
 {{-- MODAL ASIGNAR RUTINA A CLIENTE --}}
-<div id="modal-asignar-rutina" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
+<div id="modal-asignar-rutina" aria-labelledby="titulo-asignar-rutina" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
     <div class="alpha-card bg-[#141416] border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
         <div class="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
-            <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <h3 id="titulo-asignar-rutina" class="text-base font-bold text-white flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
                 Asignar Rutina a Miembro
             </h3>
-            <button type="button" onclick="cerrarModalAsignar()" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
+            <button type="button" onclick="cerrarModalAsignar()" aria-label="Cerrar asignación de rutina" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
         </div>
         <form id="form-asignar-rutina" method="POST" action="" class="space-y-4">
             @csrf
             <div>
                 <p class="text-xs text-gray-400 mb-3">Se creará una copia personalizada de <strong id="nombre-rutina-asignar" class="text-yellow-400"></strong> en la cuenta del cliente seleccionado.</p>
-                <label class="block text-xs font-semibold text-gray-300 mb-1">Seleccionar Cliente *</label>
-                <select name="cliente_id" required class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-yellow-400/60 outline-none">
+                <label for="asignar-cliente" class="block text-xs font-semibold text-gray-300 mb-1">Seleccionar Cliente *</label>
+                <select id="asignar-cliente" name="cliente_id" required class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-yellow-400/60 outline-none">
                     <option value="">-- Elige un cliente --</option>
                     @foreach($clientes as $cli)
-                        <option value="{{ $cli->id }}">{{ $cli->nombre }} ({{ $cli->correo }})</option>
+                        <option value="{{ $cli->id }}">{{ $cli->nombre }} · #{{ $cli->id }}</option>
                     @endforeach
                 </select>
             </div>
@@ -147,11 +176,11 @@
     function abrirModalAsignar(rutinaId, nombre) {
         document.getElementById('form-asignar-rutina').action = `/entrenamientos/${rutinaId}/asignar`;
         document.getElementById('nombre-rutina-asignar').textContent = `"${nombre}"`;
-        document.getElementById('modal-asignar-rutina').classList.remove('hidden');
+        window.alphaAnimateModalOpen('#modal-asignar-rutina');
     }
 
     function cerrarModalAsignar() {
-        document.getElementById('modal-asignar-rutina').classList.add('hidden');
+        window.alphaAnimateModalClose('#modal-asignar-rutina');
     }
 </script>
 @endif

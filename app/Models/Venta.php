@@ -12,6 +12,7 @@ class Venta extends Model
     use HasFactory;
 
     protected $fillable = [
+        'venta_uuid',
         'user_id',
         'cliente_id',
         'total',

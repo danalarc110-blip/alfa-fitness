@@ -21,8 +21,17 @@
         </div>
 
         @if ($esAdmin)
+            <div class="flex items-center gap-2 overflow-x-auto pb-1">
+                @foreach (['Todos' => 'Todo el personal', 'Entrenador' => 'Entrenadores', 'Secretaria' => 'Secretarías'] as $rVal => $rLabel)
+                    <a href="{{ route('entrenadores.index', ['rol' => $rVal, 'q' => $busqueda]) }}"
+                       class="px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all {{ ($filtroRol ?? 'Todos') === $rVal ? 'bg-yellow-400 text-black border-yellow-400 shadow-md shadow-yellow-400/20' : 'bg-white/5 text-gray-300 border-white/10 hover:border-white/20' }}">
+                        {{ $rLabel }}
+                    </a>
+                @endforeach
+            </div>
+
             <details class="alpha-card rounded-2xl p-5 sm:p-6" data-animate="card" @if ($errors->any()) open @endif>
-                <summary class="font-semibold cursor-pointer text-white">Agregar entrenador</summary>
+                <summary class="font-semibold cursor-pointer text-white">Agregar personal (Entrenador o Secretaria)</summary>
                 <form method="POST" action="{{ route('entrenadores.store') }}" enctype="multipart/form-data" class="alpha-form grid sm:grid-cols-2 gap-4 mt-5">
                     @csrf
                     <label>
@@ -33,23 +42,30 @@
                         Correo
                         <input name="email" type="email" value="{{ old('email') }}" maxlength="255" autocomplete="email" required>
                     </label>
-                    <label class="sm:col-span-2">
+                    <label>
+                        Rol en el sistema
+                        <select name="rol" required>
+                            <option value="Entrenador" @selected(old('rol') === 'Entrenador')>Entrenador</option>
+                            <option value="Secretaria" @selected(old('rol') === 'Secretaria')>Secretaria (Recepción y Caja)</option>
+                        </select>
+                    </label>
+                    <label>
                         Foto opcional
                         <input name="avatar" type="file" accept="image/jpeg,image/png,image/webp" data-image-preview="trainer-new-preview">
                         <span class="block mt-1 text-[11px] text-gray-500">JPG, PNG o WebP · máximo 2 MB</span>
                     </label>
                     <img id="trainer-new-preview" class="hidden w-24 h-24 rounded-2xl object-cover" alt="Vista previa de la foto seleccionada">
                     <p class="sm:col-span-2 text-xs text-gray-400">
-                        El entrenador recibirá un enlace privado y de un solo uso para crear su contraseña.
+                        El colaborador recibirá un enlace privado y seguro para crear su contraseña.
                     </p>
-                    <div><button class="alpha-btn-primary px-5 py-3 rounded-xl">Crear e invitar</button></div>
+                    <div class="sm:col-span-2"><button class="alpha-btn-primary px-5 py-3 rounded-xl">Crear e invitar</button></div>
                 </form>
             </details>
         @endif
 
         <div class="flex items-center justify-between gap-4">
             <p class="text-xs text-gray-400" aria-live="polite">
-                {{ $entrenadores->total() }} {{ $entrenadores->total() === 1 ? 'entrenador' : 'entrenadores' }}
+                {{ $entrenadores->total() }} {{ $entrenadores->total() === 1 ? 'colaborador' : 'colaboradores' }}
             </p>
             @if ($entrenadores->lastPage() > 1)
                 <span class="text-xs text-gray-500">Página {{ $entrenadores->currentPage() }} de {{ $entrenadores->lastPage() }}</span>
@@ -68,24 +84,39 @@
                             @endif
                         </div>
 
-                        @if ($esAdmin)
-                            <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $entrenador->activo ? 'bg-green-500/10 text-green-300' : 'bg-red-500/10 text-red-300' }}">
-                                {{ $entrenador->activo ? 'Activo' : 'Inactivo' }}
-                            </span>
-                        @endif
+                        <div class="flex flex-col items-end gap-1.5">
+                            @if ($esAdmin)
+                                <span class="rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider {{ $entrenador->rol === 'Secretaria' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'bg-yellow-400/20 text-yellow-300 border border-yellow-400/30' }}">
+                                    {{ $entrenador->rol }}
+                                </span>
+                                <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold {{ $entrenador->activo ? 'bg-green-500/10 text-green-300' : 'bg-red-500/10 text-red-300' }}">
+                                    {{ $entrenador->activo ? 'Activo' : 'Inactivo' }}
+                                </span>
+                                @if (!$entrenador->password_establecida)
+                                    <span class="text-[10px] text-amber-400/80 bg-amber-400/10 px-2 py-0.5 rounded-full">Invitación pendiente</span>
+                                @endif
+                            @endif
+                        </div>
                     </div>
 
                     <h2 class="text-xl font-semibold mt-5">{{ $entrenador->name }}</h2>
-                    <p class="text-sm text-gray-400 mt-2">Entrenador de Alpha Fitness</p>
+                    <p class="text-sm text-gray-400 mt-1">{{ $entrenador->rol === 'Secretaria' ? 'Recepción y Operaciones' : 'Entrenador de Alpha Fitness' }}</p>
 
                     @if ($esAdmin)
                         <details class="mt-5 border-t border-white/10 pt-4">
-                            <summary class="text-sm font-semibold text-yellow-400 cursor-pointer">Editar entrenador</summary>
+                            <summary class="text-sm font-semibold text-yellow-400 cursor-pointer">Editar personal</summary>
                             <form method="POST" action="{{ route('entrenadores.update', $entrenador) }}" enctype="multipart/form-data" class="alpha-form space-y-3 mt-4">
                                 @csrf
                                 @method('PUT')
                                 <label>Nombre<input name="name" value="{{ $entrenador->name }}" maxlength="255" required></label>
                                 <label>Correo<input type="email" name="email" value="{{ $entrenador->email }}" maxlength="255" required></label>
+                                <label>
+                                    Rol
+                                    <select name="rol" required>
+                                        <option value="Entrenador" @selected($entrenador->rol === 'Entrenador')>Entrenador</option>
+                                        <option value="Secretaria" @selected($entrenador->rol === 'Secretaria')>Secretaria</option>
+                                    </select>
+                                </label>
                                 <label>
                                     Acceso
                                     <select name="activo" required>

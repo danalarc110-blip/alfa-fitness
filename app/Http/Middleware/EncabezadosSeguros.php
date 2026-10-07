@@ -14,6 +14,9 @@ class EncabezadosSeguros
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('X-Permitted-Cross-Domain-Policies', 'none');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        if ($request->is('establecer-contrasena*')) {
+            $response->headers->set('Referrer-Policy', 'no-referrer');
+        }
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
         $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
         $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
@@ -42,7 +45,7 @@ class EncabezadosSeguros
         }
         $response->headers->set('Content-Security-Policy', implode('; ', $directivas));
 
-        if (auth('web')->check() || auth('cliente')->check() || $request->is('establecer-contrasena*')) {
+        if (auth('web')->check() || auth('cliente')->check() || $request->is('login', 'olvide-mi-contrasena', 'establecer-contrasena*')) {
             $response->headers->set('Cache-Control', 'private, no-store');
         }
 

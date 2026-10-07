@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Mail\ComprobanteVentaMail;
 use App\Models\Asistencia;
 use App\Models\Cliente;
 use App\Models\Membresia;
@@ -19,6 +18,7 @@ class AuditoriaLogicaInvariantesTest extends TestCase
     use RefreshDatabase;
 
     private User $secretaria;
+
     private Cliente $cliente;
 
     protected function setUp(): void

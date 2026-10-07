@@ -359,8 +359,7 @@
                 window.showAlphaToast(data.mensaje, 'success');
             }
         })
-        .catch(err => {
-            console.error(err);
+        .catch(() => {
             if (window.showAlphaToast) {
                 window.showAlphaToast('No se pudo guardar la calificación', 'error');
             }

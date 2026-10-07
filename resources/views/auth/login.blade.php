@@ -30,15 +30,26 @@
                     @csrf
                     <label>Correo del personal<input type="email" name="email" value="{{ old('email') }}" placeholder="tu@correo.com" required autocomplete="username"></label>
                     <label>Contraseña<span class="alpha-password block"><input id="password" type="password" name="password" required autocomplete="current-password" placeholder="Ingresa tu contraseña"><button type="button" data-password="password" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button></span></label>
+                    <div class="flex justify-end -mt-1 mb-2"><a href="{{ route('password.request') }}" class="text-xs text-yellow-400/90 hover:text-yellow-300 transition-colors">¿Olvidaste tu contraseña?</a></div>
                     <button class="alpha-btn-primary px-4 py-3" type="submit">Iniciar Sesión como Usuario <span aria-hidden="true">→</span></button>
                 </form>
             </div>
             <div id="seccion-clientes" role="tabpanel" aria-labelledby="tab-btn-clientes" @class(['hidden' => !$clientTab])>
                 <form id="form-cliente-login" method="POST" action="{{ route('cliente.login.submit') }}" @class(['alpha-login-form', 'hidden' => old('nombre')])>
                     @csrf
-                    @if(config('services.google.client_id') && config('services.google.client_secret'))<a href="{{ route('cliente.google') }}" class="alpha-btn-secondary px-4 py-3">Continuar con Google</a><p class="text-xs text-gray-400 text-center">o ingresa con tu correo</p>@endif
+                    {{-- NO QUITAR: Inicio de sesión con Google --}}
+                    <a href="{{ route('cliente.google') }}" class="alpha-btn-secondary w-full py-3 px-4 rounded-xl text-sm font-semibold flex items-center justify-center gap-3 transition-all duration-150 active:scale-95 shadow-sm group">
+                        <svg class="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.63h6.47a5.53 5.53 0 01-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.92l-3.88-3c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.11A12 12 0 0012 24z"/><path fill="#FBBC05" d="M5.27 14.27a7.2 7.2 0 010-4.54v-3.1H1.27a12 12 0 000 10.75l4-3.11z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 001.27 6.63l4 3.1C6.22 6.86 8.87 4.75 12 4.75z"/></svg>
+                        <span>Continuar con Google</span>
+                    </a>
+                    <div class="flex items-center gap-3 my-2">
+                        <div class="flex-1 h-px bg-white/10 border-t border-white/10"></div>
+                        <span class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">o ingresa con tu correo</span>
+                        <div class="flex-1 h-px bg-white/10 border-t border-white/10"></div>
+                    </div>
                     <label>Correo del cliente<input type="email" name="correo" value="{{ old('correo') }}" placeholder="tu@correo.com" required autocomplete="username"></label>
                     <label>Contraseña<span class="alpha-password block"><input id="passwordCliente" type="password" name="password" required autocomplete="current-password" placeholder="Ingresa tu contraseña"><button type="button" data-password="passwordCliente" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button></span></label>
+                    <div class="flex justify-end -mt-1 mb-2"><a href="{{ route('password.request') }}" class="text-xs text-yellow-400/90 hover:text-yellow-300 transition-colors">¿Olvidaste tu contraseña?</a></div>
                     <button class="alpha-btn-primary px-4 py-3" type="submit">Iniciar Sesión como Cliente <span aria-hidden="true">→</span></button>
                     <p class="text-xs text-gray-400 text-center">¿No tienes cuenta? <button type="button" id="btnMostrarRegistro" class="text-yellow-400 font-semibold">Crea una cuenta aquí</button></p>
                 </form>
@@ -50,11 +61,12 @@
                     <label>Contraseña<span class="alpha-password block"><input id="passwordRegistro" type="password" name="password" required minlength="12" autocomplete="new-password"><button type="button" data-password="passwordRegistro" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button></span></label>
                     <label>Confirmar contraseña<span class="alpha-password block"><input id="passwordRegistroConfirm" type="password" name="password_confirmation" required minlength="12" autocomplete="new-password"><button type="button" data-password="passwordRegistroConfirm" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button></span></label>
                     <p class="text-xs text-gray-400">Usa al menos 12 caracteres, mayúsculas, minúsculas, un número y un símbolo.</p>
+                    <p class="text-xs text-gray-400">Utilizamos tus datos para gestionar tu cuenta y tu actividad en el gimnasio. Consulta el <a href="{{ route('privacidad') }}" class="underline">aviso de privacidad</a> antes de registrarte.</p>
                     <button type="submit" class="alpha-btn-primary px-4 py-3">Crear cuenta</button>
                     <p class="text-xs text-center text-gray-400">¿Ya tienes cuenta? <button id="btnMostrarLogin" type="button" class="text-yellow-400 font-semibold">Inicia sesión</button></p>
                 </form>
             </div>
-            <div class="alpha-login-help"><span>¿Dudas sobre el club?</span><a href="{{ route('informacion') }}">Información y horarios ↗</a></div><p class="alpha-login-caption">ALPHA FITNESS · CADA DÍA CUENTA</p>
+            <div class="alpha-login-help"><span>¿Dudas sobre el club?</span><a href="{{ route('informacion') }}">Información y horarios ↗</a></div><p class="text-xs mt-4 text-gray-400"><a href="{{ route('privacidad') }}" class="underline">Aviso de privacidad</a></p><p class="alpha-login-caption">ALPHA FITNESS · CADA DÍA CUENTA</p>
         </div>
     </section>
 </main>

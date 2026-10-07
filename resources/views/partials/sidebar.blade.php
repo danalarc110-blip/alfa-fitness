@@ -13,21 +13,34 @@
     $inicioRoute = $guardActual === 'web' ? route('dashboard') : route('cliente.dashboard');
     $logoutRoute = $guardActual === 'web' ? route('logout') : route('cliente.logout');
     $salirRoute = $guardActual === 'web' ? route('salir') : route('cliente.salir');
+    $asistenciaRoute = $guardActual === 'cliente' ? route('cliente.asistencia') : route('asistencia.index');
+    $asistenciaLabel = $guardActual === 'cliente' ? 'Mi Asistencia' : 'Asistencia';
     $navItems = [
         ['key' => 'inicio', 'label' => 'Inicio', 'href' => $inicioRoute, 'icon' => 'home'],
         ['key' => 'entrenamientos', 'label' => 'Entrenamientos', 'href' => route('entrenamientos.index'), 'icon' => 'dumbbell'],
         ['key' => 'ejercicios', 'label' => 'Ejercicios', 'href' => route('ejercicios.index'), 'icon' => 'activity'],
         ['key' => 'membresias', 'label' => 'Membresías', 'href' => route('membresias.index'), 'icon' => 'badge'],
-        ['key' => 'asistencia', 'label' => 'Asistencia', 'href' => route('asistencia.index'), 'icon' => 'check-circle'],
+        ['key' => 'asistencia', 'label' => $asistenciaLabel, 'href' => $asistenciaRoute, 'icon' => 'check-circle'],
         ['key' => 'entrenadores', 'label' => 'Entrenadores', 'href' => route('entrenadores.index'), 'icon' => 'users'],
         ['key' => 'productos', 'label' => 'Productos', 'href' => route('productos.index'), 'icon' => 'package'],
         ['key' => 'ventas', 'label' => 'Ventas (TPV)', 'href' => route('ventas.index'), 'icon' => 'cart'],
+        ['key' => 'analitica', 'label' => 'Analítica', 'href' => route('analitica.index'), 'icon' => 'bar-chart'],
         ['key' => 'progreso', 'label' => 'Progreso', 'href' => route('progreso.index'), 'icon' => 'trending-up'],
         ['key' => 'configuracion', 'label' => 'Configuración', 'href' => route('configuracion'), 'icon' => 'settings'],
     ];
 
     $navItems[] = ['key' => 'cuentas', 'label' => 'Administrar cuentas', 'href' => route('cuentas.index'), 'icon' => 'users'];
-    $permisosNav = ['cuentas' => 'administrar', 'asistencia' => 'asistencia', 'membresias' => 'membresias', 'progreso' => 'progreso', 'estadisticas' => 'progreso', 'ventas' => 'inventario'];
+    $permisosNav = [
+        'cuentas' => 'administrar',
+        'membresias' => 'membresias',
+        'progreso' => 'progreso',
+        'estadisticas' => 'progreso',
+        'ventas' => 'inventario',
+        'analitica' => 'analitica_financiera',
+    ];
+    if ($guardActual !== 'cliente') {
+        $permisosNav['asistencia'] = 'asistencia';
+    }
     $navItems = array_filter($navItems, fn ($item) => !isset($permisosNav[$item['key']]) || \App\Support\Acceso::permite($userActual, $permisosNav[$item['key']]));
 
     $icons = [
@@ -66,11 +79,11 @@
     </div>
 
     <div class="flex items-center gap-2">
-        <button type="button" onclick="alphaToggleTema()" title="Cambiar tema"
+        <button type="button" onclick="alphaToggleTema()" title="Cambiar tema" aria-label="Cambiar tema"
             class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-yellow-400 transition-all duration-150 active:scale-95">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
         </button>
-        <a href="{{ route('configuracion') }}" class="w-8 h-8 rounded-full overflow-hidden bg-white/10 border border-yellow-400/30 flex items-center justify-center shrink-0">
+        <a href="{{ route('configuracion') }}" aria-label="Configuración de {{ $nombreActual }}" class="w-8 h-8 rounded-full overflow-hidden bg-white/10 border border-yellow-400/30 flex items-center justify-center shrink-0">
             @if ($avatarUrlActual)
                 <img src="{{ $avatarUrlActual }}" alt="{{ $nombreActual }}" class="w-full h-full object-cover">
             @else
