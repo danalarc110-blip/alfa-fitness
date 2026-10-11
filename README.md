@@ -2,6 +2,8 @@
 
 Aplicación Laravel 12 para gestionar entrenamiento y operaciones del gimnasio.
 
+La [documentación integral](docs/documentacion/README.md) incluye el manual técnico y de administración y el manual de usuario por rol.
+
 ## Uso local
 
 Requisitos: PHP 8.2 o superior, Composer, Node.js compatible con Vite 7 (20.19+ o 22.12+) y SQLite o MySQL. PHP necesita PDO para la base elegida, mbstring, XML/DOM, OpenSSL, cURL, ZIP y GD. GD recodifica imágenes y elimina sus metadatos; si falta, habilítalo en el entorno antes de probar uploads. No se modifica `php.ini` automáticamente.
