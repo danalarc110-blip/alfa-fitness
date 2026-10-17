@@ -6,7 +6,7 @@
     <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
         <div>
             <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Productos</h1>
-            <p class="text-gray-400 text-xs mt-1">Catálogo de productos y suplementos, con precio y existencias al día.</p>
+            <p class="text-gray-400 text-xs mt-1">Catálogo de productos y suplementos, con precio y disponibilidad al día.</p>
         </div>
 
         <div class="flex items-center gap-3">
@@ -27,6 +27,11 @@
 
 @section('content')
     @php($puedeGestionar = \Illuminate\Support\Facades\Gate::allows('inventario'))
+    @php($puedeEditarStock = \Illuminate\Support\Facades\Gate::allows('existencias'))
+
+    @if (! $puedeGestionar)
+        <p class="alpha-card rounded-2xl p-4 mb-5 text-sm text-gray-300">Para comprar este producto, acércate a recepción. La venta la realiza la secretaria</p>
+    @endif
 
     <section class="grid grid-cols-1 xl:grid-cols-[340px_1fr] gap-5">
         <aside class="space-y-5">
@@ -68,11 +73,16 @@
                                 Precio
                                 <input type="number" name="precio" min="0" max="999999" step="0.01" value="{{ old('precio') }}" required>
                             </label>
-                            <label>
-                                Stock
-                                <input type="number" name="stock" min="0" max="999999" value="{{ old('stock', 0) }}" required>
-                            </label>
+                            @if ($puedeEditarStock)
+                                <label>
+                                    Existencias
+                                    <input type="number" name="stock" min="0" max="999999" value="{{ old('stock', 0) }}" required>
+                                </label>
+                            @endif
                         </div>
+                        @if (! $puedeEditarStock)
+                            <p class="text-xs text-gray-400">El producto se crea sin existencias. El administrador establece y repone las cantidades.</p>
+                        @endif
 
                         <label>
                             Categoría
@@ -96,16 +106,16 @@
                     @foreach ($productos as $producto)
                         <article class="alpha-card-interactive bg-black/40 border border-white/10 rounded-xl p-4">
                             <div class="flex items-start gap-3">
-                                <div class="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                                <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
                                     @if ($producto->imagen_url)
                                         <img
                                             src="{{ $producto->imagen_url }}"
                                             alt="{{ $producto->nombre }}"
-                                            width="64"
-                                            height="64"
+                                            width="96"
+                                            height="96"
                                             loading="lazy"
                                             decoding="async"
-                                            class="w-full h-full object-cover"
+                                            class="w-full h-full object-contain bg-white"
                                         >
                                     @else
                                         <svg class="w-6 h-6 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m21 8-9-5-9 5 9 5 9-5Z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
@@ -117,15 +127,22 @@
                                         <div class="min-w-0">
                                             <h3 class="text-sm font-bold text-white truncate">{{ $producto->nombre }}</h3>
                                             <p class="text-[11px] text-gray-500 truncate">{{ $producto->categoria ?: 'Sin categoría' }}</p>
+                                            @if (str_starts_with($producto->imagen ?? '', 'catalogo-'))
+                                                <p class="text-[10px] text-gray-500">Imagen ilustrativa</p>
+                                            @endif
                                         </div>
                                         <span class="shrink-0 text-sm font-bold text-yellow-400">{{ $producto->precio_formateado }}</span>
                                     </div>
 
                                     <div class="mt-3 flex items-center justify-between text-xs">
-                                        <span class="text-gray-500">Existencias</span>
+                                        <span class="text-gray-500">{{ $puedeGestionar ? 'Existencias' : 'Disponibilidad' }}</span>
                                         <div class="text-right">
-                                            @if (! $producto->activo || $producto->stock <= 0)
-                                                <span class="font-semibold text-red-300">No disponible</span>
+                                            @if (! $puedeGestionar)
+                                                <span class="font-semibold {{ $producto->stock > 0 ? 'text-green-400' : 'text-red-300' }}">{{ $producto->stock > 0 ? 'Disponible' : 'Agotado' }}</span>
+                                            @elseif (! $producto->activo)
+                                                <span class="font-semibold text-red-300">Inactivo · {{ $producto->stock }} unidades</span>
+                                            @elseif ($producto->stock <= 0)
+                                                <span class="font-semibold text-red-300">Agotado · 0 unidades</span>
                                             @elseif ($producto->stock <= 3)
                                                 <span class="inline-flex items-center gap-1 font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md text-[11px]" title="Quedan {{ $producto->stock }} unidad(es)">
                                                     <svg class="w-3 h-3 text-amber-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" /></svg>
@@ -151,7 +168,11 @@
                                         <label>Nombre<input name="nombre" value="{{ $producto->nombre }}" maxlength="255" required></label>
                                         <label>Precio<input type="number" name="precio" min="0" max="999999" step="0.01" value="{{ $producto->precio }}" required></label>
                                         <label>Categoría<input name="categoria" value="{{ $producto->categoria }}" maxlength="100"></label>
-                                        <label>Stock<input type="number" name="stock" min="0" max="999999" value="{{ $producto->stock }}" required></label>
+                                        @if ($puedeEditarStock)
+                                            <label>Existencias<input type="number" name="stock" min="0" max="999999" value="{{ $producto->stock }}" required></label>
+                                        @else
+                                            <p class="text-xs text-gray-400 self-center">Solo el administrador modifica las existencias. Las ventas descuentan unidades automáticamente.</p>
+                                        @endif
 
                                         <label class="inline-flex items-center gap-2 text-xs text-gray-400">
                                             <input type="checkbox" name="activo" value="1" @checked($producto->activo)>
@@ -181,7 +202,7 @@
             @else
                 <div class="py-12 text-center">
                     <h3 class="text-base font-bold text-white mb-1">Sin productos encontrados</h3>
-                    <p class="text-xs text-gray-400">{{ $busqueda ? 'Prueba con otra búsqueda.' : 'Agrega el primer producto para iniciar el catálogo.' }}</p>
+                    <p class="text-xs text-gray-400">{{ $busqueda ? 'Prueba con otra búsqueda.' : ($puedeGestionar ? 'Agrega el primer producto para iniciar el catálogo.' : 'El catálogo estará disponible próximamente.') }}</p>
                 </div>
             @endif
         </section>

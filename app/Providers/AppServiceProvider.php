@@ -41,7 +41,7 @@ class AppServiceProvider extends ServiceProvider
                     auth($event->guard)->hashPasswordForCookie($event->user->getAuthPassword()));
             }
         });
-        foreach (['administrar', 'asistencia', 'membresias', 'operaciones', 'inventario', 'progreso', 'analitica_financiera', 'asignar_rutinas'] as $permiso) {
+        foreach (['administrar', 'asistencia', 'membresias', 'operaciones', 'inventario', 'existencias', 'progreso', 'analitica_financiera', 'asignar_rutinas'] as $permiso) {
             Gate::define($permiso, fn ($user) => Acceso::permite($user, $permiso));
         }
     }

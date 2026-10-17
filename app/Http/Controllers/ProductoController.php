@@ -16,10 +16,10 @@ class ProductoController extends Controller
     {
         ['guard' => $guard, 'user' => $user] = $this->actual();
         $filtros = $request->validate(['q' => ['nullable', 'string', 'max:100']]);
-        $busqueda = $filtros['q'] ?? '';
+        $busqueda = trim($filtros['q'] ?? '');
         $productos = Producto::query()
             ->when(! Gate::allows('inventario'), fn ($q) => $q->where('activo', true))
-            ->when($busqueda, fn ($q) => $q->where(fn ($s) => $s->where('nombre', 'like', "%{$busqueda}%")->orWhere('categoria', 'like', "%{$busqueda}%")))
+            ->when($busqueda !== '', fn ($q) => $q->where(fn ($s) => $s->where('nombre', 'like', "%{$busqueda}%")->orWhere('categoria', 'like', "%{$busqueda}%")))
             ->orderBy('orden')->orderBy('nombre')->paginate(self::ELEMENTOS_POR_PAGINA)->withQueryString();
 
         $totalCatalogo = Gate::allows('inventario') ? Producto::count() : null;
@@ -38,7 +38,7 @@ class ProductoController extends Controller
     public function store(Request $request)
     {
         Gate::authorize('inventario');
-        $data = $request->validate($this->reglas());
+        $data = $request->validate($this->reglas(), ['stock.missing' => 'Solo el administrador puede modificar las existencias.']);
         unset($data['imagen'], $data['eliminar_imagen']);
         $nuevo = null;
         $producto = null;
@@ -63,7 +63,7 @@ class ProductoController extends Controller
     public function update(Request $request, Producto $producto)
     {
         Gate::authorize('inventario');
-        $data = $request->validate($this->reglas(true));
+        $data = $request->validate($this->reglas(true), ['stock.missing' => 'Solo el administrador puede modificar las existencias.']);
         $anterior = $producto->imagen;
         $nuevo = $request->hasFile('imagen') ? app(ImagenSegura::class)->guardar($request->file('imagen'), 'productos', 'producto_'.$producto->id) : null;
         try {
@@ -72,7 +72,8 @@ class ProductoController extends Controller
                 $anterior = $producto->imagen;
                 $producto->update([
                     'nombre' => $data['nombre'], 'precio' => $data['precio'], 'categoria' => $data['categoria'] ?? null,
-                    'stock' => $data['stock'], 'activo' => $request->boolean('activo'),
+                    ... (Gate::allows('existencias') ? ['stock' => $data['stock']] : []),
+                    'activo' => $request->boolean('activo'),
                     'imagen' => $nuevo ?: ($request->boolean('eliminar_imagen') ? null : $anterior),
                 ]);
             });
@@ -93,7 +94,8 @@ class ProductoController extends Controller
     {
         return [
             'nombre' => ['required', 'string', 'max:255'], 'precio' => ['required', 'numeric', 'decimal:0,2', 'min:0', 'max:999999'],
-            'categoria' => ['nullable', 'string', 'max:100'], 'stock' => ['required', 'integer', 'min:0', 'max:999999'],
+            'categoria' => ['nullable', 'string', 'max:100'],
+            'stock' => Gate::allows('existencias') ? ['required', 'integer', 'min:0', 'max:999999'] : ['missing'],
             'activo' => [$actualizar ? 'nullable' : 'prohibited', 'boolean'],
             'imagen' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=5000,max_height=5000'],
             'eliminar_imagen' => [$actualizar ? 'nullable' : 'prohibited', 'boolean'],

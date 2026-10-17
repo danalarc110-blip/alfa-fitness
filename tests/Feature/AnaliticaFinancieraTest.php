@@ -263,6 +263,11 @@ class AnaliticaFinancieraTest extends TestCase
         $this->assertEquals(5, $analitica['kpis']['transacciones_totales']);
         // Ticket promedio: 135 / 5 = $27.00
         $this->assertEquals(27.00, $analitica['kpis']['ticket_promedio']);
+        $this->assertEquals(135.00, array_sum(array_column($analitica['serie_diaria'], 'total')));
+        $this->assertSame(5, array_sum(array_column($analitica['serie_diaria'], 'transacciones')));
+        $this->assertEquals(75.00, $analitica['planes']->sum('ingresos'));
+        $this->assertEquals(60.00, $analitica['productos']->sum('ingresos'));
+        $this->assertEquals(135.00, $analitica['metodos']->sum('ingresos'));
 
         // Comprobar que en la vista se muestren exactamente estos totales
         $response = $this->actingAs($this->admin)

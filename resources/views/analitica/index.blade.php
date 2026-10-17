@@ -12,14 +12,22 @@
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/20">
                     Módulo Gerencial
                 </span>
-                <span class="text-xs" style="color: var(--alpha-muted);">Datos consolidados en tiempo real</span>
+                <span class="text-xs font-semibold" style="color: var(--alpha-muted);">{{ $datos['periodo']['abierto'] ? 'En curso' : 'Cerrado' }}</span>
             </div>
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1" style="color: var(--alpha-text);">
                 Analítica <span class="text-rose-500">Financiera</span>
             </h1>
             <p class="text-sm mt-1" style="color: var(--alpha-muted);">
-                Período actual: <strong style="color: var(--alpha-text);">{{ $datos['periodo']['desde'] }}</strong> al <strong style="color: var(--alpha-text);">{{ $datos['periodo']['hasta'] }}</strong>
+                Período efectivo: <strong style="color: var(--alpha-text);">{{ $datos['periodo']['desde'] }}</strong> al <strong style="color: var(--alpha-text);">{{ $datos['periodo']['hasta'] }}</strong>
                 ({{ $datos['periodo']['dias'] }} días) · Comparado con: {{ $datos['periodo']['prev_desde'] }} al {{ $datos['periodo']['prev_hasta'] }}
+            </p>
+            <p class="text-xs mt-2" style="color: var(--alpha-muted);">
+                Hasta solicitado: {{ $datos['periodo']['solicitado_hasta'] }} · Corte de datos: {{ $datos['periodo']['corte'] }}
+                · Corte comparativo: {{ $datos['periodo']['comparacion_hasta'] }}
+            </p>
+            <p class="text-xs mt-1" style="color: var(--alpha-muted);">
+                {{ $datos['reporte']['codigo'] }} · Generado: {{ $datos['reporte']['generado_en'] }}
+                · {{ $datos['reporte']['zona_horaria'] }} · Importes en {{ $datos['reporte']['moneda'] }}
             </p>
         </div>
 
@@ -99,6 +107,15 @@
         </div>
     </div>
 
+    <section class="alpha-card rounded-2xl p-5 sm:p-6" aria-labelledby="resumen-ejecutivo">
+        <h2 id="resumen-ejecutivo" class="text-lg font-bold" style="color: var(--alpha-text);">Resumen ejecutivo</h2>
+        <ul class="mt-3 space-y-2 list-disc pl-5 text-sm" style="color: var(--alpha-text);">
+            @foreach($datos['resumen_ejecutivo'] as $conclusion)
+                <li>{{ $conclusion }}</li>
+            @endforeach
+        </ul>
+    </section>
+
     {{-- KPIS PRINCIPALES --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {{-- Tarjeta 1: Ingresos Totales --}}
@@ -114,7 +131,9 @@
                     ${{ number_format($datos['kpis']['ingresos_totales'], 2) }}
                 </div>
                 <div class="mt-2 flex items-center gap-1.5 text-xs">
-                    @if($datos['kpis']['diferencia_monetaria'] >= 0)
+                    @if($datos['kpis']['variacion_porcentual'] === null)
+                        <span class="font-semibold" style="color: var(--alpha-muted);">{{ $datos['kpis']['variacion_texto'] }}</span>
+                    @elseif($datos['kpis']['diferencia_monetaria'] >= 0)
                         <span class="inline-flex items-center font-semibold" style="color: var(--alpha-success);">
                             <svg class="w-3.5 h-3.5 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
                             {{ $datos['kpis']['variacion_texto'] }}
@@ -188,6 +207,40 @@
         </div>
     </div>
 
+    <section class="alpha-card rounded-2xl p-5 sm:p-6" aria-labelledby="comparativo-periodos">
+        <h2 id="comparativo-periodos" class="text-lg font-bold" style="color: var(--alpha-text);">Comparativo de períodos</h2>
+        <p class="mt-1 mb-4 text-xs" style="color: var(--alpha-muted);">Diferencia = actual − anterior. La variación porcentual requiere una base anterior mayor a cero.</p>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <caption class="sr-only">Indicadores del período efectivo y del período anterior, con diferencias absolutas y porcentuales</caption>
+                <thead>
+                    <tr class="border-b uppercase font-semibold text-[10px]" style="border-color: var(--alpha-border); color: var(--alpha-muted);">
+                        <th scope="col" class="pb-3 pr-3">Indicador</th>
+                        <th scope="col" class="pb-3 px-3 text-right">Actual</th>
+                        <th scope="col" class="pb-3 px-3 text-right">Anterior</th>
+                        <th scope="col" class="pb-3 px-3 text-right">Diferencia</th>
+                        <th scope="col" class="pb-3 pl-3 text-right">Variación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($datos['comparativo'] as $indicador)
+                        <tr class="border-b" style="border-color: var(--alpha-border); color: var(--alpha-text);">
+                            <th scope="row" class="py-3 pr-3 font-medium">{{ $indicador['indicador'] }}</th>
+                            @foreach(['actual', 'anterior', 'diferencia'] as $valor)
+                                <td class="py-3 px-3 text-right whitespace-nowrap">
+                                    {{ $indicador['formato'] === 'moneda' ? '$'.number_format($indicador[$valor], 2) : number_format($indicador[$valor], 0) }}
+                                </td>
+                            @endforeach
+                            <td class="py-3 pl-3 text-right whitespace-nowrap">
+                                {{ $indicador['variacion'] === null ? 'No calculable' : number_format($indicador['variacion'], 1).'%' }}
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </section>
+
     {{-- GRÁFICA: EVOLUCIÓN DE INGRESOS (DIARIA) --}}
     <div class="alpha-card rounded-2xl p-5 sm:p-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
@@ -224,9 +277,11 @@
                         $alturaMem = $dia['total'] > 0 ? round(($dia['membresias'] / $dia['total']) * 100) : 0;
                         $alturaVen = $dia['total'] > 0 ? round(($dia['ventas'] / $dia['total']) * 100) : 0;
                     @endphp
-                    <div class="flex-1 flex flex-col items-center h-full justify-end group relative">
+                    <div class="flex-1 flex flex-col items-center h-full justify-end group relative" tabindex="0"
+                         aria-label="{{ $dia['fecha'] }}: total {{ number_format($dia['total'], 2) }} USD; membresías {{ number_format($dia['membresias'], 2) }} USD; ventas {{ number_format($dia['ventas'], 2) }} USD; {{ $dia['transacciones'] }} operaciones">
                         {{-- Tooltip flotante --}}
-                        <div class="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-20 pointer-events-none">
+                        <div class="absolute top-2 hidden group-hover:flex group-focus:flex flex-col items-center z-20 pointer-events-none"
+                             style="{{ $loop->first ? 'left: 0;' : ($loop->last ? 'right: 0;' : 'left: 50%; transform: translateX(-50%);') }}">
                             <div class="bg-gray-950 text-white text-[10px] rounded-lg py-1.5 px-2.5 shadow-2xl border border-gray-700 whitespace-nowrap">
                                 <div class="font-bold text-gray-200">{{ $dia['fecha_corta'] }} ({{ $dia['fecha'] }})</div>
                                 <div class="text-rose-400 font-extrabold mt-0.5">Total: ${{ number_format($dia['total'], 2) }}</div>
@@ -311,15 +366,15 @@
                 </div>
 
                 <div class="p-3.5 rounded-xl border" style="background-color: var(--alpha-subtle); border-color: var(--alpha-border);">
-                    <span class="block font-medium" style="color: var(--alpha-muted);">Día con menor ingreso (activo)</span>
+                    <span class="block font-medium" style="color: var(--alpha-muted);">Día con menor ingreso positivo</span>
                     <div class="text-base font-bold mt-1" style="color: var(--alpha-text);">${{ number_format($datos['kpis']['dia_menor_ingreso']['monto'], 2) }}</div>
                     <span class="text-[11px]" style="color: var(--alpha-muted);">{{ $datos['kpis']['dia_menor_ingreso']['fecha'] }}</span>
                 </div>
 
                 <div class="p-3.5 rounded-xl border" style="background-color: var(--alpha-subtle); border-color: var(--alpha-border);">
-                    <span class="block font-medium" style="color: var(--alpha-muted);">Promedio por día activo</span>
+                    <span class="block font-medium" style="color: var(--alpha-muted);">Promedio por día con ingresos</span>
                     <div class="text-base font-bold mt-1" style="color: var(--alpha-text);">${{ number_format($datos['kpis']['promedio_ingreso_dia_activo'], 2) }}</div>
-                    <span class="text-[11px]" style="color: var(--alpha-muted);">{{ $datos['kpis']['dias_activos'] }} días con operaciones</span>
+                    <span class="text-[11px]" style="color: var(--alpha-muted);">{{ $datos['kpis']['dias_activos'] }} días con ingresos</span>
                 </div>
 
                 <div class="p-3.5 rounded-xl border" style="background-color: var(--alpha-subtle); border-color: var(--alpha-border);">
@@ -362,11 +417,11 @@
                     <table class="w-full text-left text-xs">
                         <thead>
                             <tr class="border-b uppercase font-semibold text-[10px]" style="border-color: var(--alpha-border); color: var(--alpha-muted);">
-                                <th class="pb-3">Plan</th>
-                                <th class="pb-3 text-center">Pagos</th>
-                                <th class="pb-3 text-right">Ingresos</th>
-                                <th class="pb-3 text-right">% Membresías</th>
-                                <th class="pb-3 text-right">Prom./Cobro</th>
+                                <th scope="col" class="pb-3">Plan</th>
+                                <th scope="col" class="pb-3 text-center">Pagos</th>
+                                <th scope="col" class="pb-3 text-right">Ingresos</th>
+                                <th scope="col" class="pb-3 text-right">% Membresías</th>
+                                <th scope="col" class="pb-3 text-right">Prom./Cobro</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y" style="border-color: var(--alpha-border);">
@@ -394,7 +449,7 @@
             <div>
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <h3 class="text-base font-bold tracking-tight" style="color: var(--alpha-text);">Rendimiento de Productos (Top)</h3>
+                        <h3 class="text-base font-bold tracking-tight" style="color: var(--alpha-text);">Rendimiento de Productos</h3>
                         <p class="text-xs" style="color: var(--alpha-muted);">Facturación y unidades vendidas en mostrador</p>
                     </div>
                     <span class="px-2 py-1 rounded-md text-[10px] font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/20">
@@ -406,11 +461,11 @@
                     <table class="w-full text-left text-xs">
                         <thead>
                             <tr class="border-b uppercase font-semibold text-[10px]" style="border-color: var(--alpha-border); color: var(--alpha-muted);">
-                                <th class="pb-3">Producto</th>
-                                <th class="pb-3 text-center">Unidades</th>
-                                <th class="pb-3 text-center">Tickets</th>
-                                <th class="pb-3 text-right">Ingresos</th>
-                                <th class="pb-3 text-right">% Ventas</th>
+                                <th scope="col" class="pb-3">Producto</th>
+                                <th scope="col" class="pb-3 text-center">Unidades</th>
+                                <th scope="col" class="pb-3 text-center">Tickets</th>
+                                <th scope="col" class="pb-3 text-right">Ingresos</th>
+                                <th scope="col" class="pb-3 text-right">% Ventas</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y" style="border-color: var(--alpha-border);">
@@ -447,11 +502,11 @@
             <table class="w-full text-left text-xs">
                 <thead>
                     <tr class="border-b uppercase font-semibold text-[10px]" style="border-color: var(--alpha-border); color: var(--alpha-muted);">
-                        <th class="pb-3">Método / Canal</th>
-                        <th class="pb-3">Origen</th>
-                        <th class="pb-3 text-center">Cantidad de Operaciones</th>
-                        <th class="pb-3 text-right">Monto Registrado</th>
-                        <th class="pb-3 text-right">% del Total General</th>
+                        <th scope="col" class="pb-3">Método / Canal</th>
+                        <th scope="col" class="pb-3">Origen</th>
+                        <th scope="col" class="pb-3 text-center">Cantidad de Operaciones</th>
+                        <th scope="col" class="pb-3 text-right">Monto Registrado</th>
+                        <th scope="col" class="pb-3 text-right">% del Total General</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y" style="border-color: var(--alpha-border);">
@@ -473,13 +528,23 @@
         </div>
     </div>
 
+    <section class="alpha-card rounded-2xl p-5 sm:p-6" aria-labelledby="metodologia-reporte">
+        <h2 id="metodologia-reporte" class="text-base font-bold" style="color: var(--alpha-text);">Metodología y alcance</h2>
+        <ul class="mt-3 space-y-2 list-disc pl-5 text-xs" style="color: var(--alpha-muted);">
+            @foreach($datos['metodologia'] as $nota)
+                <li>{{ $nota }}</li>
+            @endforeach
+        </ul>
+        <p class="mt-4 text-xs" style="color: var(--alpha-muted);">Versión del reporte: {{ $datos['reporte']['version'] }} · Información consolidada al momento de la consulta.</p>
+    </section>
+
     {{-- AVISO DE PRIVACIDAD / DISCLAIMER --}}
     <div class="rounded-xl p-4 border text-xs flex items-center justify-between gap-4" style="background-color: var(--alpha-subtle); border-color: var(--alpha-border); color: var(--alpha-muted);">
         <div class="flex items-center gap-2">
             <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-            <span><strong style="color: var(--alpha-text);">Privacidad Garantizada:</strong> Este módulo gerencial no expone nombres de socios, correos, números telefónicos ni historiales individuales de entrenamiento o asistencia.</span>
+            <span><strong style="color: var(--alpha-text);">Uso gerencial:</strong> Información financiera agregada, sin datos personales ni historiales individuales de socios.</span>
         </div>
-        <span class="text-[11px] shrink-0" style="color: var(--alpha-muted);">Alpha Fitness v2.0</span>
+        <span class="text-[11px] shrink-0" style="color: var(--alpha-muted);">Alpha Fitness</span>
     </div>
 
 </div>

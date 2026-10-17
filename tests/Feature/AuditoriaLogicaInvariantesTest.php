@@ -302,6 +302,7 @@ class AuditoriaLogicaInvariantesTest extends TestCase
 
         $response = $this->actingAs($this->secretaria, 'web')
             ->post(route('ventas.store'), [
+                'venta_uuid' => (string) \Illuminate\Support\Str::uuid(),
                 'cliente_id' => $inactiveClient->id,
                 'metodo_pago' => 'Efectivo',
                 'items' => [

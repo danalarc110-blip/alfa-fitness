@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cliente;
 use App\Models\Ejercicio;
 use App\Models\PersonalRecord;
-use App\Models\Rutina;
+use App\Services\ClientesEntrenador;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -121,10 +121,7 @@ class ProgresoController extends Controller
         abort_unless(in_array($user->rol, ['Administrador', 'Entrenador'], true), 403);
 
         if ($user->rol === 'Entrenador') {
-            $asignado = Rutina::where('user_type', 'cliente')
-                ->where('user_id', $cliente->id)
-                ->where('asignado_por_id', $user->id)
-                ->exists();
+            $asignado = app(ClientesEntrenador::class)->vinculado($user->id, $cliente->id);
             abort_unless($asignado, 403, 'No tienes asignado a este cliente.');
         }
 

@@ -60,6 +60,12 @@ class AnaliticaFinancieraService
                 ]);
             }
 
+            if ($desde->gt($hoy)) {
+                throw ValidationException::withMessages([
+                    'periodo' => 'La fecha inicial no puede ser futura: el reporte presenta operaciones registradas, no proyecciones.',
+                ]);
+            }
+
             return [
                 'desde' => $desde,
                 'hasta' => $hasta,
@@ -92,6 +98,17 @@ class AnaliticaFinancieraService
      */
     public function obtenerAnalitica(Carbon $desde, Carbon $hasta, int $dias): array
     {
+        $generado = Carbon::now(config('app.timezone'));
+        $solicitadoHasta = $hasta->copy();
+        $abierto = $hasta->gte($generado);
+        if ($desde->gt($generado)) {
+            throw ValidationException::withMessages(['periodo' => 'No se pueden analizar períodos futuros.']);
+        }
+        if ($abierto) {
+            $hasta = $generado->copy();
+        }
+        $dias = (int) $desde->copy()->startOfDay()->diffInDays($hasta->copy()->startOfDay()) + 1;
+
         // 1. Ingresos y transacciones del período actual
         $centavosMembresias = $this->centavosAgregados(PagoMembresia::whereBetween('pagado_en', [$desde, $hasta])->sum('importe'));
         $ingresosMembresias = $this->importe($centavosMembresias);
@@ -107,21 +124,27 @@ class AnaliticaFinancieraService
         $ticketPromedio = $this->promedio($centavosTotales, $transaccionesTotales);
 
         // 2. Período anterior de la MISMA duración
-        $prevHasta = $desde->copy()->subSecond();
-        $prevDesde = $prevHasta->copy()->subDays($dias - 1)->startOfDay();
+        $prevDesde = $desde->copy()->subDays($dias)->startOfDay();
+        $prevHasta = $abierto
+            ? $hasta->copy()->subDays($dias)
+            : $desde->copy()->subSecond();
 
         $prevCentavosMembresias = $this->centavosAgregados(PagoMembresia::whereBetween('pagado_en', [$prevDesde, $prevHasta])->sum('importe'));
         $prevCentavosVentas = $this->centavosAgregados(Venta::whereBetween('created_at', [$prevDesde, $prevHasta])->sum('total'));
         $prevCentavosTotales = $prevCentavosMembresias + $prevCentavosVentas;
         $prevIngresosTotales = $this->importe($prevCentavosTotales);
+        $prevTransaccionesMembresias = (int) PagoMembresia::whereBetween('pagado_en', [$prevDesde, $prevHasta])->count();
+        $prevTransaccionesVentas = (int) Venta::whereBetween('created_at', [$prevDesde, $prevHasta])->count();
+        $prevTransaccionesTotales = $prevTransaccionesMembresias + $prevTransaccionesVentas;
+        $prevTicketPromedio = $this->promedio($prevCentavosTotales, $prevTransaccionesTotales);
 
         $diferenciaMonetaria = $this->importe($centavosTotales - $prevCentavosTotales);
         if ($prevIngresosTotales > 0) {
             $variacionPorcentual = round((($ingresosTotales - $prevIngresosTotales) / $prevIngresosTotales) * 100, 1);
             $variacionTexto = ($variacionPorcentual >= 0 ? '+' : '').$variacionPorcentual.'%';
         } elseif ($ingresosTotales > 0) {
-            $variacionPorcentual = 100.0;
-            $variacionTexto = '+100% (sin registros previos)';
+            $variacionPorcentual = null;
+            $variacionTexto = 'No calculable (base anterior sin ingresos)';
         } else {
             $variacionPorcentual = 0.0;
             $variacionTexto = '0.0% vs período anterior';
@@ -292,7 +315,58 @@ class AnaliticaFinancieraService
 
         $metodosRendimiento = $metodosRendimiento->sortByDesc('ingresos')->values();
 
+        $comparativo = [];
+        foreach ([
+            ['Ingresos por membresías', $ingresosMembresias, $this->importe($prevCentavosMembresias), 'moneda'],
+            ['Ingresos por ventas', $ingresosVentas, $this->importe($prevCentavosVentas), 'moneda'],
+            ['Ingresos totales', $ingresosTotales, $prevIngresosTotales, 'moneda'],
+            ['Transacciones', $transaccionesTotales, $prevTransaccionesTotales, 'entero'],
+            ['Ticket promedio', $ticketPromedio, $prevTicketPromedio, 'moneda'],
+        ] as [$indicador, $actual, $anterior, $formato]) {
+            $comparativo[] = [
+                'indicador' => $indicador,
+                'actual' => $actual,
+                'anterior' => $anterior,
+                'diferencia' => round($actual - $anterior, 2),
+                'variacion' => $anterior > 0 ? round(($actual - $anterior) / $anterior * 100, 1) : ($actual > 0 ? null : 0.0),
+                'formato' => $formato,
+            ];
+        }
+
+        $resumen = [
+            'Se registraron USD '.number_format($ingresosTotales, 2).' en '.$transaccionesTotales.' operaciones; el ticket promedio fue USD '.number_format($ticketPromedio, 2).'.',
+            $prevIngresosTotales > 0
+                ? 'La variación de ingresos fue '.$variacionTexto.'; la diferencia frente al período comparable fue USD '.number_format($diferenciaMonetaria, 2).'.'
+                : ($ingresosTotales > 0 ? 'El período anterior no registra ingresos. No existe una base para calcular crecimiento porcentual.' : 'Ambos períodos carecen de ingresos registrados; no se observa variación monetaria.'),
+        ];
+        if ($ingresosTotales > 0) {
+            $origen = $ingresosMembresias >= $ingresosVentas ? 'Las membresías' : 'Las ventas de productos';
+            $participacion = max($porcentajeMembresias, $porcentajeVentas);
+            $resumen[] = $origen.' representan la mayor participación: '.number_format($participacion, 1).'% de los ingresos del período.';
+        }
+        if ($abierto) {
+            $resumen[] = 'Período en curso: cifras acumuladas al corte. La comparación utiliza el mismo número de días y la misma hora de corte; los resultados pueden cambiar con nuevos registros.';
+        }
+
+        $metodologia = [
+            'Moneda: USD. Ingresos registrados = cobros de membresías (pagado_en) + ventas de productos (created_at). Las fechas usan la zona horaria configurada.',
+            'No se registran costos, gastos ni devoluciones en este módulo. Los ingresos no representan utilidad, rentabilidad ni un estado financiero contable.',
+            'Comparación: intervalo inmediatamente anterior con igual número de días calendario; si el período está en curso, ambos terminan a la misma hora de corte. No ajusta por estacionalidad ni días de apertura.',
+            'Ticket promedio = ingresos / transacciones. Una transacción es un cobro de membresía o una venta; las operaciones por producto pueden compartir una venta y no se suman como transacciones generales.',
+            'Días con ingresos: días cuyo importe total es mayor que cero. Promedio por día activo = ingresos / días con ingresos. Los días sin ingresos se conservan en el detalle diario.',
+            'Variación porcentual = (actual - anterior) / anterior × 100. Con base anterior cero y valor actual positivo se indica No calculable; con ambos valores cero se muestra 0%.',
+            'Los métodos de pago corresponden a ventas. Los cobros de membresías se agrupan por origen porque no registran un método de pago.',
+            'Las cifras son agregadas, sin datos personales de clientes. El código identifica el rango; la fecha de generación identifica el corte de la consulta, no un cierre contable auditado.',
+        ];
+
         return [
+            'reporte' => [
+                'codigo' => 'AF-GER-'.$desde->format('Ymd').'-'.$hasta->format('Ymd'),
+                'generado_en' => $generado->format('d/m/Y H:i:s'),
+                'zona_horaria' => config('app.timezone'),
+                'moneda' => 'USD',
+                'version' => '1.0',
+            ],
             'periodo' => [
                 'desde' => $desde->format('d/m/Y'),
                 'hasta' => $hasta->format('d/m/Y'),
@@ -301,6 +375,10 @@ class AnaliticaFinancieraService
                 'dias' => $dias,
                 'prev_desde' => $prevDesde->format('d/m/Y'),
                 'prev_hasta' => $prevHasta->format('d/m/Y'),
+                'solicitado_hasta' => $solicitadoHasta->format('d/m/Y'),
+                'abierto' => $abierto,
+                'corte' => $hasta->format('d/m/Y H:i:s'),
+                'comparacion_hasta' => $prevHasta->format('d/m/Y H:i:s'),
             ],
             'kpis' => [
                 'ingresos_totales' => $ingresosTotales,
@@ -334,6 +412,9 @@ class AnaliticaFinancieraService
             'planes' => $planesRendimiento,
             'productos' => $productosRendimiento,
             'metodos' => $metodosRendimiento,
+            'comparativo' => $comparativo,
+            'resumen_ejecutivo' => $resumen,
+            'metodologia' => $metodologia,
         ];
     }
 

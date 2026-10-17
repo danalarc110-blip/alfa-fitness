@@ -1,10 +1,10 @@
-@extends('layouts.app', ['active' => 'entrenamientos'])
+@extends('layouts.app', ['active' => 'mis-clientes'])
 @section('title', 'Progreso de ' . $cliente->nombre)
 
 @section('page-header')
 <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
     <div class="flex items-center gap-3">
-        <a href="{{ route('entrenamientos.index') }}" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all shadow-sm" title="Volver a Entrenamientos">
+        <a href="{{ route('entrenador.clientes') }}" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all shadow-sm" title="Volver a clientes" aria-label="Volver a clientes">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
         </a>
         <div>
@@ -170,8 +170,9 @@
             <span class="text-xs font-semibold text-gray-500">{{ $records->total() }} registros{{ $ejercicioSeleccionadoObj ? ' para ' . $ejercicioSeleccionadoObj->nombre : '' }}</span>
         </div>
 
-        <form method="GET" action="{{ route('entrenador.cliente.progreso', $cliente) }}" class="flex items-center gap-2">
-            <select name="ejercicio_id" onchange="this.form.submit()" class="bg-black/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-yellow-400/60">
+        <form method="GET" action="{{ route('entrenador.cliente.progreso', $cliente) }}" class="flex flex-wrap items-center gap-2">
+            <label for="filtrar-ejercicio" class="sr-only">Filtrar por ejercicio</label>
+            <select id="filtrar-ejercicio" name="ejercicio_id" class="min-w-0 max-w-full bg-black/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-yellow-400/60">
                 <option value="">Todos los ejercicios</option>
                 @foreach ($ejercicios as $ej)
                     <option value="{{ $ej->id }}" @selected(($ejercicioFiltro ?? '') == $ej->id)>
@@ -179,6 +180,7 @@
                     </option>
                 @endforeach
             </select>
+            <button type="submit" class="alpha-btn-primary px-3 py-1.5 rounded-xl text-xs">Filtrar</button>
             @if($ejercicioFiltro)
                 <a href="{{ route('entrenador.cliente.progreso', $cliente) }}" class="alpha-btn-secondary px-2.5 py-1.5 rounded-xl text-xs">Limpiar</a>
             @endif

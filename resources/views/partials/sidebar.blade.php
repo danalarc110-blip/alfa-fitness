@@ -29,6 +29,12 @@
         ['key' => 'configuracion', 'label' => 'Configuración', 'href' => route('configuracion'), 'icon' => 'settings'],
     ];
 
+    if ($guardActual === 'web' && in_array($userActual?->rol, ['Administrador', 'Entrenador'], true)) {
+        array_splice($navItems, 2, 0, [[
+            'key' => 'mis-clientes', 'label' => $userActual->rol === 'Administrador' ? 'Clientes y entrenadores' : 'Mis clientes', 'href' => route('entrenador.clientes'), 'icon' => 'users',
+        ]]);
+    }
+
     $navItems[] = ['key' => 'cuentas', 'label' => 'Administrar cuentas', 'href' => route('cuentas.index'), 'icon' => 'users'];
     $permisosNav = [
         'cuentas' => 'administrar',

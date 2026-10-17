@@ -25,7 +25,7 @@ final class Acceso
             return false;
         }
         $permisos = match ($user->rol) {
-            'Administrador' => ['administrar', 'inventario', 'membresias', 'asistencia', 'analitica_financiera', 'asignar_rutinas'],
+            'Administrador' => ['administrar', 'inventario', 'existencias', 'membresias', 'asistencia', 'analitica_financiera', 'asignar_rutinas'],
             'Secretaria' => ['asistencia', 'membresias', 'operaciones', 'inventario'],
             'Entrenador' => ['asignar_rutinas'],
             default => [],

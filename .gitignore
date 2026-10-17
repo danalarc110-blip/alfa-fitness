@@ -21,6 +21,7 @@
 /public/.qa-alpha
 /public/images/productos/*
 !/public/images/productos/.gitkeep
+!/public/images/productos/catalogo-*.webp
 /public/images/avatars/*
 !/public/images/avatars/.gitkeep
 /storage/*.key

@@ -19,6 +19,7 @@ body { background:var(--alpha-background); color:var(--alpha-text); }
 .alpha-btn-primary, .btn-alpha-submit { background:var(--alpha-primary); color:var(--alpha-on-primary); font-weight:600; border:1px solid transparent; }
 .alpha-btn-secondary { background:var(--alpha-surface); color:var(--alpha-text); border:1px solid var(--alpha-border); }
 .alpha-btn-primary, .alpha-btn-secondary { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; transition:transform .14s ease-out,opacity .14s ease-out; }
+#form-venta :is(.alpha-btn-primary, .alpha-btn-secondary).hidden { display:none; }
 .alpha-btn-primary:hover, .alpha-btn-secondary:hover { opacity:.9; }
 .alpha-btn-primary:active:not(:disabled), .alpha-btn-secondary:active:not(:disabled) { transform:scale(.98); }
 .nav-item-active { background:var(--alpha-primary); color:var(--alpha-on-primary); border-left:3px solid var(--alpha-primary); }

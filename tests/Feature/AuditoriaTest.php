@@ -80,7 +80,7 @@ class AuditoriaTest extends TestCase
     public function test_failed_image_processing_does_not_create_a_partial_product(): void
     {
         $this->mock(ImagenSegura::class)->shouldReceive('guardar')->once()->andThrow(new \RuntimeException('Disk failed'));
-        $this->actingAs(User::factory()->create())->post(route('productos.store'), ['nombre' => 'Producto', 'precio' => 2, 'stock' => 1, 'imagen' => UploadedFile::fake()->image('foto.jpg')])->assertServerError();
+        $this->actingAs(User::factory()->create())->post(route('productos.store'), ['nombre' => 'Producto', 'precio' => 2, 'imagen' => UploadedFile::fake()->image('foto.jpg')])->assertServerError();
         $this->assertDatabaseCount('productos', 0);
     }
 

@@ -92,19 +92,58 @@ function trainingEnvironment(fetchImpl) {
     });
     await check('malicious product names stay text in newly added sale rows',()=> {
         const malicious='</option><img src=x onerror=alert(1)>';
-        const rows=[], options=[];
-        const select={append:option=>options.push(option)};
-        const document={getElementById:()=>({appendChild:row=>rows.push(row)}),createElement:tag=>tag==='option'
-            ?{dataset:{},textContent:''}:{innerHTML:'',querySelector:()=>select}};
-        const code=inline('resources/views/ventas/index.blade.php')
-            .replace('@json($productos)',JSON.stringify([{id:1,nombre:malicious,precio:'4.50',stock:2}]));
-        const context=vm.createContext({document,window:{}});
-        vm.runInContext(code,context);vm.runInContext('agregarFila()',context);
-        assert.equal(rows.length,1);assert.equal(options.length,1);
+        const element=()=>({dataset:{},children:[],listeners:{},textContent:'',value:'',
+            classList:{add(){},remove(){},toggle(){}},setAttribute(){},removeAttribute(){},focus(){},
+            addEventListener(name,handler){this.listeners[name]=handler;},
+            append(...nodes){this.children.push(...nodes);},replaceChildren(){this.children=[];},
+            querySelector(selector){this.parts??=new Map();if(!this.parts.has(selector))this.parts.set(selector,element());return this.parts.get(selector);},
+            querySelectorAll(){return this.children;}});
+        const nodes=new Map();
+        const get=id=>{if(!nodes.has(id))nodes.set(id,element());return nodes.get(id);};
+        get('venta-config').textContent=JSON.stringify({productos:[{id:1,nombre:malicious,precio_centavos:450,stock:2,activo:true}],itemsAnteriores:[],recuperarVenta:false});
+        const add=element();add.dataset.anadirProducto='1';
+        const document={getElementById:get,createElement:element,
+            querySelectorAll:selector=>selector==='[data-anadir-producto]'?[add]:[],addEventListener(){}};
+        const context=vm.createContext({document,window:{addEventListener(){}}});
+        vm.runInContext(read('resources/js/ventas.js'),context);
+        add.listeners.click();
+        let rows=get('items-contenedor').children;
+        assert.equal(rows.length,1);
         assert.equal(rows[0].innerHTML.includes(malicious),false);
-        assert.equal(options[0].textContent.includes(malicious),true);
-        assert.equal(options[0].value,1);
-        assert.match(read('resources/views/ventas/index.blade.php'),/old\('venta_uuid',/);
+        assert.equal(rows[0].querySelector('.fila-nombre').textContent,malicious);
+        assert.equal(rows[0].querySelector('.input-producto').value,'1');
+        assert.equal(get('gran-total').textContent,'$4.50');
+        add.listeners.click();
+        rows=get('items-contenedor').children;
+        assert.equal(rows.length,1);
+        assert.equal(rows[0].querySelector('.input-cantidad').value,'2');
+        assert.equal(get('gran-total').textContent,'$9.00');
+        add.listeners.click();
+        assert.equal(get('gran-total').textContent,'$9.00');
+        assert.match(get('venta-mensaje').textContent,/Stock disponible: 2/);
+    });
+    await check('named submit button value survives double-submit protection and browser restoration',()=> {
+        const events={},windowEvents={},hidden=[];
+        const button={name:'estrellas',value:'4',disabled:false,dataset:{}};
+        const form={method:'post',dataset:{},setAttribute(){},removeAttribute(){},
+            querySelectorAll:()=>[button],append:node=>hidden.push(node)};
+        const document={addEventListener:(name,handler)=>events[name]=handler,
+            createElement:()=>({dataset:{},remove(){hidden.splice(hidden.indexOf(this),1);}}),
+            querySelectorAll:selector=>selector.startsWith('input')?hidden.slice():selector.startsWith('form')?[form]:[button]};
+        const window={addEventListener:(name,handler)=>windowEvents[name]=handler};
+        vm.runInContext(read('resources/js/feedback.js'),vm.createContext({document,window}));
+        let prevented=0;
+        const event={target:form,submitter:button,defaultPrevented:false,preventDefault(){prevented++;}};
+        events.submit(event);
+        assert.equal(button.disabled,true);
+        assert.equal(hidden.length,1);
+        assert.deepEqual({name:hidden[0].name,value:hidden[0].value},{name:'estrellas',value:'4'});
+        events.submit(event);
+        assert.equal(prevented,1);assert.equal(hidden.length,1);
+        windowEvents.pageshow();
+        assert.equal(hidden.length,0);assert.equal(button.disabled,false);
+        button.value='5';events.submit(event);
+        assert.equal(hidden[0].value,'5');
     });
     await check('modal keyboard wraps focus, Escape restores trigger and scroll',()=> {
         const listeners={};

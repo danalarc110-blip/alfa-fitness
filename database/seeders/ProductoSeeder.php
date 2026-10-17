@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Producto;
+use App\Support\ImagenesCatalogo;
 use Illuminate\Database\Seeder;
 
 class ProductoSeeder extends Seeder
@@ -24,7 +25,7 @@ class ProductoSeeder extends Seeder
 
             Producto::firstOrCreate(
                 ['nombre' => $datos['nombre']],
-                $datos + ['activo' => true, 'orden' => $indice + 1],
+                $datos + ['activo' => true, 'orden' => $indice + 1, 'imagen' => ImagenesCatalogo::PRODUCTOS[$datos['nombre']]],
             );
         }
     }

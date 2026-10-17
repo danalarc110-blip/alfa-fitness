@@ -21,7 +21,7 @@ class ReporteExcelSeguridadTest extends TestCase
         try {
             file_put_contents($path, $bytes);
             $book = IOFactory::load($path);
-            $this->assertSame(['Resumen', 'Ingresos por día', 'Membresías', 'Productos', 'Métodos de pago'], $book->getSheetNames());
+            $this->assertSame(['Resumen', 'Ingresos por día', 'Membresías', 'Productos', 'Métodos de pago', 'Comparativo'], $book->getSheetNames());
             foreach ([['Resumen', 'C19', '=1+1'], ['Resumen', 'C20', '+1+1'], ['Resumen', 'C21', '@SUM(1)'], ['Membresías', 'A2', '=1+1'], ['Productos', 'A2', '+1+1'], ['Métodos de pago', 'A2', '-1+1']] as [$sheet, $coord, $value]) {
                 $cell = $book->getSheetByName($sheet)->getCell($coord);
                 $this->assertSame($value, $cell->getValue());
@@ -33,10 +33,18 @@ class ReporteExcelSeguridadTest extends TestCase
                 $this->assertEquals($value, $cell->getValue());
             }
             foreach ($book->getAllSheets() as $sheet) {
+                $this->assertFalse($sheet->getShowGridlines());
+                $this->assertNotEmpty($sheet->getFreezePane());
+                $this->assertSame(1, $sheet->getPageSetup()->getFitToWidth());
                 foreach ($sheet->getCellCollection()->getCoordinates() as $coordinate) {
                     $this->assertNotSame(DataType::TYPE_FORMULA, $sheet->getCell($coordinate)->getDataType());
                 }
             }
+            $this->assertEquals(125.5, $book->getSheetByName('Ingresos por día')->getCell('D3')->getValue());
+            $this->assertSame('A1:E2', $book->getSheetByName('Ingresos por día')->getAutoFilter()->getRange());
+            $this->assertSame('0.0%', $book->getSheetByName('Membresías')->getStyle('D2')->getNumberFormat()->getFormatCode());
+            $this->assertSame('No calculable', $book->getSheetByName('Comparativo')->getCell('E2')->getValue());
+            $this->assertSame(DataType::TYPE_NUMERIC, $book->getSheetByName('Comparativo')->getCell('B2')->getDataType());
             $content = json_encode(array_map(fn ($sheet) => $sheet->toArray(), $book->getAllSheets()));
             foreach (['privado@example.test', 'DUI-PRIVADO', 'PASSWORD-PRIVADO', 'TOKEN-PRIVADO', 'GOOGLE-PRIVADO'] as $sensitive) {
                 $this->assertStringNotContainsString($sensitive, $content);
@@ -50,7 +58,11 @@ class ReporteExcelSeguridadTest extends TestCase
     private function datos(): array
     {
         return [
-            'periodo' => ['desde' => '2026-10-01', 'hasta' => '2026-10-01', 'dias' => 1, 'prev_desde' => '2026-09-30', 'prev_hasta' => '2026-09-30'],
+            'periodo' => ['desde' => '2026-10-01', 'hasta' => '2026-10-01', 'dias' => 1, 'prev_desde' => '2026-09-30', 'prev_hasta' => '2026-09-30', 'abierto' => false, 'solicitado_hasta' => '2026-10-01', 'corte' => '01/10/2026 23:59:59', 'comparacion_hasta' => '30/09/2026 23:59:59'],
+            'reporte' => ['codigo' => 'AF-GER-20261001-20261001', 'version' => '1.0', 'generado_en' => '02/10/2026 12:00:00', 'zona_horaria' => 'America/El_Salvador', 'moneda' => 'USD'],
+            'resumen_ejecutivo' => ['=RESUMEN_NO_EJECUTAR'],
+            'metodologia' => ['+METODOLOGIA_NO_EJECUTAR'],
+            'comparativo' => [['indicador' => '@INDICADOR_NO_EJECUTAR', 'actual' => 125.5, 'anterior' => 0.0, 'diferencia' => 125.5, 'variacion' => null, 'formato' => 'moneda']],
             'kpis' => [
                 'ingresos_totales' => 125.5, 'ingresos_membresias' => 100.0, 'ingresos_ventas' => 25.5,
                 'porcentaje_membresias' => 79.7, 'porcentaje_ventas' => 20.3,

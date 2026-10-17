@@ -5,8 +5,10 @@ namespace App\Services;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -20,6 +22,7 @@ class ReporteExcelService
     public function descargar(array $datos, string $nombreArchivo): StreamedResponse
     {
         $spreadsheet = new Spreadsheet;
+        $spreadsheet->getDefaultStyle()->getFont()->setName('Arial')->setSize(10);
         $spreadsheet->getProperties()
             ->setCreator('Alpha Fitness Management')
             ->setTitle('Reporte Financiero Gerencial')
@@ -52,7 +55,7 @@ class ReporteExcelService
         $filasResumen = [
             ['Indicador', 'Valor', 'Detalle'],
             ['Período analizado', "{$periodo['desde']} al {$periodo['hasta']}", "{$periodo['dias']} días"],
-            ['Período de comparación', "{$periodo['prev_desde']} al {$periodo['prev_hasta']}", 'Misma duración'],
+            ['Período de comparación', "{$periodo['prev_desde']} al {$periodo['prev_hasta']}", 'Igual número de días y hora de corte'],
             ['Ingresos totales', $kpis['ingresos_totales'], 'Membresías + Ventas'],
             ['Ingresos por membresías', $kpis['ingresos_membresias'], "{$kpis['porcentaje_membresias']}% del total"],
             ['Ingresos por ventas', $kpis['ingresos_ventas'], "{$kpis['porcentaje_ventas']}% del total"],
@@ -85,6 +88,59 @@ class ReporteExcelService
                 }
             }
             $fila++;
+        }
+
+        // Metadatos y metodología comparten el mismo corte que la pantalla y el PDF.
+        $reporte = $datos['reporte'];
+        $fila = 24;
+        foreach ([
+            ['Control del reporte', 'Valor', 'Detalle'],
+            ['Código del rango', $reporte['codigo'], 'Versión '.$reporte['version']],
+            ['Generado', $reporte['generado_en'], $reporte['zona_horaria']],
+            ['Moneda', $reporte['moneda'], 'Importes con dos decimales'],
+            ['Estado del período', $periodo['abierto'] ? 'En curso' : 'Cerrado', 'Fin solicitado: '.$periodo['solicitado_hasta']],
+            ['Corte de datos', $periodo['corte'], 'Corte comparable: '.$periodo['comparacion_hasta']],
+        ] as $i => $row) {
+            foreach (['A', 'B', 'C'] as $j => $col) {
+                $hojaResumen->setCellValueExplicit($col.$fila, $row[$j], DataType::TYPE_STRING);
+            }
+            if ($i === 0) {
+                $hojaResumen->getStyle("A{$fila}:C{$fila}")->applyFromArray($estiloCabecera);
+            }
+            $fila++;
+        }
+        $fila++;
+        foreach (['Resumen ejecutivo' => $datos['resumen_ejecutivo'], 'Metodología y alcance' => $datos['metodologia']] as $titulo => $lineas) {
+            $hojaResumen->setCellValueExplicit('A'.$fila, $titulo, DataType::TYPE_STRING);
+            $hojaResumen->mergeCells("A{$fila}:C{$fila}");
+            $hojaResumen->getStyle("A{$fila}:C{$fila}")->applyFromArray($estiloCabecera);
+            $fila++;
+            foreach ($lineas as $linea) {
+                $hojaResumen->setCellValueExplicit('A'.$fila, $linea, DataType::TYPE_STRING);
+                $hojaResumen->mergeCells("A{$fila}:C{$fila}");
+                $hojaResumen->getRowDimension($fila)->setRowHeight(42);
+                $fila++;
+            }
+            $fila++;
+        }
+
+        // Comparación numérica editable y filtrable en una hoja propia.
+        $hojaComparativo = $spreadsheet->createSheet();
+        $hojaComparativo->setTitle('Comparativo');
+        $hojaComparativo->fromArray(['Indicador', 'Actual', 'Anterior', 'Diferencia', 'Variación (%)'], null, 'A1');
+        foreach ($datos['comparativo'] as $i => $row) {
+            $f = $i + 2;
+            $hojaComparativo->setCellValueExplicit('A'.$f, $row['indicador'], DataType::TYPE_STRING);
+            foreach (['B' => 'actual', 'C' => 'anterior', 'D' => 'diferencia'] as $col => $key) {
+                $hojaComparativo->setCellValueExplicit($col.$f, $row[$key], DataType::TYPE_NUMERIC);
+                $hojaComparativo->getStyle($col.$f)->getNumberFormat()->setFormatCode($row['formato'] === 'moneda' ? self::FORMATO_MONEDA : NumberFormat::FORMAT_NUMBER);
+            }
+            if ($row['variacion'] === null) {
+                $hojaComparativo->setCellValueExplicit('E'.$f, 'No calculable', DataType::TYPE_STRING);
+            } else {
+                $hojaComparativo->setCellValue('E'.$f, $row['variacion'] / 100);
+                $hojaComparativo->getStyle('E'.$f)->getNumberFormat()->setFormatCode('0.0%');
+            }
         }
 
         // -------------------------------------------------------------
@@ -136,7 +192,7 @@ class ReporteExcelService
 
             $hojaPlanes->getStyle('B'.$f)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER);
             $hojaPlanes->getStyle('C'.$f)->getNumberFormat()->setFormatCode(self::FORMATO_MONEDA);
-            $hojaPlanes->getStyle('D'.$f)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_PERCENTAGE_0);
+            $hojaPlanes->getStyle('D'.$f)->getNumberFormat()->setFormatCode('0.0%');
             $hojaPlanes->getStyle('E'.$f)->getNumberFormat()->setFormatCode(self::FORMATO_MONEDA);
             $f++;
         }
@@ -164,7 +220,7 @@ class ReporteExcelService
 
             $hojaProductos->getStyle("B{$f}:C{$f}")->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER);
             $hojaProductos->getStyle('D'.$f)->getNumberFormat()->setFormatCode(self::FORMATO_MONEDA);
-            $hojaProductos->getStyle('E'.$f)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_PERCENTAGE_0);
+            $hojaProductos->getStyle('E'.$f)->getNumberFormat()->setFormatCode('0.0%');
             $f++;
         }
 
@@ -189,15 +245,70 @@ class ReporteExcelService
 
             $hojaMetodos->getStyle('B'.$f)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER);
             $hojaMetodos->getStyle('C'.$f)->getNumberFormat()->setFormatCode(self::FORMATO_MONEDA);
-            $hojaMetodos->getStyle('D'.$f)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_PERCENTAGE_0);
+            $hojaMetodos->getStyle('D'.$f)->getNumberFormat()->setFormatCode('0.0%');
             $f++;
         }
 
-        // Ajustar ancho de columnas en todas las hojas
-        foreach ($spreadsheet->getAllSheets() as $hoja) {
-            foreach (range('A', 'E') as $col) {
-                $hoja->getColumnDimension($col)->setAutoSize(true);
+        // Totales de conciliación calculados a partir de las filas exportadas.
+        foreach ([
+            [$hojaDias, $datos['serie_diaria'], ['B' => 'membresias', 'C' => 'ventas', 'D' => 'total', 'E' => 'transacciones'], ['B', 'C', 'D']],
+            [$hojaPlanes, $datos['planes'], ['B' => 'pagos', 'C' => 'ingresos'], ['C']],
+            [$hojaProductos, $datos['productos'], ['B' => 'unidades', 'D' => 'ingresos'], ['D']],
+            [$hojaMetodos, $datos['metodos'], ['B' => 'operaciones', 'C' => 'ingresos'], ['C']],
+        ] as [$hoja, $filas, $columnas, $moneda]) {
+            $totalFila = count($filas) + 2;
+            $hoja->setCellValueExplicit('A'.$totalFila, 'TOTAL', DataType::TYPE_STRING);
+            foreach ($columnas as $col => $key) {
+                $hoja->setCellValue($col.$totalFila, round(collect($filas)->sum($key), 2));
+                $hoja->getStyle($col.$totalFila)->getNumberFormat()->setFormatCode(in_array($col, $moneda, true) ? self::FORMATO_MONEDA : NumberFormat::FORMAT_NUMBER);
             }
+            $hoja->getStyle("A{$totalFila}:".$hoja->getHighestColumn().$totalFila)->getFont()->setBold(true);
+            if ($hoja === $hojaProductos) {
+                $notaFila = $totalFila + 2;
+                $hoja->setCellValueExplicit('A'.$notaFila, 'Las operaciones por producto no son aditivas: una venta puede incluir varios productos.', DataType::TYPE_STRING);
+                $hoja->mergeCells("A{$notaFila}:E{$notaFila}");
+                $hoja->getRowDimension($notaFila)->setRowHeight(32);
+            }
+        }
+
+        // Mantener las cinco hojas originales primero.
+        foreach (['Resumen', 'Ingresos por día', 'Membresías', 'Productos', 'Métodos de pago', 'Comparativo'] as $index => $titulo) {
+            $spreadsheet->setIndexByName($titulo, $index);
+        }
+        foreach ($spreadsheet->getAllSheets() as $hoja) {
+            $ultimaColumna = $hoja->getHighestColumn();
+            $ultimaFila = $hoja->getHighestRow();
+            $hoja->setShowGridlines(false);
+            $hoja->getStyle("A1:{$ultimaColumna}{$ultimaFila}")->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_CENTER);
+            $hoja->getColumnDimension('A')->setWidth($hoja === $hojaResumen ? 36 : 42);
+            foreach (range('B', $ultimaColumna) as $col) {
+                $hoja->getColumnDimension($col)->setWidth($hoja === $hojaResumen && $col === 'C' ? 60 : 24);
+            }
+            $cabecera = $hoja === $hojaResumen ? 4 : 1;
+            $hoja->getStyle("A{$cabecera}:{$ultimaColumna}{$cabecera}")->applyFromArray($estiloCabecera);
+            $hoja->getRowDimension($cabecera)->setRowHeight(34);
+            $hoja->freezePane('B'.($cabecera + 1));
+            if ($hoja !== $hojaResumen) {
+                $cantidad = match ($hoja->getTitle()) {
+                    'Ingresos por día' => count($datos['serie_diaria']),
+                    'Membresías' => count($datos['planes']),
+                    'Productos' => count($datos['productos']),
+                    'Métodos de pago' => count($datos['metodos']),
+                    default => count($datos['comparativo']),
+                };
+                if ($cantidad > 0) {
+                    $hoja->setAutoFilter('A1:'.$ultimaColumna.($cantidad + 1));
+                }
+                for ($f = 2; $f <= $cantidad + 1; $f++) {
+                    $hoja->getRowDimension($f)->setRowHeight(32);
+                    if ($f % 2 === 0) {
+                        $hoja->getStyle("A{$f}:{$ultimaColumna}{$f}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F1F5F9');
+                    }
+                }
+            }
+            $hoja->getStyle("A{$cabecera}:{$ultimaColumna}{$ultimaFila}")->getBorders()->getHorizontal()->setBorderStyle(Border::BORDER_HAIR)->getColor()->setRGB('CBD5E1');
+            $hoja->getPageSetup()->setPaperSize(PageSetup::PAPERSIZE_LETTER)->setOrientation(PageSetup::ORIENTATION_LANDSCAPE)->setFitToWidth(1)->setFitToHeight(0)->setRowsToRepeatAtTopByStartAndEnd($cabecera, $cabecera)->setPrintArea("A1:{$ultimaColumna}{$ultimaFila}");
+            $hoja->getHeaderFooter()->setOddHeader('Alpha Fitness | '.$reporte['codigo'])->setOddFooter('Confidencial | USD | Página &P de &N');
         }
 
         $spreadsheet->setActiveSheetIndex(0);

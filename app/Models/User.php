@@ -91,6 +91,11 @@ class User extends Authenticatable
         return $this->hasMany(Venta::class);
     }
 
+    public function calificacionesEntrenador(): HasMany
+    {
+        return $this->hasMany(EntrenadorCalificacion::class, 'entrenador_id');
+    }
+
     /** Keep profile images first-party so opening the app never contacts a tracking host. */
     public function getAvatarUrlAttribute(): ?string
     {

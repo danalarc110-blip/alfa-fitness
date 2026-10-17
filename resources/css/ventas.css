@@ -1,0 +1,21 @@
+[data-venta-ir][aria-pressed="true"],
+[data-venta-categoria][aria-pressed="true"] {
+    background: var(--alpha-primary);
+    color: var(--alpha-on-primary);
+    border-color: var(--alpha-primary);
+}
+.venta-cobro {
+    background: var(--alpha-surface);
+    box-shadow: 0 -4px 16px #0000000a;
+}
+#venta-nueva button:focus-visible {
+    outline: 2px solid var(--alpha-primary-text);
+    outline-offset: 3px;
+}
+#venta-nueva button:disabled {
+    cursor: not-allowed;
+    opacity: .5;
+}
+@media (min-width: 1024px) {
+    #venta-ir-carrito { display: none; }
+}

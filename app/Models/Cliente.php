@@ -60,6 +60,11 @@ class Cliente extends Authenticatable
         return $this->hasMany(PersonalRecord::class);
     }
 
+    public function rutinas(): HasMany
+    {
+        return $this->hasMany(Rutina::class, 'user_id')->where('user_type', 'cliente');
+    }
+
     public function asistencias(): HasMany
     {
         return $this->hasMany(Asistencia::class);

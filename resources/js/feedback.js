@@ -19,6 +19,16 @@ document.addEventListener('submit', event => {
     if (event.defaultPrevented || form.method.toLowerCase() === 'get') return;
     if (form.dataset.confirm && !window.confirm(form.dataset.confirm)) { event.preventDefault(); return; }
     if (form.dataset.submitting) { event.preventDefault(); return; }
+    // Disabled submit buttons are omitted from native form data (for example trainer stars).
+    const submitter = event.submitter;
+    if (submitter?.name && !submitter.disabled) {
+        const value = document.createElement('input');
+        value.type = 'hidden';
+        value.name = submitter.name;
+        value.value = submitter.value;
+        value.dataset.submitterValue = 'true';
+        form.append(value);
+    }
     form.dataset.submitting = 'true';
     form.setAttribute('aria-busy', 'true');
     form.querySelectorAll('button[type="submit"], button:not([type])').forEach(button => {
@@ -27,6 +37,7 @@ document.addEventListener('submit', event => {
     });
 });
 window.addEventListener('pageshow', () => {
+    document.querySelectorAll('input[data-submitter-value]').forEach(input => input.remove());
     document.querySelectorAll('form[data-submitting]').forEach(form => { delete form.dataset.submitting; form.removeAttribute('aria-busy'); });
     document.querySelectorAll('button[data-pending]').forEach(button => { button.disabled = false; delete button.dataset.pending; });
 });

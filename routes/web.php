@@ -92,7 +92,11 @@ Route::middleware(['auth:cliente,web', 'auth.session'])->group(function () {
     Route::post('/asistencia/salida', [AsistenciaController::class, 'salida'])->middleware('can:asistencia')->name('asistencia.salida');
 
     Route::get('/entrenadores', [EntrenadorController::class, 'index'])->name('entrenadores.index');
+    Route::post('/entrenadores/{entrenador}/calificar', [EntrenadorController::class, 'calificar'])->middleware('throttle:60,1')->name('entrenadores.calificar');
+    Route::get('/entrenador/clientes', [EntrenadorController::class, 'misClientes'])->name('entrenador.clientes');
+    Route::get('/entrenador/clientes/{cliente}', [EntrenadorController::class, 'cliente'])->name('entrenador.cliente');
     Route::post('/entrenadores', [EntrenadorController::class, 'store'])->middleware(['can:administrar', 'throttle:exportaciones'])->name('entrenadores.store');
+    Route::post('/entrenadores/{entrenador}/invitacion', [EntrenadorController::class, 'invitar'])->middleware(['can:administrar', 'throttle:5,1'])->name('entrenadores.invitar');
     Route::put('/entrenadores/{entrenador}', [EntrenadorController::class, 'update'])->middleware('can:administrar')->name('entrenadores.update');
     Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
     Route::post('/productos', [ProductoController::class, 'store'])->middleware('can:inventario')->name('productos.store');

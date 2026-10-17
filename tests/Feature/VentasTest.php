@@ -7,6 +7,7 @@ use App\Models\Producto;
 use App\Models\User;
 use App\Models\Venta;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class VentasTest extends TestCase
@@ -33,6 +34,7 @@ class VentasTest extends TestCase
 
         // Staff registers a sale of 2 units
         $response = $this->actingAs($secretaria)->post(route('ventas.store'), [
+            'venta_uuid' => (string) Str::uuid(),
             'cliente_id' => $cliente->id,
             'metodo_pago' => 'Efectivo',
             'items' => [
@@ -75,6 +77,7 @@ class VentasTest extends TestCase
         ]);
 
         $response = $this->actingAs($secretaria)->post(route('ventas.store'), [
+            'venta_uuid' => (string) Str::uuid(),
             'metodo_pago' => 'Tarjeta',
             'items' => [
                 [
