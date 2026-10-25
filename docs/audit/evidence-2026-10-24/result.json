@@ -1,0 +1,460 @@
+{
+  "url": "http://127.0.0.1:8047",
+  "build": "%TEMP%\\alfa-fitness-audit-build-833e97a1137f414e929bf8bcf453276d",
+  "checks": [
+    {
+      "label": "login-320",
+      "status": 200
+    },
+    {
+      "label": "login-320",
+      "path": "/login",
+      "viewport": 320,
+      "scrollWidth": 320,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Un nuevo día.Una mejor versión.",
+      "nameless": []
+    },
+    {
+      "label": "login-390",
+      "status": 200
+    },
+    {
+      "label": "login-390",
+      "path": "/login",
+      "viewport": 390,
+      "scrollWidth": 390,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Un nuevo día.Una mejor versión.",
+      "nameless": []
+    },
+    {
+      "label": "login-1440",
+      "status": 200
+    },
+    {
+      "label": "login-1440",
+      "path": "/login",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Un nuevo día.Una mejor versión.",
+      "nameless": []
+    },
+    {
+      "label": "/cliente/dashboard-320",
+      "status": 200
+    },
+    {
+      "label": "/cliente/dashboard-320",
+      "path": "/cliente/dashboard",
+      "viewport": 320,
+      "scrollWidth": 320,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Mi entrenamiento",
+      "nameless": []
+    },
+    {
+      "label": "/entrenamientos-320",
+      "status": 200
+    },
+    {
+      "label": "/entrenamientos-320",
+      "path": "/entrenamientos",
+      "viewport": 320,
+      "scrollWidth": 320,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Entrenamientos",
+      "nameless": []
+    },
+    {
+      "label": "/ejercicios-320",
+      "status": 200
+    },
+    {
+      "label": "/ejercicios-320",
+      "path": "/ejercicios",
+      "viewport": 320,
+      "scrollWidth": 320,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Ejercicios Populares",
+      "nameless": [
+        {
+          "tag": "INPUT",
+          "id": "",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "label": "/membresias-320",
+      "status": 200
+    },
+    {
+      "label": "/membresias-320",
+      "path": "/membresias",
+      "viewport": 320,
+      "scrollWidth": 320,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Membresías",
+      "nameless": []
+    },
+    {
+      "label": "/progreso-320",
+      "status": 200
+    },
+    {
+      "label": "/progreso-320",
+      "path": "/progreso",
+      "viewport": 320,
+      "scrollWidth": 320,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Mi progreso",
+      "nameless": []
+    },
+    {
+      "label": "/cliente/asistencia-320",
+      "status": 404
+    },
+    {
+      "label": "/cliente/asistencia-320",
+      "path": "/cliente/asistencia",
+      "viewport": 320,
+      "scrollWidth": 320,
+      "overflow": false,
+      "theme": "light",
+      "h1": "No encontramos esta página",
+      "nameless": []
+    },
+    {
+      "label": "/configuracion-320",
+      "status": 200
+    },
+    {
+      "label": "/configuracion-320",
+      "path": "/configuracion",
+      "viewport": 320,
+      "scrollWidth": 320,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Mi cuenta",
+      "nameless": []
+    },
+    {
+      "label": "/cliente/dashboard",
+      "status": 200
+    },
+    {
+      "label": "/cliente/dashboard",
+      "path": "/cliente/dashboard",
+      "viewport": 320,
+      "scrollWidth": 320,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Mi entrenamiento",
+      "nameless": []
+    },
+    {
+      "label": "/cliente/dashboard-390",
+      "status": 200
+    },
+    {
+      "label": "/cliente/dashboard-390",
+      "path": "/cliente/dashboard",
+      "viewport": 390,
+      "scrollWidth": 390,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Mi entrenamiento",
+      "nameless": []
+    },
+    {
+      "label": "/entrenamientos-390",
+      "status": 200
+    },
+    {
+      "label": "/entrenamientos-390",
+      "path": "/entrenamientos",
+      "viewport": 390,
+      "scrollWidth": 390,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Entrenamientos",
+      "nameless": []
+    },
+    {
+      "label": "/ejercicios-390",
+      "status": 200
+    },
+    {
+      "label": "/ejercicios-390",
+      "path": "/ejercicios",
+      "viewport": 390,
+      "scrollWidth": 390,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Ejercicios Populares",
+      "nameless": [
+        {
+          "tag": "INPUT",
+          "id": "",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "label": "/membresias-390",
+      "status": 200
+    },
+    {
+      "label": "/membresias-390",
+      "path": "/membresias",
+      "viewport": 390,
+      "scrollWidth": 390,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Membresías",
+      "nameless": []
+    },
+    {
+      "label": "/progreso-390",
+      "status": 200
+    },
+    {
+      "label": "/progreso-390",
+      "path": "/progreso",
+      "viewport": 390,
+      "scrollWidth": 390,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Mi progreso",
+      "nameless": []
+    },
+    {
+      "label": "/cliente/asistencia-390",
+      "status": 404
+    },
+    {
+      "label": "/cliente/asistencia-390",
+      "path": "/cliente/asistencia",
+      "viewport": 390,
+      "scrollWidth": 390,
+      "overflow": false,
+      "theme": "light",
+      "h1": "No encontramos esta página",
+      "nameless": []
+    },
+    {
+      "label": "/configuracion-390",
+      "status": 200
+    },
+    {
+      "label": "/configuracion-390",
+      "path": "/configuracion",
+      "viewport": 390,
+      "scrollWidth": 390,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Mi cuenta",
+      "nameless": []
+    },
+    {
+      "label": "/cliente/dashboard-1440",
+      "status": 200
+    },
+    {
+      "label": "/cliente/dashboard-1440",
+      "path": "/cliente/dashboard",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Mi entrenamiento",
+      "nameless": []
+    },
+    {
+      "label": "/entrenamientos-1440",
+      "status": 200
+    },
+    {
+      "label": "/entrenamientos-1440",
+      "path": "/entrenamientos",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Entrenamientos",
+      "nameless": []
+    },
+    {
+      "label": "/ejercicios-1440",
+      "status": 200
+    },
+    {
+      "label": "/ejercicios-1440",
+      "path": "/ejercicios",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Ejercicios Populares",
+      "nameless": [
+        {
+          "tag": "INPUT",
+          "id": "",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "label": "/membresias-1440",
+      "status": 200
+    },
+    {
+      "label": "/membresias-1440",
+      "path": "/membresias",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Membresías",
+      "nameless": []
+    },
+    {
+      "label": "/progreso-1440",
+      "status": 200
+    },
+    {
+      "label": "/progreso-1440",
+      "path": "/progreso",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Mi progreso",
+      "nameless": []
+    },
+    {
+      "label": "/cliente/asistencia-1440",
+      "status": 404
+    },
+    {
+      "label": "/cliente/asistencia-1440",
+      "path": "/cliente/asistencia",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": false,
+      "theme": "light",
+      "h1": "No encontramos esta página",
+      "nameless": []
+    },
+    {
+      "label": "/configuracion-1440",
+      "status": 200
+    },
+    {
+      "label": "/configuracion-1440",
+      "path": "/configuracion",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Mi cuenta",
+      "nameless": []
+    },
+    {
+      "label": "/cliente/dashboard",
+      "status": 200
+    },
+    {
+      "label": "/cliente/dashboard",
+      "path": "/cliente/dashboard",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Mi entrenamiento",
+      "nameless": []
+    },
+    {
+      "label": "/configuracion",
+      "status": 200
+    },
+    {
+      "label": "/configuracion",
+      "path": "/configuracion",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": false,
+      "theme": "light",
+      "h1": "Mi cuenta",
+      "nameless": []
+    },
+    {
+      "label": "dashboard-dark",
+      "status": 200
+    },
+    {
+      "label": "dashboard-dark",
+      "path": "/cliente/dashboard",
+      "viewport": 1440,
+      "scrollWidth": 1440,
+      "overflow": false,
+      "theme": "dark",
+      "h1": "Mi entrenamiento",
+      "nameless": []
+    },
+    {
+      "label": "mobile-menu-keyboard",
+      "expanded": "true",
+      "closed": "false"
+    },
+    {
+      "label": "dashboard-text-200-percent",
+      "path": "/cliente/dashboard",
+      "viewport": 390,
+      "scrollWidth": 390,
+      "overflow": false,
+      "theme": "dark",
+      "h1": "Mi entrenamiento",
+      "nameless": []
+    },
+    {
+      "label": "gym-background",
+      "status": 200
+    }
+  ],
+  "runtimeErrors": [],
+  "requestErrors": [
+    {
+      "url": "/cliente/asistencia",
+      "status": 404
+    },
+    {
+      "url": "/cliente/asistencia",
+      "status": 404
+    },
+    {
+      "url": "/cliente/asistencia",
+      "status": 404
+    }
+  ],
+  "screenshots": [
+    "%TEMP%\\alfa-skill-ui-1185c7ea351c4ce183b3f787ec193e11\\captures\\login-320.png",
+    "%TEMP%\\alfa-skill-ui-1185c7ea351c4ce183b3f787ec193e11\\captures\\login-1440.png",
+    "%TEMP%\\alfa-skill-ui-1185c7ea351c4ce183b3f787ec193e11\\captures\\dashboard-320.png",
+    "%TEMP%\\alfa-skill-ui-1185c7ea351c4ce183b3f787ec193e11\\captures\\dashboard-1440.png",
+    "%TEMP%\\alfa-skill-ui-1185c7ea351c4ce183b3f787ec193e11\\captures\\dashboard-dark.png",
+    "%TEMP%\\alfa-skill-ui-1185c7ea351c4ce183b3f787ec193e11\\captures\\dashboard-text-200.png"
+  ],
+  "started": "2026-10-24T23:14:06.030Z",
+  "completed": "2026-10-24T23:17:09.326Z"
+}

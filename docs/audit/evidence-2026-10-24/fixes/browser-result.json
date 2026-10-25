@@ -1,0 +1,83 @@
+{
+  "tree": "d3d05510536cbcedbc732ef432a8c889d32dc24d",
+  "checks": [
+    {
+      "name": "stale product form after real sale",
+      "before": 10,
+      "sold": 2,
+      "after": 8,
+      "saleStatus": 200
+    },
+    {
+      "name": "create exercise modal keyboard and labels",
+      "role": "dialog",
+      "modal": "true",
+      "focus": true,
+      "labels": [
+        {
+          "name": "nombre",
+          "labels": 1
+        },
+        {
+          "name": "grupo_muscular",
+          "labels": 1
+        },
+        {
+          "name": "subgrupo",
+          "labels": 1
+        },
+        {
+          "name": "imagen",
+          "labels": 1
+        },
+        {
+          "name": "imagen_musculos",
+          "labels": 1
+        }
+      ],
+      "escapeClosed": true,
+      "focusRestored": true
+    },
+    {
+      "name": "edit exercise modal keyboard and labels",
+      "role": "dialog",
+      "modal": "true",
+      "focus": true,
+      "labels": [
+        {
+          "name": "nombre",
+          "labels": 1
+        },
+        {
+          "name": "grupo_muscular",
+          "labels": 1
+        },
+        {
+          "name": "subgrupo",
+          "labels": 1
+        },
+        {
+          "name": "imagen",
+          "labels": 1
+        },
+        {
+          "name": "imagen_musculos",
+          "labels": 1
+        }
+      ],
+      "escapeClosed": true,
+      "focusRestored": true
+    },
+    {
+      "name": "exercise modal at 320px",
+      "overflow": false
+    },
+    {
+      "name": "rendered timer after 90 seconds suspension",
+      "display": "00:00",
+      "state": "¡A entrenar!",
+      "alerts": 1
+    }
+  ],
+  "pageErrors": []
+}

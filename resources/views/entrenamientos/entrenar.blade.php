@@ -216,6 +216,8 @@
     // ESTADO DEL CRONÓMETRO Y ALERTA MULTIMEDIA
     let segundosRestantes = 60;
     let tiempoBase = 60;
+    let tiempoRestanteMs = 60000;
+    let timerDeadline = null;
     let timerInterval = null;
     let sonidoHabilitado = true;
     try { sonidoHabilitado = localStorage.getItem('alfa_timer_sonido') !== 'false'; }
@@ -307,47 +309,67 @@
         document.getElementById('timer-display').textContent = formatearTiempo(segundosRestantes);
     }
 
+    function detenerTimer() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        timerDeadline = null;
+    }
+
+    function sincronizarTimer() {
+        if (timerDeadline === null) return;
+        // Date.now también avanza cuando el navegador suspende los callbacks.
+        tiempoRestanteMs = Math.max(0, timerDeadline - Date.now());
+        segundosRestantes = Math.ceil(tiempoRestanteMs / 1000);
+        actualizarDisplay();
+        if (tiempoRestanteMs > 0) return;
+
+        detenerTimer();
+        document.getElementById('timer-estado').textContent = '¡A entrenar!';
+        document.getElementById('timer-estado').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-400 text-black animate-pulse';
+        reproducirAlertaDescanso();
+        if (window.showAlphaToast) {
+            window.showAlphaToast('¡Tiempo de descanso cumplido! Comienza la siguiente serie.', 'info');
+        }
+    }
+
     function iniciarTimer() {
-        if (timerInterval) return;
+        if (timerDeadline !== null) return;
+        timerDeadline = Date.now() + tiempoRestanteMs;
         document.getElementById('timer-estado').textContent = 'Descansando';
         document.getElementById('timer-estado').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-400 border border-emerald-400/30';
 
-        timerInterval = setInterval(() => {
-            if (segundosRestantes > 0) {
-                segundosRestantes--;
-                actualizarDisplay();
-            } else {
-                pausarTimer();
-                document.getElementById('timer-estado').textContent = '¡A entrenar!';
-                document.getElementById('timer-estado').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-400 text-black animate-pulse';
-                reproducirAlertaDescanso();
-                if (window.showAlphaToast) {
-                    window.showAlphaToast('¡Tiempo de descanso cumplido! Comienza la siguiente serie.', 'info');
-                }
-            }
-        }, 1000);
+        timerInterval = setInterval(sincronizarTimer, 1000);
+        sincronizarTimer();
     }
 
     function pausarTimer() {
-        clearInterval(timerInterval);
-        timerInterval = null;
+        if (timerDeadline !== null) {
+            sincronizarTimer();
+            if (timerDeadline === null) return;
+        }
+        detenerTimer();
         document.getElementById('timer-estado').textContent = 'Pausado';
         document.getElementById('timer-estado').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/5 text-gray-400';
     }
 
     function reiniciarTimer() {
-        pausarTimer();
+        detenerTimer();
+        tiempoRestanteMs = tiempoBase * 1000;
         segundosRestantes = tiempoBase;
         actualizarDisplay();
         document.getElementById('timer-estado').textContent = 'Listo';
+        document.getElementById('timer-estado').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/5 text-gray-400';
     }
 
     function ajustarTimer(segundos) {
         tiempoBase = segundos;
-        segundosRestantes = segundos;
-        actualizarDisplay();
         reiniciarTimer();
     }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') sincronizarTimer();
+    });
+    window.addEventListener('pageshow', sincronizarTimer);
 
     // TOGGLE DE SERIES INTERACTIVAS
     function toggleSerie(btn, descanso) {

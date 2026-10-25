@@ -14,7 +14,7 @@
 
     <div class="flex items-center gap-3 self-end sm:self-auto">
         @can('administrar')
-            <button type="button" onclick="document.getElementById('modal-nuevo-ejercicio').classList.remove('hidden')"
+            <button type="button" onclick="window.alphaAnimateModalOpen('#modal-nuevo-ejercicio')"
                 class="alpha-btn-primary px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-yellow-400/10">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
                 Nuevo Ejercicio
@@ -166,25 +166,25 @@
 
 @can('administrar')
 {{-- MODAL NUEVO EJERCICIO --}}
-<div id="modal-nuevo-ejercicio" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
+<div id="modal-nuevo-ejercicio" role="dialog" aria-modal="true" aria-labelledby="titulo-nuevo-ejercicio" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
     <div class="alpha-card bg-[#141416] border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-5 pb-3 border-b border-white/10">
-            <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <h3 id="titulo-nuevo-ejercicio" class="text-base font-bold text-white flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
                 Nuevo Ejercicio
             </h3>
-            <button type="button" onclick="document.getElementById('modal-nuevo-ejercicio').classList.add('hidden')" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
+            <button type="button" onclick="window.alphaAnimateModalClose('#modal-nuevo-ejercicio')" aria-label="Cerrar nuevo ejercicio" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
         </div>
         <form method="POST" action="{{ route('ejercicios.store') }}" enctype="multipart/form-data" class="space-y-4">
             @csrf
             <div>
-                <label class="block text-xs font-semibold text-gray-300 mb-1">Nombre del Ejercicio *</label>
-                <input type="text" name="nombre" required maxlength="100" placeholder="Ej: Press militar con barra" class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:border-yellow-400/60 outline-none">
+                <label for="crear-nombre" class="block text-xs font-semibold text-gray-300 mb-1">Nombre del Ejercicio *</label>
+                <input type="text" id="crear-nombre" name="nombre" required maxlength="100" placeholder="Ej: Press militar con barra" class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:border-yellow-400/60 outline-none">
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-300 mb-1">Grupo Muscular *</label>
-                    <input type="text" name="grupo_muscular" list="grupos-lista" required maxlength="50" placeholder="Ej: Pecho, Hombros..." class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:border-yellow-400/60 outline-none">
+                    <label for="crear-grupo" class="block text-xs font-semibold text-gray-300 mb-1">Grupo Muscular *</label>
+                    <input type="text" id="crear-grupo" name="grupo_muscular" list="grupos-lista" required maxlength="50" placeholder="Ej: Pecho, Hombros..." class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:border-yellow-400/60 outline-none">
                     <datalist id="grupos-lista">
                         <option value="Pecho">
                         <option value="Espalda">
@@ -197,22 +197,22 @@
                     </datalist>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-300 mb-1">Subgrupo Muscular</label>
-                    <input type="text" name="subgrupo" maxlength="50" placeholder="Ej: Deltoides anterior" class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:border-yellow-400/60 outline-none">
+                    <label for="crear-subgrupo" class="block text-xs font-semibold text-gray-300 mb-1">Subgrupo Muscular</label>
+                    <input type="text" id="crear-subgrupo" name="subgrupo" maxlength="50" placeholder="Ej: Deltoides anterior" class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 focus:border-yellow-400/60 outline-none">
                 </div>
             </div>
             <div>
-                <label class="block text-xs font-semibold text-gray-300 mb-1">Foto o Ilustración del Ejercicio</label>
-                <input type="file" name="imagen" accept="image/jpeg,image/png,image/webp" class="w-full text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-yellow-400/10 file:text-yellow-400 hover:file:bg-yellow-400/20">
+                <label for="crear-imagen" class="block text-xs font-semibold text-gray-300 mb-1">Foto o Ilustración del Ejercicio</label>
+                <input type="file" id="crear-imagen" name="imagen" accept="image/jpeg,image/png,image/webp" class="w-full text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-yellow-400/10 file:text-yellow-400 hover:file:bg-yellow-400/20">
                 <span class="block mt-1 text-[11px] text-gray-500">JPG, PNG o WebP · Máximo 8 MB</span>
             </div>
             <div>
-                <label class="block text-xs font-semibold text-gray-300 mb-1">Diagrama de Músculos Trabajados</label>
-                <input type="file" name="imagen_musculos" accept="image/jpeg,image/png,image/webp" class="w-full text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-yellow-400/10 file:text-yellow-400 hover:file:bg-yellow-400/20">
+                <label for="crear-imagen-musculos" class="block text-xs font-semibold text-gray-300 mb-1">Diagrama de Músculos Trabajados</label>
+                <input type="file" id="crear-imagen-musculos" name="imagen_musculos" accept="image/jpeg,image/png,image/webp" class="w-full text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-yellow-400/10 file:text-yellow-400 hover:file:bg-yellow-400/20">
                 <span class="block mt-1 text-[11px] text-gray-500">JPG, PNG o WebP · Diagrama anatómico</span>
             </div>
             <div class="flex justify-end gap-3 pt-3 border-t border-white/5">
-                <button type="button" onclick="document.getElementById('modal-nuevo-ejercicio').classList.add('hidden')" class="alpha-btn-secondary px-4 py-2 text-xs font-semibold">Cancelar</button>
+                <button type="button" onclick="window.alphaAnimateModalClose('#modal-nuevo-ejercicio')" class="alpha-btn-secondary px-4 py-2 text-xs font-semibold">Cancelar</button>
                 <button type="submit" class="alpha-btn-primary px-5 py-2 text-xs font-semibold">Guardar Ejercicio</button>
             </div>
         </form>
@@ -220,42 +220,42 @@
 </div>
 
 {{-- MODAL EDITAR EJERCICIO --}}
-<div id="modal-editar-ejercicio" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
+<div id="modal-editar-ejercicio" role="dialog" aria-modal="true" aria-labelledby="titulo-editar-ejercicio" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
     <div class="alpha-card bg-[#141416] border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-5 pb-3 border-b border-white/10">
-            <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <h3 id="titulo-editar-ejercicio" class="text-base font-bold text-white flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
                 Editar Ejercicio
             </h3>
-            <button type="button" onclick="document.getElementById('modal-editar-ejercicio').classList.add('hidden')" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
+            <button type="button" onclick="window.alphaAnimateModalClose('#modal-editar-ejercicio')" aria-label="Cerrar editar ejercicio" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
         </div>
         <form id="form-editar-ejercicio" method="POST" action="" enctype="multipart/form-data" class="space-y-4">
             @csrf
             @method('PUT')
             <div>
-                <label class="block text-xs font-semibold text-gray-300 mb-1">Nombre del Ejercicio *</label>
+                <label for="edit-nombre" class="block text-xs font-semibold text-gray-300 mb-1">Nombre del Ejercicio *</label>
                 <input type="text" id="edit-nombre" name="nombre" required maxlength="100" class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-yellow-400/60 outline-none">
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-300 mb-1">Grupo Muscular *</label>
+                    <label for="edit-grupo" class="block text-xs font-semibold text-gray-300 mb-1">Grupo Muscular *</label>
                     <input type="text" id="edit-grupo" name="grupo_muscular" list="grupos-lista" required maxlength="50" class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-yellow-400/60 outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-gray-300 mb-1">Subgrupo Muscular</label>
+                    <label for="edit-subgrupo" class="block text-xs font-semibold text-gray-300 mb-1">Subgrupo Muscular</label>
                     <input type="text" id="edit-subgrupo" name="subgrupo" maxlength="50" class="w-full bg-black/60 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-yellow-400/60 outline-none">
                 </div>
             </div>
             <div>
-                <label class="block text-xs font-semibold text-gray-300 mb-1">Reemplazar Foto del Ejercicio</label>
-                <input type="file" name="imagen" accept="image/jpeg,image/png,image/webp" class="w-full text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-yellow-400/10 file:text-yellow-400 hover:file:bg-yellow-400/20">
+                <label for="edit-imagen" class="block text-xs font-semibold text-gray-300 mb-1">Reemplazar Foto del Ejercicio</label>
+                <input type="file" id="edit-imagen" name="imagen" accept="image/jpeg,image/png,image/webp" class="w-full text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-yellow-400/10 file:text-yellow-400 hover:file:bg-yellow-400/20">
             </div>
             <div>
-                <label class="block text-xs font-semibold text-gray-300 mb-1">Reemplazar Diagrama de Músculos</label>
-                <input type="file" name="imagen_musculos" accept="image/jpeg,image/png,image/webp" class="w-full text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-yellow-400/10 file:text-yellow-400 hover:file:bg-yellow-400/20">
+                <label for="edit-imagen-musculos" class="block text-xs font-semibold text-gray-300 mb-1">Reemplazar Diagrama de Músculos</label>
+                <input type="file" id="edit-imagen-musculos" name="imagen_musculos" accept="image/jpeg,image/png,image/webp" class="w-full text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-yellow-400/10 file:text-yellow-400 hover:file:bg-yellow-400/20">
             </div>
             <div class="flex justify-end gap-3 pt-3 border-t border-white/5">
-                <button type="button" onclick="document.getElementById('modal-editar-ejercicio').classList.add('hidden')" class="alpha-btn-secondary px-4 py-2 text-xs font-semibold">Cancelar</button>
+                <button type="button" onclick="window.alphaAnimateModalClose('#modal-editar-ejercicio')" class="alpha-btn-secondary px-4 py-2 text-xs font-semibold">Cancelar</button>
                 <button type="submit" class="alpha-btn-primary px-5 py-2 text-xs font-semibold">Actualizar Ejercicio</button>
             </div>
         </form>
@@ -374,7 +374,7 @@
         document.getElementById('edit-nombre').value = ej.nombre;
         document.getElementById('edit-grupo').value = ej.grupo_muscular;
         document.getElementById('edit-subgrupo').value = ej.subgrupo || '';
-        document.getElementById('modal-editar-ejercicio').classList.remove('hidden');
+        window.alphaAnimateModalOpen('#modal-editar-ejercicio');
     }
 </script>
 @endpush

@@ -1,0 +1,77 @@
+{
+  "checks": [
+    {
+      "path": "/mi-asistencia",
+      "width": 320,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/mi-asistencia",
+      "width": 390,
+      "status": 200,
+      "overflow": false
+    },
+    {
+      "path": "/mi-asistencia",
+      "width": 1440,
+      "status": 200,
+      "overflow": false
+    }
+  ],
+  "modal": {
+    "visible": true,
+    "role": null,
+    "ariaModal": null,
+    "focusInside": false,
+    "fields": [
+      {
+        "name": "nombre",
+        "id": "",
+        "labels": 0,
+        "ariaLabel": null,
+        "placeholder": "Ej: Press militar con barra"
+      },
+      {
+        "name": "grupo_muscular",
+        "id": "",
+        "labels": 0,
+        "ariaLabel": null,
+        "placeholder": "Ej: Pecho, Hombros..."
+      },
+      {
+        "name": "subgrupo",
+        "id": "",
+        "labels": 0,
+        "ariaLabel": null,
+        "placeholder": "Ej: Deltoides anterior"
+      },
+      {
+        "name": "imagen",
+        "id": "",
+        "labels": 0,
+        "ariaLabel": null,
+        "placeholder": null
+      },
+      {
+        "name": "imagen_musculos",
+        "id": "",
+        "labels": 0,
+        "ariaLabel": null,
+        "placeholder": null
+      }
+    ],
+    "focusInsideAfterTab": false,
+    "closedByEscape": false,
+    "accessibleInputs": [
+      {
+        "role": "button",
+        "name": "Seleccionar archivo"
+      },
+      {
+        "role": "button",
+        "name": "Seleccionar archivo"
+      }
+    ]
+  }
+}

@@ -7,6 +7,7 @@ use App\Services\ImagenSegura;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 
 class ProductoController extends Controller
 {
@@ -70,9 +71,18 @@ class ProductoController extends Controller
             DB::transaction(function () use ($producto, $data, $request, $nuevo, &$anterior) {
                 $producto = Producto::whereKey($producto->id)->lockForUpdate()->firstOrFail();
                 $anterior = $producto->imagen;
+                $ajusteStock = [];
+                if (Gate::allows('existencias') && (int) $data['stock'] !== (int) $data['stock_original']) {
+                    if ($producto->stock !== (int) $data['stock_original']) {
+                        throw ValidationException::withMessages([
+                            'stock' => 'Las existencias cambiaron mientras editabas. Recarga el catálogo y revisa el ajuste.',
+                        ]);
+                    }
+                    $ajusteStock = ['stock' => (int) $data['stock']];
+                }
                 $producto->update([
                     'nombre' => $data['nombre'], 'precio' => $data['precio'], 'categoria' => $data['categoria'] ?? null,
-                    ... (Gate::allows('existencias') ? ['stock' => $data['stock']] : []),
+                    ...$ajusteStock,
                     'activo' => $request->boolean('activo'),
                     'imagen' => $nuevo ?: ($request->boolean('eliminar_imagen') ? null : $anterior),
                 ]);
@@ -96,6 +106,7 @@ class ProductoController extends Controller
             'nombre' => ['required', 'string', 'max:255'], 'precio' => ['required', 'numeric', 'decimal:0,2', 'min:0', 'max:999999'],
             'categoria' => ['nullable', 'string', 'max:100'],
             'stock' => Gate::allows('existencias') ? ['required', 'integer', 'min:0', 'max:999999'] : ['missing'],
+            'stock_original' => $actualizar && Gate::allows('existencias') ? ['required', 'integer', 'min:0', 'max:999999'] : ['missing'],
             'activo' => [$actualizar ? 'nullable' : 'prohibited', 'boolean'],
             'imagen' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=5000,max_height=5000'],
             'eliminar_imagen' => [$actualizar ? 'nullable' : 'prohibited', 'boolean'],

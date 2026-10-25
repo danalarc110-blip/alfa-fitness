@@ -1,0 +1,155 @@
+{
+  "base": "06d31c2984133a9596bff0db21935399eb8c658c",
+  "sourceChecksFingerprint": "168e06846a6be3570879bcd9cfae36d57fda4e762466f7e33f47512ccc676416",
+  "checkedSourceFiles": 228,
+  "statusBeforeAuditReport": [
+    " M .gitattributes",
+    " M README.md",
+    " M app/Http/Controllers/AnaliticaFinancieraController.php",
+    " M app/Http/Controllers/AsistenciaController.php",
+    " M app/Http/Controllers/Auth/LoginController.php",
+    " M app/Http/Controllers/ConfiguracionController.php",
+    " M app/Http/Controllers/CuentasController.php",
+    " M app/Http/Controllers/DashboardController.php",
+    " M app/Http/Controllers/MembresiaController.php",
+    " M app/Http/Controllers/ProgresoController.php",
+    " M app/Http/Controllers/RutinaController.php",
+    " M app/Http/Controllers/VentaController.php",
+    " M app/Http/Middleware/CuentaActiva.php",
+    " M app/Models/Cliente.php",
+    " M app/Models/Ejercicio.php",
+    " M app/Models/Membresia.php",
+    " M app/Models/Venta.php",
+    " M app/Providers/AppServiceProvider.php",
+    " M app/Services/AnaliticaFinancieraService.php",
+    " M app/Services/ReporteExcelService.php",
+    " M bootstrap/app.php",
+    " M composer.lock",
+    " M docs/documentacion/MANUAL_TECNICO.md",
+    " M docs/documentacion/MANUAL_TECNICO.pdf",
+    " M docs/documentacion/MANUAL_USUARIO.md",
+    " M docs/documentacion/MANUAL_USUARIO.pdf",
+    " M docs/documentacion/README.md",
+    " M package-lock.json",
+    " M package.json",
+    " M phpunit.xml",
+    " M resources/css/app.css",
+    " M resources/css/design.css",
+    " M resources/css/refinements.css",
+    " M resources/js/ventas.js",
+    " M resources/views/analitica/index.blade.php",
+    " M resources/views/analitica/pdf.blade.php",
+    " M resources/views/asistencia/index.blade.php",
+    " M resources/views/auth/establecer-password.blade.php",
+    " M resources/views/cliente/asistencia.blade.php",
+    " M resources/views/ejercicios/index.blade.php",
+    " M resources/views/emails/comprobante-venta.blade.php",
+    " M resources/views/entrenamientos/crear.blade.php",
+    " M resources/views/entrenamientos/entrenar.blade.php",
+    " M resources/views/entrenamientos/historial.blade.php",
+    " M resources/views/entrenamientos/index.blade.php",
+    " M resources/views/home.blade.php",
+    " M resources/views/layouts/app.blade.php",
+    " M resources/views/membresias/index.blade.php",
+    " M resources/views/partials/feedback.blade.php",
+    " M resources/views/partials/sidebar.blade.php",
+    " M resources/views/privacidad.blade.php",
+    " M resources/views/productos/index.blade.php",
+    " M resources/views/progreso/entrenador.blade.php",
+    " M resources/views/progreso/index.blade.php",
+    " M resources/views/ventas/comprobante.blade.php",
+    " M resources/views/ventas/index.blade.php",
+    " D routes/console.php",
+    " M tests/Feature/AccesoEntrenadoresTest.php",
+    " M tests/Feature/AuditoriaLogicaInvariantesTest.php",
+    " M tests/Feature/AuditoriaSistemaTest.php",
+    " M tests/Feature/ComprobanteVentaTest.php",
+    " M tests/Feature/ExampleTest.php",
+    " D tests/Unit/ExampleTest.php",
+    "?? app/Services/PagoSimulado.php",
+    "?? app/Services/ProgresoCliente.php",
+    "?? app/Support/RangoAtleta.php",
+    "?? database/migrations/2026_10_19_100000_add_simulated_payments_to_ventas.php",
+    "?? database/migrations/2026_10_22_100000_add_access_version_to_clientes.php",
+    "?? docs/audit/",
+    "?? docs/documentacion/DICCIONARIO_DATOS.md",
+    "?? docs/documentacion/DICCIONARIO_DATOS.pdf",
+    "?? docs/documentacion/OPERACION_DESPLIEGUE.md",
+    "?? docs/documentacion/OPERACION_DESPLIEGUE.pdf",
+    "?? docs/documentacion/PROYECTO_REQUISITOS.md",
+    "?? docs/documentacion/PROYECTO_REQUISITOS.pdf",
+    "?? docs/documentacion/REVISION.json",
+    "?? docs/documentacion/RUTAS.json",
+    "?? docs/documentacion/VERIFICACION_PRUEBAS.md",
+    "?? docs/documentacion/VERIFICACION_PRUEBAS.pdf",
+    "?? docs/documentacion/capturas/",
+    "?? docs/presentacion-2026-10-14/",
+    "?? public/images/rangos/",
+    "?? resources/css/mobile-progress.css",
+    "?? resources/views/partials/mobile-nav.blade.php",
+    "?? resources/views/progreso/panel.blade.php",
+    "?? tests/Feature/PagosSimuladosTest.php",
+    "?? tests/Feature/ProgresoMovilTest.php",
+    "?? tests/Feature/ReporteSnapshotDiarioTest.php",
+    "?? tests/Feature/RevisionEntrenamientoDiarioTest.php",
+    "?? tests/Feature/RevisionOperacionDiariaTest.php",
+    "?? tests/Feature/RevisionReportesDiariosTest.php",
+    "?? tests/Feature/RevisionSeguridadDiariaTest.php",
+    "?? tools/build_project_docs.py",
+    "?? tools/daily_browser_check.cjs",
+    "?? tools/daily_frontend_check.cjs",
+    "?? tools/mobile_review_check.cjs",
+    "?? tools/prepare_daily_qa.php",
+    "?? tools/prepare_mobile_qa.php"
+  ],
+  "files": [
+    {
+      "path": "app/Http/Controllers/ProductoController.php",
+      "sha256": "71D27B8E1D401D3DD5F17C1B3DD538356FC8AB46A301DA15CD87C4E060F0905B"
+    },
+    {
+      "path": "app/Http/Controllers/VentaController.php",
+      "sha256": "F345A1A79B180556256302FB2D3A079EC203E94A03650A29A7DEE1E91691ED89"
+    },
+    {
+      "path": "resources/views/productos/index.blade.php",
+      "sha256": "901BF02AF0729DC8C5A58E38EB3321D06381E89D5CEA58F7792BEEAC82F7FE3A"
+    },
+    {
+      "path": "resources/views/entrenamientos/entrenar.blade.php",
+      "sha256": "AEE43000B8BB9EFE765AD7F0546CA2FD3AD9B6F470C08E963DF09A138D49B2CC"
+    },
+    {
+      "path": "resources/views/ejercicios/index.blade.php",
+      "sha256": "C43646EC2D335D23CB219A8C921108BCFF0AA23AFB836706E98A4299301FAC4A"
+    },
+    {
+      "path": "resources/js/animations.js",
+      "sha256": "E27D0BECF80F05FA712D8232F423A15D151DF9CFA673806D290D64E67A465CFE"
+    },
+    {
+      "path": "routes/web.php",
+      "sha256": "2B4F5D8F33AC72007AC99C2C3A0072D7CA3847EDEC936049C44DDDCAD20F24AE"
+    },
+    {
+      "path": "composer.json",
+      "sha256": "67F3909BB89B17096C538C95D295A7B7CD020CBFB8E05FC5A94F35970A0B72CF"
+    },
+    {
+      "path": "composer.lock",
+      "sha256": "2FF53DD60AD067C1F42AFC25390955CE773E086C360F963AA68BD66FAA6ED1E6"
+    },
+    {
+      "path": "package.json",
+      "sha256": "6B2D8974B83F1A1708739723856BF7CB609FB2A625DC573431FD0187056C90F1"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "E73DCD93D0F17F772D962D0934B4B1670679CC739C9B3B6D88A406B2A4AE4068"
+    },
+    {
+      "path": "phpunit.xml",
+      "sha256": "78526FE3F722A3CA960BE1A6F8FBE3A3AD6CC32B6A8AFAE728E3B8A8930235CD"
+    }
+  ]
+}

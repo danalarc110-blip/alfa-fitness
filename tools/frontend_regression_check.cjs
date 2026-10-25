@@ -21,7 +21,7 @@ function trainingEnvironment(fetchImpl) {
         querySelectorAll: selector => selector.includes('data-completada') ? [{}] : [{},{}]};
     const context = vm.createContext({document, navigator:{}, Date, JSON, Object,
         localStorage:{getItem(){throw new Error('Storage blocked');},setItem(){throw new Error('Storage blocked');}},
-        window:{alphaAnimateModalOpen:selector=>opened.push(selector),showAlphaToast:(message,type)=>toasts.push({message,type})},
+        window:{alphaAnimateModalOpen:selector=>opened.push(selector),showAlphaToast:(message,type)=>toasts.push({message,type}),addEventListener(){}},
         clearInterval(){},setInterval(){return 1;},
         fetch:async(url,options)=> {requests.push(JSON.parse(options.body));return fetchImpl(url,options);}});
     const code = inline('resources/views/entrenamientos/entrenar.blade.php')

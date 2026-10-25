@@ -169,6 +169,7 @@
                                         <label>Precio<input type="number" name="precio" min="0" max="999999" step="0.01" value="{{ $producto->precio }}" required></label>
                                         <label>Categoría<input name="categoria" value="{{ $producto->categoria }}" maxlength="100"></label>
                                         @if ($puedeEditarStock)
+                                            <input type="hidden" name="stock_original" value="{{ $producto->stock }}">
                                             <label>Existencias<input type="number" name="stock" min="0" max="999999" value="{{ $producto->stock }}" required></label>
                                         @else
                                             <p class="text-xs text-gray-400 self-center">Solo el administrador modifica las existencias. Las ventas descuentan unidades automáticamente.</p>

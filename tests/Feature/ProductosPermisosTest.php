@@ -177,10 +177,10 @@ class ProductosPermisosTest extends TestCase
             ->assertRedirect()->assertSessionHasNoErrors();
         $producto = Producto::firstOrFail();
 
-        $this->put(route('productos.update', $producto), ['nombre' => $producto->nombre, 'precio' => '1.25', 'stock' => 15, 'activo' => 1])
+        $this->put(route('productos.update', $producto), ['nombre' => $producto->nombre, 'precio' => '1.25', 'stock' => 15, 'stock_original' => 8, 'activo' => 1])
             ->assertRedirect()->assertSessionHasNoErrors();
         $this->assertSame(15, $producto->fresh()->stock);
-        $this->put(route('productos.update', $producto), ['nombre' => $producto->nombre, 'precio' => '1.25', 'stock' => -1, 'activo' => 1])
+        $this->put(route('productos.update', $producto), ['nombre' => $producto->nombre, 'precio' => '1.25', 'stock' => -1, 'stock_original' => 15, 'activo' => 1])
             ->assertSessionHasErrors('stock');
         $this->post(route('productos.store'), ['nombre' => 'Stock negativo', 'precio' => '1.25', 'stock' => -1])
             ->assertSessionHasErrors('stock');
