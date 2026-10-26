@@ -126,7 +126,7 @@ class AuditoriaSistemaTest extends TestCase
         $this->actingAs($admin)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Últimas ventas (TPV)')
+            ->assertSee('Últimas ventas')
             ->assertSee('Planes que vencen en los próximos 7 días');
 
         // Dashboard de Entrenador: ve ejercicios populares y no ve ventas de TPV
@@ -134,6 +134,6 @@ class AuditoriaSistemaTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('Ejercicios populares')
-            ->assertDontSee('Últimas ventas (TPV)');
+            ->assertDontSee('Últimas ventas');
     }
 }

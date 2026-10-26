@@ -8,6 +8,7 @@ use App\Models\Rutina;
 use App\Models\RutinaDia;
 use App\Models\RutinaEjercicio;
 use App\Models\SesionEntrenamiento;
+use App\Services\ClientesEntrenador;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,6 +35,17 @@ class RutinaController extends Controller
             ? Cliente::where('activo', true)->orderBy('nombre')->get(['id', 'nombre'])
             : collect();
 
+        $clientesProgreso = collect();
+        if ($guard === 'web' && Gate::allows('asignar_rutinas')) {
+            $clientesProgreso = $user->rol === 'Administrador'
+                ? $clientes
+                : app(ClientesEntrenador::class)
+                    ->clientes((int) $user->id)
+                    ->where('activo', true)
+                    ->orderBy('nombre')
+                    ->get(['clientes.id', 'clientes.nombre']);
+        }
+
         return view('entrenamientos.index', [
             'guard' => $guard,
             'nombre' => $this->nombreActual($guard, $user),
@@ -41,6 +53,7 @@ class RutinaController extends Controller
             'avatarUrl' => $user->avatar_url,
             'rutinas' => $rutinas,
             'clientes' => $clientes,
+            'clientesProgreso' => $clientesProgreso,
         ]);
     }
 
@@ -326,7 +339,7 @@ class RutinaController extends Controller
         $this->autorizarPropietario($dia->rutina);
 
         $data = $request->validate([
-            'orden' => ['required', 'array'],
+            'orden' => ['required', 'array', 'list'],
             'orden.*' => ['integer', 'distinct', Rule::exists('rutina_ejercicios', 'id')->where('rutina_dia_id', $dia->id)],
         ]);
 
@@ -525,7 +538,7 @@ class RutinaController extends Controller
     /**
      * Historial de sesiones de entrenamiento completadas por el usuario.
      */
-    public function historial(Request $request)
+    public function historial()
     {
         ['guard' => $guard, 'user' => $user] = $this->actual();
 

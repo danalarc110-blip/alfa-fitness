@@ -31,8 +31,7 @@ class LoginController extends Controller
 
     /**
      * Procesa el intento de inicio de sesión.
-     * Siempre se recuerda al usuario para que no tenga que volver
-     * a iniciar sesión la próxima vez que entre.
+     * Respeta la preferencia de sesión recordada enviada por el formulario.
      */
     public function login(Request $request): RedirectResponse
     {

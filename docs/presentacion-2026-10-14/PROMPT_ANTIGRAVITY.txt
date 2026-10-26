@@ -1,0 +1,75 @@
+PREPARA LA DOCUMENTACIÓN PARA PRESENTAR ALPHA FITNESS
+
+Trabaja sobre la aplicación existente de Alpha Fitness en Laravel 12 y Blade. Necesito documentos en español, claros y adecuados para presentar el proyecto y explicar su uso. La programación de Productos, Punto de Venta, Entrenadores y Mis clientes ya está implementada. Este encargo es documental.
+
+1. Revisa primero el estado real
+
+Lee AGENTS.md y las instrucciones del redactor-documentacion. Aplica el protocolo del equipo según las herramientas disponibles; no afirmes que hay agentes ejecutándose si no los has invocado. La orden explícita de este encargo autoriza al redactor-documentacion a preparar los documentos. Los diagramas nuevos requieren una orden adicional.
+
+Inspecciona git status y git diff. Conserva los cambios existentes, incluidos los de analítica y reportes. Verifica rutas, permisos, controladores, modelos, migraciones, vistas y pruebas antes de describir su comportamiento. No modifiques código, dependencias ni datos de la aplicación para elaborar los documentos. Si encuentras una discrepancia, registra el hallazgo y su fuente.
+
+La referencia de la entrega documentada es el commit base db338cd0b67410baf61ad7459f91a34a61a92ad8 más cambios sin commit. El snapshot de 35 archivos está en storage/app/private/modules-check/source-snapshot.json y tiene huella agregada c9bb7e6fded081081178c1ca2527a9665445fb3e8ac0b56da9857aa7385d9dd2. El commit base por sí solo no contiene esta implementación. Compara la referencia con el árbol actual y declara si cambió; no atribuyas pruebas anteriores a fuentes distintas sin revalidar lo afectado.
+
+Revisa docs/documentacion/MANUAL_USUARIO.md, MANUAL_TECNICO.md y README.md. Son una edición anterior del 7 de octubre de 2026; sus reglas y exportaciones deben contrastarse con el estado actual. Usa también las fuentes de docs/presentacion-2026-10-14 como apoyo, sin tratarlas como sustituto del código.
+
+2. Comportamiento que deben reflejar los documentos
+
+Productos
+- El catálogo del cliente es informativo: imagen, nombre, categoría, precio y Disponible o Agotado. Los productos inactivos se ocultan. El cliente no tiene compra, carrito, pedidos, reservas ni pago en línea.
+- El aviso dice: “Para comprar este producto, acércate a recepción. La venta la realiza la secretaria”.
+- Las cantidades exactas y alertas de stock son para el personal con permiso de inventario. Solo el Administrador tiene el permiso existencias para establecer, corregir o reponer cantidades manualmente.
+- La Secretaria conserva la gestión de nombre, precio, categoría, estado e imagen. Cuando crea un producto, comienza con stock cero y el Administrador establece sus existencias. Las peticiones de la Secretaria que contienen stock se rechazan, incluso si el valor es vacío.
+- Las ventas descuentan unidades automáticamente. No se permiten ventas de productos inactivos o con existencias insuficientes.
+- Los cinco productos existentes tienen ilustraciones locales WebP de 640 por 640 píxeles, sin marcas o etiquetas inventadas. Las fotografías válidas existentes se conservan y las imágenes se pueden sustituir mediante la gestión autorizada.
+
+Punto de Venta
+- Describe el recorrido real: buscar por nombre o categoría, añadir productos, ajustar cantidades o retirarlos, seleccionar Cliente o Público General, elegir método presencial, revisar y registrar.
+- Los productos repetidos se agrupan; se muestran subtotales y total. Efectivo, Tarjeta y Transferencia registran el método del pago presencial. El sistema no cobra una tarjeta ni verifica automáticamente una transferencia bancaria.
+- El servidor calcula los importes en centavos, valida cantidades y stock y registra la operación dentro de una transacción. venta_uuid es obligatorio y protege los reintentos; la misma venta no consume stock por segunda vez. Se conservan los datos después de una validación fallida.
+- Explica el comprobante y las opciones existentes de impresión y correo. Distingue esas funciones de su uso con servicios o equipos externos reales.
+
+Entrenadores y Mis clientes
+- Los clientes consultan entrenadores activos, con foto cuando está disponible, nombre, promedio y número de valoraciones; aparece Sin calificaciones cuando corresponde.
+- Solo un Cliente vinculado por una rutina asignada puede calificar de 1 a 5 estrellas. Puede actualizar su voto; existe una sola fila por pareja entrenador y cliente. Los datos están separados de las calificaciones de ejercicios. El personal no emite ni altera estas valoraciones.
+- La vinculación se obtiene de rutinas con user_type = cliente, user_id del cliente y asignado_por_id del entrenador. Se reutiliza en listado, detalle, valoración y autorización del progreso. No existe un sistema paralelo de asignaciones.
+- Mis clientes permite al Entrenador buscar clientes vinculados, verlos sin duplicados, consultar sus rutinas asignadas y abrir el progreso existente. Las URLs de clientes ajenos se rechazan. El Entrenador no accede a ventas o información financiera.
+- Conserva los permisos actuales del Administrador. El directorio administrativo también puede mostrar secretarias y personal inactivo para gestionarlo. Comprueba la navegación real antes de describirla.
+
+Fuentes principales: app/Support/Acceso.php; app/Http/Controllers/ProductoController.php, VentaController.php, EntrenadorController.php y ProgresoController.php; app/Services/ClientesEntrenador.php; app/Models/EntrenadorCalificacion.php; routes/web.php; resources/views/productos, ventas, entrenadores y entrenador; resources/js/ventas.js y feedback.js; resources/css/refinements.css; las migraciones del 14 de octubre; y las pruebas relacionadas.
+
+3. Entregables
+
+A. Manual de usuario actualizado
+Organiza los procedimientos por Administrador, Secretaria, Entrenador y Cliente. Incluye objetivo, precondiciones, pasos con nombres reales de botones, resultado esperado y recuperación ante errores. Añade una matriz de permisos y un glosario breve. Describe los demás módulos solo después de contrastarlos con sus fuentes actuales.
+
+B. Manual técnico actualizado
+Incluye la pila y requisitos reales, configuración sin secretos, arquitectura implementada, rutas y permisos, reglas de stock y dinero, idempotencia de ventas, separación de guards, relación cliente entrenador, modelos, migraciones y diccionario de datos. Explica cómo ejecutar pruebas en una base aislada y cómo preparar respaldo, actualización y recuperación. Etiqueta los procedimientos no ejecutados. No ejecutes operaciones destructivas para ilustrarlos.
+
+C. Informe y guion de presentación
+Explica el problema, el objetivo, la solución por módulo, los controles por rol, las pruebas y los límites. Prepara un guion sugerido de 5 a 7 minutos y un recorrido de demostración con datos ficticios. Usa capturas de la aplicación real, con texto alternativo y pie explicativo. No inventes imágenes de pantallas, nombres de estudiantes o docentes, institución, resultados de producción ni compromisos futuros. Deja los datos de portada no suministrados como campos pendientes.
+
+D. Índice de entrega
+Actualiza el índice para enlazar los archivos existentes y distinguir fuentes editables, exportaciones verificadas y formatos pendientes. Mantén una tabla breve función, fuente de código, sección del documento y evidencia. Conserva las ediciones anteriores sin presentarlas como exportaciones actualizadas.
+
+Entrega fuentes Markdown. Cuando las herramientas del entorno permitan crear y renderizar Word y PDF, genera también esas versiones e inspecciona todas sus páginas: tablas, títulos, capturas, cortes, numeración y enlaces. No anuncies un formato que no se creó ni una exportación que no se comprobó. No generes una presentación de diapositivas o diagramas nuevos como parte de este encargo sin una orden adicional.
+
+4. Evidencia y límites
+
+Estos resultados pertenecen a la sesión de implementación del 14 de octubre de 2026 y deben identificarse como evidencia de esa revisión, no como pruebas nuevas de este encargo documental:
+- Suite general PHPUnit: 214 pruebas, 1653 aserciones, código de salida 0.
+- Revalidación después del ajuste de búsqueda de “0”: 29 pruebas, 235 aserciones, código de salida 0.
+- Revisión independiente dirigida: 50 pruebas, 365 aserciones, código de salida 0.
+- Comprobaciones frontend: 8 grupos aprobados.
+- Navegador: cinco grupos completos y dos grupos de Punto de Venta repetidos tras el ajuste visual; escritorio 1440 por 1000 y móvil 390 por 844; sin errores de JavaScript. Se comprobó el uso con teclado.
+- Compilación Vite completada con código de salida 0.
+- Base SQLite local: dos migraciones aplicadas con respaldo; cinco productos con imagen; existencias conservadas; cero referencias inválidas, stock negativo, valoraciones inválidas o duplicadas y discrepancias en los totales examinados.
+
+Las suites dirigidas y la revalidación contienen casos que también aparecen en la suite general: no sumes esos conteos como pruebas distintas. Las fuentes de navegador están en storage/app/private/modules-check/results.json, results-pos.json y css-state-results.json. Las capturas para presentar están en docs/presentacion-2026-10-14/capturas y contienen datos ficticios.
+
+No se probaron concurrencia real del motor, entrega a un correo externo, impresora física, despliegue de producción ni restauración del respaldo en un entorno externo. No presentes estas comprobaciones como realizadas. La documentación tampoco demuestra por sí sola ausencia total de errores.
+
+No publiques .env, credenciales, logs completos, bases de datos, respaldos ni modules-qa.json, que contiene datos privados de las pruebas. La evidencia debe mostrar resultados y contexto, no secretos o información personal real.
+
+5. Cierre
+
+Verifica que cada ruta, botón, permiso, tabla y enlace descrito exista. Revisa ortografía, coherencia y que las explicaciones correspondan al código. Entrega la lista de documentos y formatos creados, la revisión examinada, la verificación documental y lo pendiente. Si alguna parte solo fue contrastada por lectura, indícalo. El resultado debe ser concreto y listo para presentar, sin afirmar validaciones que no se hicieron.

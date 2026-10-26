@@ -7,7 +7,7 @@
         <div class="flex items-center gap-2">
             <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Ventas</h1>
         </div>
-        <p class="text-gray-400 text-sm mt-1">Añade productos, elige cómo te pagan y registra la venta.</p>
+        <p class="text-gray-400 text-sm mt-1">Añade productos y practica el cobro con efectivo o tarjeta de prueba.</p>
     </div>
 
 </header>
@@ -37,6 +37,7 @@
 @endif
 
 <section id="venta-historial" aria-label="Historial y comprobantes" @class(['hidden' => !$mostrarHistorial])>
+<p class="text-sm text-gray-400 mb-4">Los importes de este resumen corresponden a ventas sin simulación. Hoy hay {{ $simulacionesHoy }} ventas simuladas; puedes identificarlas en el historial.</p>
 {{-- MÉTRICAS DE VENTAS --}}
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 sm:mb-8" data-animate="card">
     <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden">
@@ -112,7 +113,7 @@
 
     @if($ventas->isNotEmpty())
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-xs">
+            <table class="alpha-mobile-table w-full text-left border-collapse text-xs">
                 <thead>
                     <tr class="border-b border-white/10 text-gray-400 font-semibold uppercase tracking-wider">
                         <th class="py-3 px-3">Ticket</th>
@@ -128,10 +129,10 @@
                 <tbody class="divide-y divide-white/5">
                     @foreach($ventas as $v)
                         <tr class="hover:bg-white/[0.02] transition-colors">
-                            <td class="py-3 px-3 font-mono font-bold text-yellow-400">#{{ str_pad($v->id, 5, '0', STR_PAD_LEFT) }}</td>
-                            <td class="py-3 px-3 text-gray-300">{{ $v->created_at->format('d/m/Y H:i') }}</td>
-                            <td class="py-3 px-3 text-gray-300">{{ $v->user->name ?? 'Staff' }}</td>
-                            <td class="py-3 px-3 text-gray-300">
+                            <td data-label="Ticket" class="py-3 px-3 font-mono font-bold text-yellow-400">#{{ str_pad($v->id, 5, '0', STR_PAD_LEFT) }}</td>
+                            <td data-label="Fecha" class="py-3 px-3 text-gray-300">{{ $v->created_at->format('d/m/Y H:i') }}</td>
+                            <td data-label="Atendido por" class="py-3 px-3 text-gray-300">{{ $v->user->name ?? 'Staff' }}</td>
+                            <td data-label="Cliente" class="py-3 px-3 text-gray-300">
                                 @if($v->cliente)
                                     <span class="font-semibold text-white">{{ $v->cliente->nombre }}</span>
                                 @else
@@ -141,7 +142,7 @@
                                     <p class="text-[10px] text-gray-400 italic mt-0.5 truncate max-w-xs" title="{{ $v->notas }}">{{ $v->notas }}</p>
                                 @endif
                             </td>
-                            <td class="py-3 px-3">
+                            <td data-label="Productos" class="py-3 px-3">
                                 <div class="flex flex-wrap gap-1 max-w-xs">
                                     @foreach($v->detalles as $det)
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/5 border border-white/5 text-[11px] text-gray-300">
@@ -150,15 +151,16 @@
                                     @endforeach
                                 </div>
                             </td>
-                            <td class="py-3 px-3">
+                            <td data-label="Pago" class="py-3 px-3">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold {{ $v->metodo_pago === 'Efectivo' ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/20' : ($v->metodo_pago === 'Tarjeta' ? 'bg-blue-400/10 text-blue-400 border border-blue-400/20' : 'bg-purple-400/10 text-purple-400 border border-purple-400/20') }}">
                                     {{ $v->metodo_pago }}
+                                    @if($v->pago_simulado) · Simulado @endif
                                 </span>
                             </td>
-                            <td class="py-3 px-3 text-right font-bold text-white text-sm">
+                            <td data-label="Total" class="py-3 px-3 text-right font-bold text-white text-sm">
                                 ${{ number_format($v->total, 2) }}
                             </td>
-                            <td class="py-3 px-3 text-right">
+                            <td data-label="Comprobante" class="py-3 px-3 text-right">
                                 <a href="{{ route('ventas.comprobante', $v) }}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-yellow-400/10 border border-white/10 hover:border-yellow-400/30 text-gray-300 hover:text-yellow-400 transition text-[11px] font-medium" title="Ver comprobante e imprimir o enviar por correo">
                                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
                                     Ticket
@@ -203,10 +205,12 @@
             </div>
         @endif
         <noscript><p class="text-sm text-red-400">Activa JavaScript para buscar productos y registrar una venta de mostrador.</p></noscript>
+        <p class="simulated-payment text-sm mb-4"><strong>Modo de práctica.</strong> Todos los cobros de esta pantalla son simulados. Se registra la venta y se actualiza el inventario, sin mover dinero ni pedir datos bancarios. Se excluyen de los ingresos de los reportes.</p>
 
         <form method="POST" action="{{ route('ventas.store') }}" id="form-venta" class="space-y-4">
             @csrf
             <input type="hidden" name="venta_uuid" value="{{ $uuidAnterior }}">
+            <input type="hidden" id="venta-simulado" name="pago_simulado" value="1">
             <div id="venta-edicion" class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 <section aria-labelledby="venta-catalogo-titulo" class="min-w-0">
                     <h3 id="venta-catalogo-titulo" class="text-base font-bold mb-2">1. Añade productos</h3>
@@ -275,7 +279,7 @@
                             <p class="text-xs text-gray-400 mt-1">Opcional. Puedes vender a Público General.</p>
                         </div>
                         <div>
-                            <label for="venta-metodo" class="block text-xs font-semibold text-gray-300 mb-1">Pago presencial *</label>
+                            <label for="venta-metodo" class="block text-xs font-semibold text-gray-300 mb-1">Método de prueba *</label>
                             <select id="venta-metodo" name="metodo_pago" required class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:border-yellow-400/60 outline-none">
                                 @if(!in_array($metodoAnterior, ['Efectivo', 'Tarjeta', 'Transferencia'], true))
                                     <option value="{{ $metodoAnterior }}" selected>Método no válido: selecciona otro</option>
@@ -286,6 +290,21 @@
                             </select>
                         </div>
                     </div>
+                    <div id="venta-efectivo-panel" class="simulated-payment mt-3">
+                        <label for="venta-efectivo" class="block text-sm font-semibold mb-2">Efectivo recibido (de prueba)</label>
+                        <input id="venta-efectivo" name="efectivo_recibido" type="number" inputmode="decimal" step="0.01" min="0" max="99999999.99" value="{{ is_scalar(old('efectivo_recibido')) ? old('efectivo_recibido') : '' }}" placeholder="Ej: 10.00" class="w-full rounded-xl border border-white/10 px-3 py-2">
+                        <button id="venta-efectivo-exacto" type="button" class="alpha-btn-secondary px-3 py-2 mt-2">Usar importe exacto</button>
+                        <p id="venta-cambio" class="text-sm mt-2" role="status">Indica el importe recibido para calcular el cambio.</p>
+                    </div>
+                    <div id="venta-tarjeta-panel" class="simulated-payment mt-3 hidden">
+                        <div class="simulated-card mb-3" aria-label="Tarjeta virtual de demostración"><small>ALPHA FITNESS · DEMO</small><strong>•••• •••• •••• DEMO</strong><small>Sin número de tarjeta, vencimiento ni CVV</small></div>
+                        <label for="venta-tarjeta-resultado" class="block text-sm font-semibold mb-2">Resultado de prueba</label>
+                        <select id="venta-tarjeta-resultado" name="resultado_tarjeta" class="w-full rounded-xl border border-white/10 px-3 py-2">
+                            <option value="aprobada" @selected(old('resultado_tarjeta', 'aprobada') === 'aprobada')>Aprobada</option>
+                            <option value="rechazada" @selected(old('resultado_tarjeta') === 'rechazada')>Rechazada (para probar el reintento)</option>
+                        </select>
+                    </div>
+                    <p id="venta-transferencia-aviso" class="simulated-payment mt-3 text-sm hidden">Transferencia simulada. Se registrará una referencia de prueba; no se solicitará acceso a ninguna cuenta bancaria.</p>
                     <div class="mt-3">
                         <label for="venta-notas" class="block text-xs font-semibold text-gray-300 mb-1">Notas / Observaciones</label>
                         <input id="venta-notas" type="text" name="notas" maxlength="255" value="{{ $notasAnteriores }}" placeholder="Ej: Pago exacto, voucher #1234"
@@ -295,10 +314,11 @@
             </div>
 
             <section id="venta-revision" aria-labelledby="venta-revision-titulo" class="hidden rounded-xl border border-yellow-400/30 bg-yellow-400/5 p-4">
-                <h3 id="venta-revision-titulo" tabindex="-1" class="text-base font-bold text-yellow-400 mb-3">3. Confirma la venta</h3>
+                <h3 id="venta-revision-titulo" tabindex="-1" class="text-base font-bold text-yellow-400 mb-3">3. Confirma el cobro simulado</h3>
                 <ul id="venta-resumen-items" class="space-y-2 text-sm"></ul>
                 <p id="venta-resumen-cliente" class="text-xs text-gray-300 mt-4"></p>
                 <p id="venta-resumen-pago" class="text-xs text-gray-300 mt-1"></p>
+                <p id="venta-resumen-simulacion" class="text-sm mt-2"></p>
                 <p id="venta-resumen-notas" class="text-xs text-gray-400 mt-1 break-words"></p>
                 <p class="text-xs text-gray-400 mt-3">Al registrar, se descontarán las existencias y podrás imprimir o enviar el comprobante.</p>
             </section>
@@ -312,7 +332,7 @@
                 <div class="flex flex-wrap items-center gap-2">
                     <button id="venta-editar" type="button" class="hidden alpha-btn-secondary px-4 py-2 text-xs font-semibold">Editar venta</button>
                     <button id="venta-revisar" type="button" disabled class="alpha-btn-primary px-4 py-2.5 text-sm font-semibold disabled:opacity-50">Revisar venta</button>
-                    <button id="venta-registrar" type="submit" disabled class="hidden alpha-btn-primary px-4 py-2.5 text-xs font-semibold disabled:opacity-50">Registrar venta</button>
+                    <button id="venta-registrar" type="submit" disabled class="hidden alpha-btn-primary px-4 py-2.5 text-xs font-semibold disabled:opacity-50">Simular cobro y registrar</button>
                 </div>
             </div>
         </form>

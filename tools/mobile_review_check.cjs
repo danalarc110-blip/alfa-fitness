@@ -1,0 +1,143 @@
+// Real mobile workflows with compiled assets and synthetic data only.
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
+const net = require('node:net');
+const {spawn, spawnSync} = require('node:child_process');
+const puppeteer = require('puppeteer-core');
+const root = path.resolve(__dirname, '..');
+const cfg = JSON.parse(fs.readFileSync(path.join(root, 'storage/app/private/mobile-qa.json'), 'utf8'));
+assert.equal(fs.realpathSync.native(path.dirname(cfg.database)).toLowerCase(), fs.realpathSync.native(os.tmpdir()).toLowerCase());
+assert.ok(path.basename(cfg.database).startsWith('alpha-modules-qa-'));
+assert.equal(cfg.url, 'http://127.0.0.1:8034');
+const php = process.env.ALPHA_QA_PHP || 'C:/xampp/php/php.exe';
+const env = {...process.env, APP_URL:cfg.url, APP_DEBUG:'false', DB_CONNECTION:'sqlite', DB_DATABASE:cfg.database, DB_URL:'', SESSION_DRIVER:'file', SESSION_COOKIE:'alpha_mobile_review', CACHE_STORE:'array', MAIL_MAILER:'array', QUEUE_CONNECTION:'sync'};
+const out = path.join(root, 'storage/app/private/mobile-review-19');
+fs.mkdirSync(out, {recursive:true});
+let server, browser;
+const checks=[], errors=[];
+const pass = message => {checks.push(message);console.log('PASS '+message);};
+
+(async()=>{
+    await new Promise((resolve,reject)=>{const p=net.createServer();p.once('error',reject);p.listen(8034,'127.0.0.1',()=>p.close(resolve));});
+    const log=fs.openSync(path.join(out,'server.log'),'a');
+    server=spawn(php,['-S','127.0.0.1:8034','-t','public','tools/qa_router.php'],{cwd:root,env,windowsHide:true,stdio:['ignore',log,log]});fs.closeSync(log);
+    browser=await puppeteer.launch({executablePath:process.env.ALPHA_QA_BROWSER||'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});
+    const context=await browser.createBrowserContext();
+    const page=await context.newPage();page.setDefaultNavigationTimeout(60000);
+    await page.setViewport({width:390,height:844});
+    await page.emulateMediaFeatures([{name:'prefers-reduced-motion',value:'reduce'}]);
+    page.on('pageerror',e=>errors.push(e.message));
+    const fit=async()=>assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Overflow: '+page.url());
+    const visit=async(route,status=200)=>{const r=await page.goto(cfg.url+route,{waitUntil:'networkidle0'});assert.equal(r.status(),status,route);if(status===200)await fit();};
+    const fill=async(selector,value)=>{await page.$eval(selector,n=>{n.value='';});await page.type(selector,value);};
+    const tap=async selector=>{
+        await page.$eval(selector,n=>n.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'}));
+        await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+        await page.waitForFunction(selector=>{const n=document.querySelector(selector);if(!n)return false;const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}, {},selector);
+        await page.click(selector);
+    };
+    const navigate=async selector=>Promise.all([page.waitForNavigation({waitUntil:'networkidle0'}),tap(selector)]);
+    const body=()=>page.$eval('body',n=>n.innerText);
+    const screenshot=async name=>{await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:path.join(out,name+'.png'),fullPage:true});};
+    const logout=async()=>{await page.evaluate(async()=>{await fetch('/logout',{method:'POST',headers:{'X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content}});});await context.deleteCookie(...await context.cookies());};
+    const login=async(email,cliente=false)=>{await visit('/login');if(cliente)await tap('#tab-btn-clientes');const form=cliente?'#form-cliente-login':'#form-usuario';await fill(form+(cliente?' [name=correo]':' [name=email]'),email);await fill(form+' [name=password]',cfg.password);await navigate(form+' [type=submit]');};
+
+    if(process.argv.includes('--captures-only')) {
+        const shot=async(name,selector)=>{
+            if(selector)await page.$eval(selector,n=>n.scrollIntoView({block:'center',behavior:'instant'}));
+            else await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+            await page.evaluate(()=>document.fonts.ready);
+            await page.screenshot({path:path.join(out,'pantalla-'+name+'.png'),fullPage:false});
+        };
+        await login('cliente-qa@example.test',true);await visit('/progreso');await tap('.progress-space details summary');
+        await page.$$eval('.rank-collection img',ns=>Promise.all(ns.map(n=>n.decode())));await shot('progreso-y-rangos');
+        await page.$eval('.rank-hero',n=>n.scrollIntoView({block:'center',behavior:'instant'}));
+        await (await page.$('.rank-hero')).screenshot({path:path.join(out,'detalle-rango.png')});
+        await logout();await login('secretaria@example.test');await visit('/ventas');
+        await tap('[data-anadir-producto]:not(:disabled)');await tap('#venta-ir-carrito');await tap('.cantidad-mas');await fill('#venta-efectivo','10');await shot('efectivo','#venta-efectivo-panel');
+        await page.select('#venta-metodo','Tarjeta');await shot('tarjeta','#venta-tarjeta-panel');
+        await visit('/ventas?vista=historial');await shot('historial','.alpha-mobile-table');
+        const receipt=await page.$$eval('.alpha-mobile-table tbody tr',ns=>ns.find(n=>n.innerText.includes('Efectivo')).querySelector('a').getAttribute('href'));
+        await visit(new URL(receipt).pathname);await shot('comprobante');
+        await visit('/membresias');await shot('membresia','.alpha-mobile-table');
+        await logout();await login('administrador@example.test');await visit('/dashboard');await shot('administrador');
+        await tap('details summary');await (await page.$('details')).screenshot({path:path.join(out,'detalle-configuracion-admin.png')});
+        assert.deepEqual(errors,[]);pass('Current mobile viewport captures saved without creating sales or changing training records');return;
+    }
+
+    await login('cliente-qa@example.test',true);
+    for(const route of ['/cliente/dashboard','/entrenamientos','/ejercicios','/membresias','/entrenadores','/productos','/mi-asistencia','/entrenamientos/historial','/configuracion','/progreso'])await visit(route);
+    assert.equal(await page.$eval('[data-rango]',n=>n.dataset.rango),'Avanzado');
+    assert.equal(await page.$$eval('.alpha-mobile-shortcuts a',ns=>ns.length),4);
+    assert.equal(await page.$$eval('.alpha-mobile-shortcuts a[href$="/ventas"]',ns=>ns.length),0);
+    await tap('.progress-space details summary');
+    await page.$$eval('.rank-collection img',ns=>Promise.all(ns.map(n=>n.decode())));
+    assert.equal(await page.$$eval('.rank-collection img',ns=>ns.filter(n=>n.naturalWidth>0).length),4);
+    for(const width of [320,360,390]){await page.setViewport({width,height:844});await fit();}
+    await screenshot('cliente-progreso-movil');
+    await page.select('#progreso-ejercicio',String(cfg.ejercicio_id));await navigate('form[role=search] button[type=submit]');
+    assert.equal(await page.$eval('[data-rango]',n=>n.dataset.rango),'Avanzado');
+    assert.equal(await page.$$eval('.progress-chart li',ns=>ns.length),4);
+    assert.ok(await page.$eval('#progreso-ejercicio',n=>parseFloat(getComputedStyle(n).fontSize)>=16));
+    await tap('#nuevo-registro summary');
+    await page.select('#nuevo-registro [name=ejercicio_id]',String(cfg.ejercicio_id));
+    await fill('[name=peso_kg]','35.5');await fill('[name=repeticiones]','6');
+    await navigate('#nuevo-registro button[type=submit]');assert.ok((await body()).includes('Registro guardado'));
+    await visit('/membresias');await navigate('form[action$="/solicitudes"] button');assert.ok((await body()).includes('Pendiente de confirmación'));
+    pass('Client: ten mobile modules, original rank images, stable rank filters, readable chart, record entry and membership request');
+    await logout();
+
+    await login('entrenador@example.test');
+    for(const route of ['/dashboard','/entrenador/clientes','/entrenador/clientes/'+cfg.cliente_id,'/entrenador/clientes/'+cfg.cliente_id+'/progreso','/entrenamientos','/ejercicios','/entrenadores','/configuracion'])await visit(route);
+    await visit('/entrenador/clientes/'+cfg.ajeno_id+'/progreso',403);await visit('/ventas',403);await visit('/asistencia',403);await visit('/membresias',403);await visit('/analitica',403);
+    await visit('/entrenador/clientes/'+cfg.cliente_id+'/progreso');assert.equal(await page.$$eval('form[action$="/progreso"]',ns=>ns.filter(n=>n.method.toLowerCase()==='post').length),0);
+    await screenshot('entrenador-seguimiento-movil');
+    pass('Trainer: assigned clients and progress, eight modules, no access to foreign clients, sales, attendance or financial reports');
+    await logout();
+
+    await login('secretaria@example.test');
+    for(const route of ['/dashboard','/asistencia','/membresias','/productos','/entrenadores','/configuracion','/ventas'])await visit(route);
+    await visit('/cuentas',403);await visit('/analitica',403);await visit('/progreso',403);
+    await visit('/membresias');await navigate('form[action$="/activar"] button');assert.ok((await body()).includes('Solicitud activada'));
+    await screenshot('secretaria-membresia-movil');
+    const newCart=async()=>{await visit('/ventas');await tap('[data-anadir-producto]:not(:disabled)');await tap('#venta-ir-carrito');await tap('.cantidad-mas');};
+    await newCart();await fill('#venta-efectivo','10');
+    assert.ok((await page.$eval('#venta-cambio',n=>n.innerText)).includes('$8.00'));
+    await screenshot('secretaria-efectivo-movil');
+    await tap('#venta-revisar');await navigate('#venta-registrar');
+    assert.ok((await body()).includes('Pago simulado'));
+    await navigate('a[href*="/comprobante"]');assert.ok((await body()).includes('SIN COBRO REAL'));assert.ok((await body()).includes('$8.00'));
+    await screenshot('comprobante-simulado-movil');
+    await newCart();await page.select('#venta-metodo','Tarjeta');await page.select('#venta-tarjeta-resultado','rechazada');
+    const uuid=await page.$eval('[name=venta_uuid]',n=>n.value);
+    await screenshot('secretaria-tarjeta-movil');
+    await tap('#venta-revisar');await navigate('#venta-registrar');assert.ok((await body()).includes('Tarjeta de prueba rechazada'));
+    assert.equal(await page.$eval('[name=venta_uuid]',n=>n.value),uuid);assert.equal(await page.$eval('.input-cantidad',n=>n.value),'2');
+    await page.select('#venta-tarjeta-resultado','aprobada');await tap('#venta-revisar');await navigate('#venta-registrar');
+    assert.ok((await body()).includes('Venta registrada exitosamente'));
+    await navigate('a[href*="/comprobante"]');assert.ok((await body()).includes('SIN COBRO REAL'));
+    const cardReplay=await page.evaluate(async uuid=>(await fetch('/ventas',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content},body:JSON.stringify({venta_uuid:uuid})})).status,uuid);
+    assert.equal(cardReplay,200);
+    await visit('/ventas?vista=historial');await screenshot('historial-ventas-movil');
+    assert.equal(await page.$eval('.alpha-mobile-table tr td',n=>getComputedStyle(n).display),'flex');
+    pass('Reception: membership activation, cash change, card decline and approval, UUID retry, labeled receipts and mobile history cards');
+    await logout();
+
+    await login('administrador@example.test');
+    for(const route of ['/dashboard','/cuentas','/entrenadores','/entrenador/clientes','/productos','/ventas','/membresias','/asistencia','/analitica','/configuracion'])await visit(route);
+    assert.equal(await page.$$eval('.alpha-mobile-shortcuts a[href$="/analitica"]',ns=>ns.length),1);
+    await visit('/membresias');assert.equal(await page.$$eval('form[action$="/activar"]',ns=>ns.length),0);
+    await visit('/dashboard');await screenshot('admin-inicio-movil');
+    await visit('/progreso',403);
+    await page.setViewport({width:1440,height:1000});await visit('/ventas');await screenshot('ventas-escritorio');
+    assert.equal(await page.$eval('.alpha-mobile-shortcuts',n=>getComputedStyle(n).display),'none');
+    pass('Administrator: ten modules, accounts/catalog/report access, membership separation and desktop layout');
+    assert.deepEqual(errors,[]);
+    const verify=spawnSync(php,[],{cwd:root,env,encoding:'utf8',input:'<?php require "vendor/autoload.php"; $app=require "bootstrap/app.php"; $app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap(); $a=app(App\\Services\\AnaliticaFinancieraService::class)->obtenerAnalitica(today(),now()->endOfDay(),1); echo json_encode(["ventas"=>App\\Models\\Venta::count(),"simuladas"=>App\\Models\\Venta::where("pago_simulado",true)->count(),"ventas_reales_reporte"=>$a["kpis"]["ingresos_ventas"],"cambio"=>App\\Models\\Venta::where("metodo_pago","Efectivo")->value("cambio"),"records"=>App\\Models\\PersonalRecord::count(),"pagos_membresia"=>App\\Models\\PagoMembresia::count()]);'});
+    assert.equal(verify.status,0);const data=JSON.parse(verify.stdout);
+    assert.deepEqual(data,{ventas:2,simuladas:2,ventas_reales_reporte:0,cambio:'8.00',records:9,pagos_membresia:1});
+    fs.writeFileSync(path.join(out,'results.json'),JSON.stringify({checks,jsErrors:errors,database:data,viewports:[320,360,390,1440],manifest:JSON.parse(fs.readFileSync(path.join(root,'public/build/manifest.json'),'utf8'))},null,2));
+    pass('Final database: two simulated sales, one cash change, no duplicate retry, real income excludes simulations; no JavaScript errors');
+})().catch(async e=>{if(browser){const p=(await browser.pages()).find(p=>p.url().startsWith(cfg.url));if(p)await p.screenshot({path:path.join(out,'fallo.png'),fullPage:true});}console.error(e);process.exitCode=1;}).finally(async()=>{if(server)server.kill();if(browser)await browser.close();});

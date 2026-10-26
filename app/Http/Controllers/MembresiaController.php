@@ -27,17 +27,22 @@ class MembresiaController extends Controller
         ]);
         $busqueda = $filtros['q'] ?? '';
         $estado = $filtros['estado'] ?? '';
+        $filtroCliente = fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where(
+            fn ($sub) => $sub->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")
+        ));
         $solicitudes = SolicitudMembresia::with(['cliente:id,nombre,correo', 'membresia.pago.registrador:id,name'])
             ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
-            ->when($busqueda && ! $clienteId, fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
+            ->when($busqueda && ! $clienteId, $filtroCliente)
             ->when($estado, fn ($q) => $q->where('estado', $estado))
             ->latest()->paginate(15, ['*'], 'solicitudes_page')->withQueryString();
         $membresias = Membresia::with(['cliente:id,nombre', 'pago.registrador:id,name', 'pausas'])
             ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
+            ->when($busqueda && ! $clienteId, $filtroCliente)
             ->latest('inicio')->paginate(15, ['*'], 'membresias_page')->withQueryString();
         $pausasPendientes = PausaMembresia::with(['cliente:id,nombre', 'membresia'])
             ->where('estado', 'pendiente')
             ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
+            ->when($busqueda && ! $clienteId, $filtroCliente)
             ->latest()
             ->get();
         $planes = PlanMembresia::where('activo', true)->orderBy('precio')->get();
@@ -114,7 +119,7 @@ class MembresiaController extends Controller
             if ($bloqueada->estado !== 'pendiente') {
                 throw ValidationException::withMessages(['solicitud' => 'Solo se puede cancelar una solicitud pendiente.']);
             }
-            $bloqueada->update(['estado' => 'cancelada', 'resuelta_en' => now(), 'resuelta_por' => auth('web')->id()]);
+            $bloqueada->update(['estado' => 'cancelada', 'resuelta_en' => now(), 'resuelta_por' => ! auth('cliente')->check() ? auth('web')->id() : null]);
         });
 
         return back()->with('status', 'Solicitud cancelada.');
@@ -122,7 +127,7 @@ class MembresiaController extends Controller
 
     public function cancelar(Membresia $membresia)
     {
-        abort_unless(auth('web')->user()?->rol === 'Secretaria', 403);
+        abort_unless(! auth('cliente')->check() && auth('web')->user()?->rol === 'Secretaria', 403);
         DB::transaction(function () use ($membresia) {
             Cliente::whereKey($membresia->cliente_id)->lockForUpdate()->firstOrFail();
             $membresia = Membresia::whereKey($membresia->id)->lockForUpdate()->firstOrFail();
@@ -136,7 +141,7 @@ class MembresiaController extends Controller
     public function solicitarPausa(Request $request, Membresia $membresia)
     {
         $esPropietario = auth('cliente')->check() && $membresia->cliente_id === auth('cliente')->id();
-        $esStaff = auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true);
+        $esStaff = ! auth('cliente')->check() && auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true);
         abort_unless($esPropietario || $esStaff, 403);
 
         $data = $request->validate([
@@ -206,9 +211,9 @@ class MembresiaController extends Controller
         return back()->with('status', $msg);
     }
 
-    public function aprobarPausa(Request $request, PausaMembresia $pausa)
+    public function aprobarPausa(PausaMembresia $pausa)
     {
-        abort_unless(auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true), 403);
+        abort_unless(! auth('cliente')->check() && auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true), 403);
 
         DB::transaction(function () use ($pausa) {
             // Todas las operaciones toman cliente, membresía y pausa en ese orden.
@@ -236,13 +241,24 @@ class MembresiaController extends Controller
                 throw ValidationException::withMessages(['pausa' => 'El período solicitado para la pausa ya transcurrió en el pasado.']);
             }
 
+            if ($membresia->pausas()->whereKeyNot($pausaBloqueada->id)->where('estado', 'aprobada')->where('fin_pausa_estimada', '>=', today())->exists()) {
+                throw ValidationException::withMessages(['pausa' => 'Esta membresía ya cuenta con otra pausa aprobada vigente o programada.']);
+            }
+
             if ($membresia->diasPausadosAcumulados() + $pausaBloqueada->dias > 30) {
                 throw ValidationException::withMessages(['pausa' => 'La aprobación excede el tope de 30 días de congelamiento permitido.']);
             }
             $nuevoFin = $this->finExtendidoSinSolapamiento($membresia, $pausaBloqueada->dias, 'pausa');
 
+            $inicioEfectivo = $pausaBloqueada->inicio_pausa->isBefore(today())
+                ? today()
+                : $pausaBloqueada->inicio_pausa->copy();
+            $finEstimadaEfectiva = $inicioEfectivo->copy()->addDays($pausaBloqueada->dias - 1);
+
             $pausaBloqueada->update([
                 'estado' => 'aprobada',
+                'inicio_pausa' => $inicioEfectivo,
+                'fin_pausa_estimada' => $finEstimadaEfectiva,
                 'aprobada_por' => auth('web')->id(),
             ]);
 
@@ -270,9 +286,9 @@ class MembresiaController extends Controller
         return $nuevoFin;
     }
 
-    public function rechazarPausa(Request $request, PausaMembresia $pausa)
+    public function rechazarPausa(PausaMembresia $pausa)
     {
-        abort_unless(auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true), 403);
+        abort_unless(! auth('cliente')->check() && auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true), 403);
 
         DB::transaction(function () use ($pausa) {
             $pausaBloqueada = PausaMembresia::whereKey($pausa->id)->lockForUpdate()->firstOrFail();
@@ -286,10 +302,10 @@ class MembresiaController extends Controller
         return back()->with('status', 'Solicitud de pausa rechazada.');
     }
 
-    public function reanudar(Request $request, Membresia $membresia)
+    public function reanudar(Membresia $membresia)
     {
         $esPropietario = auth('cliente')->check() && $membresia->cliente_id === auth('cliente')->id();
-        $esStaff = auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true);
+        $esStaff = ! auth('cliente')->check() && auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true);
         abort_unless($esPropietario || $esStaff, 403);
 
         DB::transaction(function () use ($membresia) {

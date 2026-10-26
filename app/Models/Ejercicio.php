@@ -154,7 +154,7 @@ class Ejercicio extends Model
     }
 
     /**
-     * Calificación promedio de 1.0 a 5.0 (de la semana o global).
+     * Calificación promedio global, o cero si no tiene votos.
      */
     public function getCalificacionPromedioAttribute(): float
     {
@@ -162,7 +162,7 @@ class Ejercicio extends Model
             ? $this->calificaciones->avg('estrellas')
             : $this->calificaciones()->avg('estrellas');
 
-        return $promedio ? round((float) $promedio, 1) : 0.0; // Valor predeterminado de popularidad 5.0
+        return $promedio ? round((float) $promedio, 1) : 0.0;
     }
 
     /**

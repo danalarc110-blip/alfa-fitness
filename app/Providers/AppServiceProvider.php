@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Cliente;
 use App\Support\Acceso;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -13,17 +14,6 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
-        //
-    }
-
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         foreach (['exportaciones' => 10, 'operaciones-financieras' => 60] as $nombre => $limite) {
@@ -36,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
         }
         // Seed at login, before another device could change the password.
         Event::listen(Login::class, function ($event) {
+            if (request()->hasSession() && $event->guard === 'cliente' && $event->user instanceof Cliente) {
+                // Also seed OAuth logins, whose accounts may not have a local password.
+                request()->session()->put('version_acceso_cliente', $event->user->version_acceso);
+            }
             if (request()->hasSession() && $event->user->getAuthPassword()) {
                 request()->session()->put('password_hash_'.$event->guard,
                     auth($event->guard)->hashPasswordForCookie($event->user->getAuthPassword()));

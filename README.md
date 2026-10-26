@@ -2,7 +2,7 @@
 
 Aplicación Laravel 12 para gestionar entrenamiento y operaciones del gimnasio.
 
-La [documentación integral](docs/documentacion/README.md) incluye el manual técnico y de administración y el manual de usuario por rol.
+La [documentación integral](docs/documentacion/README.md), edición del 19 de octubre de 2026, incluye los manuales de usuario y técnico, requisitos, diccionario de datos, operación y despliegue, y evidencia de pruebas. Se conservan las fuentes Markdown y las versiones PDF.
 
 ## Uso local
 
@@ -33,15 +33,19 @@ Para crear el administrador inicial, ejecuta `php artisan admin:create` y propor
 - Registro e ingreso de clientes y acceso de empleados.
 - Constructor de rutinas, catálogo de ejercicios y calificaciones.
 - Membresías: registro, importe en USD, fechas, detección de superposiciones, búsqueda, historial y cancelación. La renovación se registra como un nuevo periodo; no procesa pagos en línea.
-- Entrenadores: directorio con búsqueda; el administrador puede crear, invitar y editar entrenadores.
-- Asistencia: entrada, salida e historial. Los clientes solo consultan y registran sus propias visitas; los empleados gestionan el conjunto.
+- Entrenadores: cuentas individuales por invitación; cada entrenador consulta sus clientes y su progreso, y los clientes ven quién les ha asignado rutinas. El administrador puede reenviar invitaciones pendientes y filtrar clientes por entrenador.
+- Asistencia: entrada, salida e historial registrados por Administrador o Secretaria; los clientes consultan sus propias visitas.
 - Productos e inventario: cinco productos iniciales editables y catálogo paginado de cinco en cinco, sin límite artificial de productos.
 - Administrar cuentas: solo el administrador puede buscar clientes, ver su fecha de registro y banear o restaurar su acceso; la acción pide confirmación y conserva el historial.
 - Perfil, avatar, diseños Elegante y Verde, modos claro/oscuro/personalizado y navegación móvil accesible por teclado.
 - Personal: creación e invitación de secretarias y entrenadores por el administrador.
-- Ventas y comprobantes; analítica financiera agregada de hasta 90 días, exportable a PDF y Excel por el administrador.
+- Ventas de práctica con carrito, efectivo recibido y cambio, tarjeta virtual aprobada/rechazada y transferencia simulada. Las simulaciones ajustan inventario, se identifican en los comprobantes y quedan fuera de los ingresos reales; no hay pasarela bancaria.
+- Analítica financiera agregada de hasta 90 días, exportable a PDF y Excel por el administrador.
+- Progreso por ejercicio, historial móvil, mejores series por volumen y cuatro rangos de constancia con insignias propias. El rango usa todos los registros, independientemente del filtro.
 - Entrenar Ahora e historial de sesiones persistidas; un reintento con el mismo identificador no crea otra sesión o venta.
 - Política de privacidad pública en `/privacidad`, accesible desde el acceso y el pie de la aplicación.
+
+En celulares, una barra inferior ofrece cuatro accesos según el rol. El Administrador gestiona existencias y reportes; Secretaria confirma pagos presenciales y activaciones de membresía. Son permisos distintos: el Administrador no hereda automáticamente las operaciones de recepción.
 
 ## Diseño y apariencia
 
@@ -86,6 +90,9 @@ php artisan view:cache
 vendor/bin/pint --test
 composer audit
 npm audit
+node tools/frontend_regression_check.cjs
 ```
 
 Las pruebas usan SQLite en memoria y cubren módulos, permisos, privacidad, recuperación entre proveedores, IDOR, integridad financiera y reintentos. No prueban la entrega real de correo, credenciales reales de Google ni concurrencia de MySQL: esos controles se verifican en el despliegue correspondiente. Se deben mantener directorios escribibles y espacio libre para vistas, exports y logs.
+
+Los comandos de auditoría consultan el estado de dependencias en el momento de ejecutarlos; su presencia en esta lista no acredita una auditoría actual. Para conocer los comandos realmente ejecutados y sus límites, consulta [Verificación y pruebas](docs/documentacion/VERIFICACION_PRUEBAS.md).

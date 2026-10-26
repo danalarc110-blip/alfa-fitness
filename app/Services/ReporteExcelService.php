@@ -124,6 +124,39 @@ class ReporteExcelService
             $fila++;
         }
 
+        if (isset($datos['conciliacion'])) {
+            $control = $datos['conciliacion'];
+            foreach ([
+                ['Control diario y conciliación de ventas', 'Valor', 'Detalle', false],
+                ['Promedio por día calendario', $kpis['promedio_ingreso_dia'], 'Incluye días sin ingresos y el día en curso cuando corresponda.', true],
+                ['Días sin ingresos', $kpis['dias_sin_ingresos'], 'De '.$periodo['dias'].' días efectivos', false],
+                ['Conciliación de ventas', $control['correcta'] ? 'Totales conciliados' : 'Revisión necesaria', 'Verificación individual de cada venta y su detalle', false],
+                ['Ventas sin detalle', $control['ventas_sin_detalle'], 'Los importes originales se conservan.', false],
+                ['Ventas con diferencias', $control['ventas_con_diferencias'], 'Total de venta diferente de la suma de sus productos', false],
+                ['Ingresos detallados por producto', $control['ingresos_productos'], 'Suma del desglose por producto; excluye simulaciones', true],
+                ['Diferencia ventas - productos', $control['diferencia'], 'Ingresos por ventas menos sus detalles', true],
+            ] as $index => [$etiqueta, $valor, $detalle, $esMoneda]) {
+                $hojaResumen->setCellValueExplicit('A'.$fila, $etiqueta, DataType::TYPE_STRING);
+                $hojaResumen->setCellValueExplicit('B'.$fila, $valor, is_string($valor) ? DataType::TYPE_STRING : DataType::TYPE_NUMERIC);
+                $hojaResumen->setCellValueExplicit('C'.$fila, $detalle, DataType::TYPE_STRING);
+                if ($esMoneda) {
+                    $hojaResumen->getStyle('B'.$fila)->getNumberFormat()->setFormatCode(self::FORMATO_MONEDA);
+                }
+                if ($index === 0) {
+                    $hojaResumen->getStyle("A{$fila}:C{$fila}")->applyFromArray($estiloCabecera);
+                }
+                $hojaResumen->getRowDimension($fila)->setRowHeight(42);
+                $fila++;
+            }
+            foreach ($control['alertas'] as $alerta) {
+                $hojaResumen->setCellValueExplicit('A'.$fila, $alerta, DataType::TYPE_STRING);
+                $hojaResumen->mergeCells("A{$fila}:C{$fila}");
+                $hojaResumen->getStyle('A'.$fila)->getFont()->getColor()->setRGB('B91C1C');
+                $hojaResumen->getRowDimension($fila)->setRowHeight(48);
+                $fila++;
+            }
+        }
+
         // Comparación numérica editable y filtrable en una hoja propia.
         $hojaComparativo = $spreadsheet->createSheet();
         $hojaComparativo->setTitle('Comparativo');

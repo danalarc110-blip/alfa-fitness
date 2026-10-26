@@ -98,6 +98,24 @@ class AnaliticaFinancieraService
      */
     public function obtenerAnalitica(Carbon $desde, Carbon $hasta, int $dias): array
     {
+        // En SQLite, mantener la lectura abierta conserva el mismo snapshot para
+        // SUM, COUNT y desgloses, aunque otra conexión confirme una venta al corte.
+        // Laravel anida la transacción sin confirmar cambios del consumidor.
+        return DB::transaction(fn () => $this->calcularAnalitica($desde, $hasta, $dias));
+    }
+
+    private function calcularAnalitica(Carbon $desde, Carbon $hasta, int $dias): array
+    {
+        // El servicio también tiene consumidores internos: validar el intervalo real,
+        // sin confiar en que el controlador ya lo resolvió ni en el contador recibido.
+        if ($desde->gt($hasta)) {
+            throw ValidationException::withMessages(['periodo' => 'La fecha inicial no puede ser posterior a la fecha final.']);
+        }
+        $diasSolicitados = (int) $desde->copy()->startOfDay()->diffInDays($hasta->copy()->startOfDay()) + 1;
+        if ($diasSolicitados > self::MAX_DIAS) {
+            throw ValidationException::withMessages(['periodo' => 'El período máximo permitido para un reporte es de 90 días.']);
+        }
+
         $generado = Carbon::now(config('app.timezone'));
         $solicitadoHasta = $hasta->copy();
         $abierto = $hasta->gte($generado);
@@ -114,9 +132,9 @@ class AnaliticaFinancieraService
         $ingresosMembresias = $this->importe($centavosMembresias);
         $transaccionesMembresias = (int) PagoMembresia::whereBetween('pagado_en', [$desde, $hasta])->count();
 
-        $centavosVentas = $this->centavosAgregados(Venta::whereBetween('created_at', [$desde, $hasta])->sum('total'));
+        $centavosVentas = $this->centavosAgregados(Venta::reales()->whereBetween('created_at', [$desde, $hasta])->sum('total'));
         $ingresosVentas = $this->importe($centavosVentas);
-        $transaccionesVentas = (int) Venta::whereBetween('created_at', [$desde, $hasta])->count();
+        $transaccionesVentas = (int) Venta::reales()->whereBetween('created_at', [$desde, $hasta])->count();
 
         $centavosTotales = $centavosMembresias + $centavosVentas;
         $ingresosTotales = $this->importe($centavosTotales);
@@ -130,11 +148,11 @@ class AnaliticaFinancieraService
             : $desde->copy()->subSecond();
 
         $prevCentavosMembresias = $this->centavosAgregados(PagoMembresia::whereBetween('pagado_en', [$prevDesde, $prevHasta])->sum('importe'));
-        $prevCentavosVentas = $this->centavosAgregados(Venta::whereBetween('created_at', [$prevDesde, $prevHasta])->sum('total'));
+        $prevCentavosVentas = $this->centavosAgregados(Venta::reales()->whereBetween('created_at', [$prevDesde, $prevHasta])->sum('total'));
         $prevCentavosTotales = $prevCentavosMembresias + $prevCentavosVentas;
         $prevIngresosTotales = $this->importe($prevCentavosTotales);
         $prevTransaccionesMembresias = (int) PagoMembresia::whereBetween('pagado_en', [$prevDesde, $prevHasta])->count();
-        $prevTransaccionesVentas = (int) Venta::whereBetween('created_at', [$prevDesde, $prevHasta])->count();
+        $prevTransaccionesVentas = (int) Venta::reales()->whereBetween('created_at', [$prevDesde, $prevHasta])->count();
         $prevTransaccionesTotales = $prevTransaccionesMembresias + $prevTransaccionesVentas;
         $prevTicketPromedio = $this->promedio($prevCentavosTotales, $prevTransaccionesTotales);
 
@@ -158,7 +176,7 @@ class AnaliticaFinancieraService
             ->get()
             ->keyBy('fecha');
 
-        $ventasPorDia = DB::table('ventas')
+        $ventasPorDia = DB::table('ventas')->where('pago_simulado', false)
             ->whereBetween('created_at', [$desde, $hasta])
             ->selectRaw('DATE(created_at) as fecha, SUM(total) as total, COUNT(*) as cantidad')
             ->groupBy(DB::raw('DATE(created_at)'))
@@ -228,6 +246,7 @@ class AnaliticaFinancieraService
         }
 
         $promedioIngresoDiaActivo = $this->promedio($centavosTotales, $diasActivos);
+        $promedioIngresoDia = $this->promedio($centavosTotales, $dias);
         $promedioTransaccionesDia = $dias > 0 ? round($transaccionesTotales / $dias, 1) : 0.0;
 
         $porcentajeMembresias = $ingresosTotales > 0 ? round(($ingresosMembresias / $ingresosTotales) * 100, 1) : 0.0;
@@ -262,6 +281,7 @@ class AnaliticaFinancieraService
         $productosRendimiento = DB::table('detalle_ventas')
             ->join('ventas', 'detalle_ventas.venta_id', '=', 'ventas.id')
             ->join('productos', 'detalle_ventas.producto_id', '=', 'productos.id')
+            ->where('ventas.pago_simulado', false)
             ->whereBetween('ventas.created_at', [$desde, $hasta])
             ->selectRaw('productos.id as producto_id, productos.nombre as producto_nombre, SUM(detalle_ventas.cantidad) as unidades_vendidas, COUNT(DISTINCT detalle_ventas.venta_id) as operaciones, SUM(detalle_ventas.subtotal) as total_ingresos')
             ->groupBy('productos.id', 'productos.nombre')
@@ -282,8 +302,40 @@ class AnaliticaFinancieraService
         $productoMayorFacturacion = $productosRendimiento->first();
         $productoMasVendido = $productosRendimiento->sortByDesc('unidades')->first();
 
+        // Conciliar cada venta evita que dos diferencias opuestas se cancelen en
+        // el total y aparenten integridad. No corregir registros históricos aquí.
+        $detallePorVenta = DB::table('detalle_ventas')
+            ->select('venta_id')->selectRaw('SUM(subtotal) as total_detalle')->groupBy('venta_id');
+        $ventasSinDetalle = Venta::reales()->whereBetween('created_at', [$desde, $hasta])
+            ->whereDoesntHave('detalles')->count();
+        $ventasConDiferencias = DB::table('ventas')
+            ->joinSub($detallePorVenta, 'detalle_resumen', 'ventas.id', '=', 'detalle_resumen.venta_id')
+            ->where('ventas.pago_simulado', false)->whereBetween('ventas.created_at', [$desde, $hasta])
+            ->whereRaw('ROUND(ventas.total, 2) <> ROUND(detalle_resumen.total_detalle, 2)')->count();
+        $centavosProductos = $productosRendimiento->sum(fn ($producto) => $this->centavosAgregados($producto['ingresos']));
+        $diferenciaDetalle = $centavosVentas - $centavosProductos;
+        $alertasConciliacion = [];
+        if ($ventasSinDetalle > 0) {
+            $alertasConciliacion[] = 'Ventas sin detalle: '.$ventasSinDetalle.'. Revise los registros originales; sus importes se conservan en los ingresos por ventas.';
+        }
+        if ($ventasConDiferencias > 0) {
+            $alertasConciliacion[] = 'Ventas con diferencias: '.$ventasConDiferencias.'. El total registrado no coincide con la suma de sus productos; revise los registros originales.';
+        }
+        if ($diferenciaDetalle !== 0) {
+            $alertasConciliacion[] = 'Diferencia ventas - productos: USD '.number_format($this->importe($diferenciaDetalle), 2).'. Los indicadores usan el total de ventas; el desglose usa sus detalles.';
+        }
+        $conciliacion = [
+            'correcta' => $alertasConciliacion === [],
+            'ventas_sin_detalle' => (int) $ventasSinDetalle,
+            'ventas_con_diferencias' => (int) $ventasConDiferencias,
+            'ingresos_ventas' => $ingresosVentas,
+            'ingresos_productos' => $this->importe($centavosProductos),
+            'diferencia' => $this->importe($diferenciaDetalle),
+            'alertas' => $alertasConciliacion,
+        ];
+
         // 6. Ingresos por Método de Pago
-        $metodosVentas = DB::table('ventas')
+        $metodosVentas = DB::table('ventas')->where('pago_simulado', false)
             ->whereBetween('created_at', [$desde, $hasta])
             ->selectRaw('metodo_pago as metodo, COUNT(*) as operaciones, SUM(total) as total_ingresos')
             ->groupBy('metodo_pago')
@@ -349,11 +401,14 @@ class AnaliticaFinancieraService
         }
 
         $metodologia = [
+            'Las ventas marcadas como simulación se excluyen de todos los importes y comparativos de este reporte.',
             'Moneda: USD. Ingresos registrados = cobros de membresías (pagado_en) + ventas de productos (created_at). Las fechas usan la zona horaria configurada.',
             'No se registran costos, gastos ni devoluciones en este módulo. Los ingresos no representan utilidad, rentabilidad ni un estado financiero contable.',
             'Comparación: intervalo inmediatamente anterior con igual número de días calendario; si el período está en curso, ambos terminan a la misma hora de corte. No ajusta por estacionalidad ni días de apertura.',
             'Ticket promedio = ingresos / transacciones. Una transacción es un cobro de membresía o una venta; las operaciones por producto pueden compartir una venta y no se suman como transacciones generales.',
             'Días con ingresos: días cuyo importe total es mayor que cero. Promedio por día activo = ingresos / días con ingresos. Los días sin ingresos se conservan en el detalle diario.',
+            'Promedio por día calendario = ingresos / días del período efectivo, incluidos los días sin ingresos y el día en curso cuando corresponda.',
+            'Conciliación de ventas: compara cada total de venta con la suma de sus detalles y detecta ventas sin productos. Una diferencia exige revisión del registro original; el reporte no modifica ni oculta sus importes.',
             'Variación porcentual = (actual - anterior) / anterior × 100. Con base anterior cero y valor actual positivo se indica No calculable; con ambos valores cero se muestra 0%.',
             'Los métodos de pago corresponden a ventas. Los cobros de membresías se agrupan por origen porque no registran un método de pago.',
             'Las cifras son agregadas, sin datos personales de clientes. El código identifica el rango; la fecha de generación identifica el corte de la consulta, no un cierre contable auditado.',
@@ -395,9 +450,11 @@ class AnaliticaFinancieraService
                 'porcentaje_membresias' => $porcentajeMembresias,
                 'porcentaje_ventas' => $porcentajeVentas,
                 'dias_activos' => $diasActivos,
+                'dias_sin_ingresos' => $dias - $diasActivos,
                 'dia_mayor_ingreso' => $diaMayor,
                 'dia_menor_ingreso' => $diaMenor,
                 'promedio_ingreso_dia_activo' => $promedioIngresoDiaActivo,
+                'promedio_ingreso_dia' => $promedioIngresoDia,
                 'promedio_transacciones_dia' => $promedioTransaccionesDia,
                 'plan_mayor_recaudacion' => $planMayorRecaudacion['plan'] ?? 'N/A',
                 'plan_mayor_recaudacion_monto' => $planMayorRecaudacion['ingresos'] ?? 0.0,
@@ -412,6 +469,7 @@ class AnaliticaFinancieraService
             'planes' => $planesRendimiento,
             'productos' => $productosRendimiento,
             'metodos' => $metodosRendimiento,
+            'conciliacion' => $conciliacion,
             'comparativo' => $comparativo,
             'resumen_ejecutivo' => $resumen,
             'metodologia' => $metodologia,

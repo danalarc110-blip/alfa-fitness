@@ -53,10 +53,14 @@
 
     {{-- SELECTOR DE PERÍODOS Y FILTROS --}}
     <div class="alpha-card rounded-2xl p-4 sm:p-5">
-        @if ($errors->has('periodo'))
-            <div class="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-xs sm:text-sm flex items-center gap-2">
+        @if ($errors->any())
+            <div role="alert" class="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-xs sm:text-sm flex items-center gap-2">
                 <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                <span>{{ $errors->first('periodo') }}</span>
+                <ul class="list-disc pl-4">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
@@ -114,6 +118,29 @@
                 <li>{{ $conclusion }}</li>
             @endforeach
         </ul>
+    </section>
+
+    <section class="alpha-card rounded-2xl p-5 sm:p-6" aria-labelledby="conciliacion-ventas">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="conciliacion-ventas" class="text-lg font-bold" style="color: var(--alpha-text);">Control diario y conciliación de ventas</h2>
+            <strong class="text-sm" style="color: {{ $datos['conciliacion']['correcta'] ? 'var(--alpha-success)' : 'var(--alpha-danger)' }};">
+                {{ $datos['conciliacion']['correcta'] ? 'Totales conciliados' : 'Revisión necesaria' }}
+            </strong>
+        </div>
+        <dl class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm" style="color: var(--alpha-text);">
+            <div><dt style="color: var(--alpha-muted);">Promedio por día calendario</dt><dd class="mt-1 font-bold">${{ number_format($datos['kpis']['promedio_ingreso_dia'], 2) }}</dd></div>
+            <div><dt style="color: var(--alpha-muted);">Días sin ingresos</dt><dd class="mt-1 font-bold">{{ $datos['kpis']['dias_sin_ingresos'] }} de {{ $datos['periodo']['dias'] }}</dd></div>
+            <div><dt style="color: var(--alpha-muted);">Ingresos detallados por producto</dt><dd class="mt-1 font-bold">${{ number_format($datos['conciliacion']['ingresos_productos'], 2) }}</dd></div>
+            <div><dt style="color: var(--alpha-muted);">Diferencia ventas - productos</dt><dd class="mt-1 font-bold">${{ number_format($datos['conciliacion']['diferencia'], 2) }}</dd></div>
+        </dl>
+        <p class="text-xs mt-3" style="color: var(--alpha-muted);">Cada venta se compara con sus productos. Los importes originales se conservan; las simulaciones se excluyen. El promedio calendario incluye los días sin ingresos y el día en curso.</p>
+        @if ($datos['conciliacion']['alertas'])
+            <ul role="status" class="mt-3 list-disc pl-5 text-sm space-y-1" style="color: var(--alpha-danger);">
+                @foreach ($datos['conciliacion']['alertas'] as $alerta)
+                    <li>{{ $alerta }}</li>
+                @endforeach
+            </ul>
+        @endif
     </section>
 
     {{-- KPIS PRINCIPALES --}}
@@ -527,6 +554,32 @@
             </table>
         </div>
     </div>
+
+    <details class="alpha-card rounded-2xl p-5 sm:p-6">
+        <summary class="cursor-pointer text-base font-bold" style="color: var(--alpha-text);">Detalle diario de ingresos ({{ $datos['periodo']['dias'] }} días)</summary>
+        <div class="overflow-x-auto mt-4">
+            <table class="w-full text-sm text-left">
+                <caption class="sr-only">Ingresos y operaciones de cada día del período efectivo, incluidos días sin ingresos</caption>
+                <thead style="color: var(--alpha-muted);">
+                    <tr><th scope="col" class="p-2">Fecha</th><th scope="col" class="p-2 text-right">Membresías</th><th scope="col" class="p-2 text-right">Ventas</th><th scope="col" class="p-2 text-right">Total</th><th scope="col" class="p-2 text-right">Operaciones</th></tr>
+                </thead>
+                <tbody style="color: var(--alpha-text);">
+                    @foreach ($datos['serie_diaria'] as $dia)
+                        <tr class="border-b" style="border-color: var(--alpha-border);">
+                            <th scope="row" class="p-2 whitespace-nowrap font-medium">{{ \Carbon\Carbon::parse($dia['fecha'])->format('d/m/Y') }}</th>
+                            @foreach (['membresias', 'ventas', 'total'] as $origen)
+                                <td class="p-2 text-right whitespace-nowrap">${{ number_format($dia[$origen], 2) }}</td>
+                            @endforeach
+                            <td class="p-2 text-right">{{ $dia['transacciones'] }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+                <tfoot style="color: var(--alpha-text);">
+                    <tr class="font-bold"><th scope="row" class="p-2">Total del período</th><td class="p-2 text-right">${{ number_format($datos['kpis']['ingresos_membresias'], 2) }}</td><td class="p-2 text-right">${{ number_format($datos['kpis']['ingresos_ventas'], 2) }}</td><td class="p-2 text-right">${{ number_format($datos['kpis']['ingresos_totales'], 2) }}</td><td class="p-2 text-right">{{ $datos['kpis']['transacciones_totales'] }}</td></tr>
+                </tfoot>
+            </table>
+        </div>
+    </details>
 
     <section class="alpha-card rounded-2xl p-5 sm:p-6" aria-labelledby="metodologia-reporte">
         <h2 id="metodologia-reporte" class="text-base font-bold" style="color: var(--alpha-text);">Metodología y alcance</h2>

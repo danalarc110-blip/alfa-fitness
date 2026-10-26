@@ -29,6 +29,7 @@
         </main>
         </div>
     </div>
+    @include('partials.mobile-nav')
     @stack('scripts')
 </body>
 </html>

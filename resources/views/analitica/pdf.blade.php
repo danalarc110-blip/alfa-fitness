@@ -118,8 +118,8 @@
             padding: 5px 8px;
         }
         .data-table .totals td { border-top: 2px solid #0f172a; font-weight: 700; }
-        .notes { padding-left: 16px; margin: 6px 0 14px; }
-        .notes li { margin-bottom: 4px; page-break-inside: avoid; }
+        .notes { padding-left: 16px; margin: 6px 0 10px; font-size: 10px; line-height: 1.3; }
+        .notes li { margin-bottom: 2px; page-break-inside: avoid; }
         .period-details { background-color: #f8fafc; padding: 8px 10px; margin-bottom: 12px; }
         .muted { color: #64748b; }
         .no-wrap { white-space: nowrap; }
@@ -137,6 +137,7 @@
             padding: 5px 8px;
             border-bottom: 1px solid #e2e8f0;
             font-size: 10px;
+            overflow-wrap: break-word;
         }
         .data-table tr:nth-child(even) td {
             background-color: #f8fafc;
@@ -412,6 +413,22 @@
             </tr>
         </tbody>
     </table>
+
+    <h2 class="section-title">Control diario y conciliación de ventas</h2>
+    <p><strong>{{ $datos['conciliacion']['correcta'] ? 'Totales conciliados' : 'Revisión necesaria' }}</strong>. Cada venta se compara con la suma de sus productos. Los importes originales se conservan; las simulaciones se excluyen.</p>
+    <table class="data-table">
+        <tbody>
+            <tr><th scope="row">Promedio por día calendario</th><td class="text-right">${{ number_format($datos['kpis']['promedio_ingreso_dia'], 2) }}</td><th scope="row">Días sin ingresos</th><td class="text-right">{{ $datos['kpis']['dias_sin_ingresos'] }} de {{ $datos['periodo']['dias'] }}</td></tr>
+            <tr><th scope="row">Ingresos detallados por producto</th><td class="text-right">${{ number_format($datos['conciliacion']['ingresos_productos'], 2) }}</td><th scope="row">Diferencia ventas - productos</th><td class="text-right">${{ number_format($datos['conciliacion']['diferencia'], 2) }}</td></tr>
+        </tbody>
+    </table>
+    @if ($datos['conciliacion']['alertas'])
+        <ul class="notes badge-negative">
+            @foreach ($datos['conciliacion']['alertas'] as $alerta)
+                <li>{{ $alerta }}</li>
+            @endforeach
+        </ul>
+    @endif
 
     <h2 class="section-title">Metodología y alcance</h2>
     <ul class="notes">

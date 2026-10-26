@@ -22,10 +22,6 @@
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             Imprimir
         </a>
-        <button type="button" onclick="alphaToggleTema()" title="Cambiar tema"
-            class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-yellow-400 transition-all duration-150 active:scale-95 shadow-sm">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-        </button>
     </div>
 </header>
 @endsection
@@ -200,9 +196,11 @@
             <a href="{{ route('entrenamientos.historial') }}" class="alpha-btn-primary px-4 py-2.5 rounded-xl text-xs font-semibold">
                 Ver mi Historial
             </a>
-            <a href="{{ route('progreso.index') }}" class="alpha-btn-secondary px-4 py-2.5 rounded-xl text-xs font-semibold">
-                Registrar PRs
-            </a>
+            @can('progreso')
+                <a href="{{ route('progreso.index') }}" class="alpha-btn-secondary px-4 py-2.5 rounded-xl text-xs font-semibold">
+                    Registrar PRs
+                </a>
+            @endcan
             <a href="{{ route('entrenamientos.index') }}" class="alpha-btn-secondary px-4 py-2.5 rounded-xl text-xs font-semibold">
                 Volver a rutinas
             </a>

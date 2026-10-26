@@ -42,6 +42,9 @@ class AccesoEntrenadoresTest extends TestCase
 
         $this->post(route('entrenadores.invitar', $entrenador))->assertSessionHas('error');
         Notification::assertSentToTimes($entrenador, ResetPassword::class, 1);
+        $this->get(route('entrenadores.index'))->assertOk()
+            ->assertSee('No se pudo reenviar la invitación. Espera un minuto')
+            ->assertSee('role="alert"', false);
     }
 
     public function test_invitation_rejects_inactive_established_and_non_staff_accounts(): void

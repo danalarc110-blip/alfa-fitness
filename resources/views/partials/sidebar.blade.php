@@ -23,7 +23,7 @@
         ['key' => 'asistencia', 'label' => $asistenciaLabel, 'href' => $asistenciaRoute, 'icon' => 'check-circle'],
         ['key' => 'entrenadores', 'label' => 'Entrenadores', 'href' => route('entrenadores.index'), 'icon' => 'users'],
         ['key' => 'productos', 'label' => 'Productos', 'href' => route('productos.index'), 'icon' => 'package'],
-        ['key' => 'ventas', 'label' => 'Ventas (TPV)', 'href' => route('ventas.index'), 'icon' => 'cart'],
+        ['key' => 'ventas', 'label' => 'Ventas', 'href' => route('ventas.index'), 'icon' => 'cart'],
         ['key' => 'analitica', 'label' => 'Analítica', 'href' => route('analitica.index'), 'icon' => 'bar-chart'],
         ['key' => 'progreso', 'label' => 'Progreso', 'href' => route('progreso.index'), 'icon' => 'trending-up'],
         ['key' => 'configuracion', 'label' => 'Configuración', 'href' => route('configuracion'), 'icon' => 'settings'],

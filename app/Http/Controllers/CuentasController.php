@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Cliente;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class CuentasController extends Controller
 {
@@ -47,15 +49,34 @@ class CuentasController extends Controller
 
     private function cambiarAcceso(Cliente $cliente, bool $activo): void
     {
-        DB::transaction(function () use ($cliente, $activo) {
+        $ahora = now();
+        $adminId = ! auth('cliente')->check() ? auth('web')->id() : null;
+
+        DB::transaction(function () use ($cliente, $activo, $ahora, $adminId) {
             $cuenta = Cliente::query()
                 ->whereKey($cliente->getKey())
                 ->lockForUpdate()
                 ->firstOrFail();
             $cuenta->activo = $activo;
-            $cuenta->baneado_en = $activo ? null : now();
-            $cuenta->baneado_por = $activo ? null : auth('web')->id();
+            $cuenta->baneado_en = $activo ? null : $ahora;
+            $cuenta->baneado_por = $activo ? null : $adminId;
+            // Also revoke on restoration: accounts banned before access versioning may still have old sessions.
+            $cuenta->version_acceso++;
+            $cuenta->remember_token = Str::random(60);
             $cuenta->save();
+
+            if (! $activo) {
+                $cuenta->asistencias()
+                    ->whereNull('fecha_salida')
+                    ->update([
+                        'fecha_salida' => $ahora,
+                        'salida_registrada_por' => $adminId,
+                    ]);
+            }
         });
+
+        if (! $activo) {
+            Cache::forget('aforo_en_vivo');
+        }
     }
 }

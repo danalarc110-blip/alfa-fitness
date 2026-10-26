@@ -13,6 +13,10 @@ class Cliente extends Authenticatable
 
     protected $table = 'clientes';
 
+    protected $attributes = [
+        'version_acceso' => 0,
+    ];
+
     protected $fillable = [
         'nombre',
         'correo',
@@ -40,6 +44,7 @@ class Cliente extends Authenticatable
         return [
             'password' => 'hashed',
             'activo' => 'boolean',
+            'version_acceso' => 'integer',
             'baneado_en' => 'datetime',
             'apariencia' => 'array',
         ];

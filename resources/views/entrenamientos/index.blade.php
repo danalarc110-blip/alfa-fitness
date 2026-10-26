@@ -25,16 +25,13 @@
                 Crear nueva rutina
             </button>
         </form>
-        <button type="button" onclick="alphaToggleTema()" title="Cambiar tema"
-            class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-yellow-400 transition-all duration-150 active:scale-95 shadow-sm">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-        </button>
     </div>
 </header>
 @endsection
 
 @section('content')
-@if($guard === 'web' && \App\Support\Acceso::permite(auth('web')->user(), 'asignar_rutinas') && $clientes->isNotEmpty())
+@php($listaProgreso = $clientesProgreso ?? $clientes)
+@if($guard === 'web' && \App\Support\Acceso::permite(auth('web')->user(), 'asignar_rutinas') && $listaProgreso->isNotEmpty())
 <div class="alpha-card rounded-2xl p-4 sm:p-5 border border-white/10 mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4" data-animate="card">
     <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 flex items-center justify-center shrink-0">
@@ -48,7 +45,7 @@
     <div class="flex items-center gap-2">
         <select id="select-progreso-cliente" class="bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-yellow-400/60 max-w-xs">
             <option value="">-- Ver progreso de un cliente --</option>
-            @foreach($clientes as $cli)
+            @foreach($listaProgreso as $cli)
                 <option value="{{ route('entrenador.cliente.progreso', $cli) }}">{{ $cli->nombre }} · #{{ $cli->id }}</option>
             @endforeach
         </select>

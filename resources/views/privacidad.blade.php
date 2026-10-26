@@ -22,7 +22,7 @@
                 <li><strong>Google:</strong> si eliges esta opción, recibimos tu identificador de Google, tu nombre y tu correo verificado para autenticarte o vincular tu cuenta. No guardamos los tokens de acceso de Google ni accedemos a tus mensajes.</li>
                 <li><strong>Membresías:</strong> plan, períodos, solicitudes y pausas para administrar el servicio contratado.</li>
                 <li><strong>Asistencia y entrenamiento:</strong> entradas, salidas, rutinas, sesiones y marcas deportivas para mostrar tu historial y facilitar el seguimiento por el entrenador que te asigna una rutina.</li>
-                <li><strong>Pagos y ventas:</strong> importes, productos y método de pago registrado para inventario, comprobantes y reportes. La aplicación no procesa pagos en línea ni solicita números de tarjeta.</li>
+                <li><strong>Pagos y ventas:</strong> importes, productos y método de pago registrado para inventario, comprobantes y reportes. Las ventas de práctica se identifican como simuladas y no se suman a los ingresos reales. La aplicación no procesa pagos en línea ni solicita números de tarjeta.</li>
             </ul>
         </section>
         <section class="mb-7" aria-labelledby="acceso">
@@ -35,7 +35,7 @@
         </section>
         <section class="mb-7" aria-labelledby="cookies">
             <h2 id="cookies" class="text-xl font-bold mb-3">Cookies y preferencias</h2>
-            <p>Utilizamos cookies de sesión para autenticarte y proteger formularios. Si activas «Recordarme», una cookie permite recuperar tu acceso. El navegador también conserva preferencias de apariencia y el avance temporal de tu entrenamiento. No se incorpora un servicio de publicidad o seguimiento externo a estas funciones.</p>
+            <p>Utilizamos cookies de sesión para autenticarte y proteger formularios. El navegador también conserva preferencias de apariencia y del sonido del temporizador. Las series marcadas y el cronómetro del entrenamiento en curso se mantienen mientras la página sigue abierta; recargarla puede perder ese avance. Las sesiones finalizadas se guardan en la base de datos al confirmar su registro. No se incorpora un servicio de publicidad o seguimiento externo a estas funciones.</p>
         </section>
         <section class="mb-7" aria-labelledby="conservacion">
             <h2 id="conservacion" class="text-xl font-bold mb-3">Conservación y solicitudes</h2>

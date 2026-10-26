@@ -1,9 +1,10 @@
-# Alpha Fitness · Manual de usuario
+# Alpha Fitness Manual de usuario
 
-**Edición:** 1.0 · **Fecha:** 7 de octubre de 2026  
-**Revisión de la aplicación:** `26b511f692c10fcb2e2d982ac94b407fbdc3b0fd`  
-**Audiencia:** Administrador, Secretaria, Entrenador y Cliente.  
-**Estado documental:** contenido contrastado con código, vistas y pruebas existentes; ejecución operativa y servicios externos sujetos a las limitaciones de la sección 10.
+**Edición:** 2.0 · **Fecha:** 19 de octubre de 2026
+
+**Revisión de la aplicación:** base `06d31c2` más el árbol de trabajo documentado en `REVISION.json`. Los cambios de esta edición están preparados localmente; este documento no acredita su publicación en GitHub.
+
+**Audiencia:** Administrador, Secretaria, Entrenador y Cliente.
 
 ## 1. Propósito y alcance
 
@@ -11,7 +12,7 @@ Este manual explica cómo utilizar Alpha Fitness para administrar cuentas y cat�
 
 Alpha Fitness es una aplicación web. El usuario debe disponer de la dirección de acceso proporcionada por el responsable del despliegue, conexión al servidor y un navegador con JavaScript y cookies habilitados. No se fija una dirección pública que el proyecto no haya confirmado. Los importes se presentan en dólares estadounidenses, con el símbolo `$` y hasta dos decimales.
 
-Las solicitudes de membresía se pagan en recepción. Seleccionar Tarjeta o Transferencia en una venta registra el método informado por el operador: la aplicación no ejecuta el cobro bancario, solicita números de tarjeta ni confirma transferencias automáticamente. El registro público crea una cuenta de cliente; no contrata ni activa una membresía por sí mismo.
+Las solicitudes de membresía se pagan en recepción y Secretaria registra su confirmación manual. La pantalla de Ventas funciona en modo de práctica: simula efectivo, tarjeta o transferencia, guarda la venta y descuenta inventario, pero no mueve dinero. Las simulaciones no se suman a los ingresos reales. No introduzca números de tarjeta ni códigos de seguridad. El registro público crea una cuenta de cliente; no contrata ni activa una membresía por sí mismo.
 
 Las instrucciones de instalación, configuración del correo, Google, base de datos y copias de seguridad pertenecen al manual técnico. Este documento se limita a la operación por parte de usuarios y personal autorizado.
 
@@ -33,7 +34,7 @@ Las instrucciones de instalación, configuración del correo, Google, base de da
 
 La autorización depende del rol y de que la cuenta esté activa. Una opción puede desaparecer del menú porque el perfil no tiene permiso. Escribir su dirección directamente no concede acceso.
 
-| Función | Administrador | Secretaria | Entrenador | Cliente |
+| Función | Admin | Secretaria | Entrenador | Cliente |
 | --- | --- | --- | --- | --- |
 | Configurar perfil y apariencia | Propios | Propios | Propios | Propios |
 | Crear, editar y entrenar rutinas | Propias | Propias | Propias | Propias |
@@ -49,6 +50,7 @@ La autorización depende del rol y de que la cuenta esté activa. Una opción pu
 | Registrar asistencia y exportar CSV | Sí | Sí | No | No |
 | Consultar asistencia personal | No aplica | No aplica | No aplica | Sí |
 | Administrar productos, ventas y comprobantes | Sí | Sí | No | No |
+| Establecer o corregir existencias de productos | Sí | No | No | No |
 | Consultar catálogo de productos y entrenadores activos | Sí | Sí | Sí | Sí |
 | Consultar y exportar analítica financiera | Sí | No | No | No |
 | Asignar una rutina propia a un cliente | Sí | No | Sí | No |
@@ -88,7 +90,7 @@ Todos los perfiles autenticados pueden consultar el directorio de entrenadores. 
 
 1. Pulse **¿Olvidaste tu contraseña?** en el acceso e introduzca el correo registrado.
 2. Pulse **Enviar enlace de recuperación** y revise la bandeja de entrada y correo no deseado.
-3. Abra el enlace privado. El formulario se titula **Establecer contraseña**; también sirve para clientes, aunque su texto introductorio menciona personal.
+3. Abra el enlace privado. El formulario **Establecer contraseña** sirve para clientes y personal.
 4. Confirme correo y nueva contraseña con los requisitos de la sección 3.2.
 5. Pulse **Guardar contraseña** y vuelva a entrar con la pestaña correspondiente.
 
@@ -120,6 +122,15 @@ Todos los perfiles autenticados pueden consultar el directorio de entrenadores. 
 ### 4.1. Reconocer el inicio y el menú
 
 El menú incluye **Inicio**, **Entrenamientos**, **Ejercicios**, **Entrenadores**, **Productos** y **Configuración**, además de las opciones permitidas al rol. En móvil se abre mediante el botón **Abrir menú de navegación**. El perfil del cliente puede aparecer con la etiqueta **Miembro**.
+
+En celulares de menos de 768 píxeles hay una barra inferior con cuatro accesos. Las demás pantallas siguen disponibles en el menú lateral. Los historiales de ventas y membresías se presentan como tarjetas; la pantalla de Progreso también utiliza tarjetas y evita desplazar una tabla ancha.
+
+| Rol | Accesos inferiores |
+| --- | --- |
+| Administrador | Inicio, Ventas, Clientes y Reportes |
+| Secretaria | Inicio, Ventas, Asistencia y Membresías |
+| Entrenador | Inicio, Mis clientes, Rutinas y Ejercicios |
+| Cliente | Inicio, Rutinas, Progreso y Mi plan |
 
 El inicio del Administrador resume clientes, ingresos, personal y ventas. Secretaria dispone de entradas, personas dentro y solicitudes pendientes. Entrenador ve rutinas propias y ejercicios. Cliente ve rutinas, visitas del mes, membresías y marcas propias. Los avisos de vencimiento muestran períodos cercanos a su fin.
 
@@ -158,6 +169,8 @@ El indicador de aforo utiliza visitas abiertas recientes y una capacidad de refe
 4. Indique al empleado que abra el enlace privado recibido y establezca su contraseña mediante la sección 3.3.
 
 **Resultado:** se crea una cuenta activa pendiente de establecer contraseña. El formulario no permite crear otro Administrador. **Recuperación:** un correo duplicado requiere revisar la cuenta existente. Si la creación informa que debe revisar el correo, la cuenta puede estar creada aunque falle el envío; no repita el alta. El empleado puede solicitar recuperación cuando el servicio de correo esté disponible.
+
+La ficha del empleado muestra su correo y si su acceso está pendiente o preparado. **Reenviar invitación** solo está disponible cuando todavía debe establecer contraseña; respete el tiempo de espera entre envíos. Con correo en modo de prueba, la pantalla advierte que la invitación no se entrega. No comparta enlaces desde logs ni use una contraseña común para todo el personal.
 
 ### 5.2. Editar personal y restringir acceso de clientes
 
@@ -202,6 +215,8 @@ El indicador de aforo utiliza visitas abiertas recientes y una capacidad de refe
 4. Pulse **Exportar PDF** o **Exportar Excel (.xlsx)** para descargar el período seleccionado.
 
 **Resultado:** se obtienen cifras agregadas; cada exportación registra usuario, tipo y período. El ticket promedio divide ingresos totales entre pagos de membresía y tickets de venta. El período anterior comparado tiene la misma duración. **Recuperación:** corrija fechas invertidas o rangos excesivos. Un período sin movimientos muestra ausencia de actividad. Las cifras reflejan registros del sistema y no una conciliación automática con bancos.
+
+Las ventas identificadas como **Simulada** quedan fuera de importes, conteos de ventas reales, promedios, productos vendidos y distribución por método de estos reportes. Las membresías aportan sus pagos registrados; el precio de un plan sin cobro no acredita un ingreso. En el inicio del Administrador, **Configuración pendiente** informa si falta el correo de entrega, el responsable/contacto de privacidad o la configuración opcional de Google. Solo el Administrador ve ese resumen.
 
 El Administrador también registra asistencia, administra productos y vende mediante los apartados 3 a 5 del capítulo 6. Para crear o asignar rutinas utiliza la sección 7; puede consultar progreso de cualquier cliente activo listado.
 
@@ -252,25 +267,34 @@ El Administrador también registra asistencia, administra productos y vende medi
 **Objetivo:** mantener el catálogo de mostrador. **Precondición:** sesión de Secretaria o Administrador.
 
 1. Abra **Productos** y busque por nombre o categoría.
-2. En **Nuevo producto**, indique nombre, precio, stock entero, categoría e imagen opcionales; pulse **Guardar producto**.
+2. En **Nuevo producto**, indique nombre, precio, categoría e imagen opcionales; pulse **Guardar producto**. El Administrador también indica el stock entero; Secretaria crea el producto sin establecer existencias.
 3. Para modificarlo, abra su edición, ajuste valores y pulse **Guardar cambios**.
 4. Desmarque el estado activo para retirarlo de la oferta; conserve el registro histórico.
 
-**Resultado:** los productos activos se ofrecen en el catálogo; solo los activos con stock positivo aparecen para venta. Se admiten precio y stock no negativos hasta 999999; fotos JPG, PNG o WebP de hasta 2 MB. El catálogo pagina cinco productos por página. **Recuperación:** corrija cantidad, precio o imagen; confirme el inventario físico antes de reemplazar el stock. La versión no registra un flujo separado de compras a proveedores.
+**Resultado:** los productos activos se ofrecen en el catálogo; solo los activos con stock positivo aparecen para venta. Se admiten precio y stock no negativos hasta 999999; fotos JPG, PNG o WebP de hasta 2 MB. El catálogo pagina cinco productos por página. **Recuperación:** corrija cantidad, precio o imagen. Solo el Administrador puede establecer o corregir existencias; Secretaria puede vender y editar los demás datos permitidos. Confirme el inventario físico antes de reemplazar el stock. La versión no registra un flujo separado de compras a proveedores.
 
 ### 6.5. Vender y entregar comprobante
 
-**Objetivo:** registrar venta de mostrador y descontar existencias. **Precondiciones:** productos activos con stock suficiente y cobro gestionado fuera de la aplicación.
+**Objetivo:** practicar una venta de mostrador y descontar existencias. **Precondiciones:** Administrador o Secretaria, productos activos con stock suficiente y un entorno de práctica. Una simulación afecta el inventario registrado; para capacitación use una instalación separada con datos de prueba.
 
-1. Abra **Ventas (TPV) → Registrar Venta**.
-2. Seleccione un cliente activo o deje **Público General**; elija Efectivo, Tarjeta o Transferencia.
-3. Añada productos y cantidades, retire filas incorrectas y revise subtotales y total. Cada producto admite hasta 999 unidades acumuladas.
-4. Añada notas si procede y pulse **Confirmar Venta**.
-5. Abra **Ver / Enviar Comprobante** o el **Ticket** del historial. Use **Imprimir Ticket** o **Enviar por Correo**, revisando el destinatario antes del envío.
+1. Abra **Ventas → Nueva venta**. Busque o filtre los productos por categoría y pulse para añadirlos al carrito.
+2. Abra el carrito mediante su acceso en la pantalla. Ajuste cantidades y retire productos incorrectos; cada producto admite hasta 999 unidades acumuladas.
+3. Seleccione un cliente activo o deje **Público General**, añada notas opcionales y elija el método de práctica.
+4. En **Efectivo**, indique cuánto recibió o use la opción de importe exacto. Por ejemplo, un total de $2.00 con $10.00 recibidos produce $8.00 de cambio. Un importe insuficiente impide confirmar.
+5. En **Tarjeta**, la tarjeta virtual **DEMO** permite seleccionar aprobación o rechazo. Un rechazo conserva el formulario y no crea venta ni descuenta inventario. Puede cambiar a aprobación y reintentar.
+6. En **Transferencia**, se registra una referencia de simulación sin comunicación con un banco. No se verifica una transferencia real.
+7. Revise cliente, productos, total y método en el resumen; confirme la venta una vez.
+8. Abra **Ver / Enviar Comprobante** o **Historial y comprobantes**. Use **Imprimir Ticket** o **Enviar por Correo**, revisando el destinatario antes del envío.
 
-**Resultado:** la venta guarda detalle, precios e importe, identifica al vendedor y descuenta stock. El servidor calcula el total con los precios del catálogo. El comprobante puede imprimirse o guardarse como PDF desde el diálogo del navegador. El historial permite búsqueda por ticket, cliente, producto o notas, además de fechas y método.
+**Resultado:** la venta guarda detalle, precios e importe, identifica al vendedor, lleva la etiqueta **Simulada** y descuenta stock. El servidor calcula el total con los precios del catálogo y genera una referencia de simulación; en efectivo guarda recibido y cambio. El comprobante indica que no acredita un pago real y puede imprimirse o guardarse como PDF desde el navegador. El historial permite búsqueda por ticket, cliente, producto o notas, además de fechas y método. Los totales financieros excluyen estas simulaciones.
 
 **Recuperación:** si falta stock, reduzca cantidades o revise el inventario. Ante una respuesta incierta, consulte el historial antes de abrir otra venta; el reintento del mismo formulario conserva su identificador para evitar duplicados, pero un formulario nuevo representa otra operación. Un fallo de correo no elimina la venta. No existe un recorrido ordinario de anulación, devolución o reembolso en esta revisión.
+
+Si el correo está en modo de prueba, **Enviar por Correo** genera el mensaje sin entregarlo y muestra ese límite. Puede imprimir el comprobante mientras el responsable configura un servicio de entrega. Nunca introduzca números de tarjeta, CVV ni contraseñas bancarias en notas o referencias.
+
+![Cobro de práctica con efectivo](capturas/pantalla-efectivo.png)
+
+![Tarjeta virtual de práctica](capturas/pantalla-tarjeta.png)
 
 ## 7. Procedimientos del Entrenador
 
@@ -293,10 +317,12 @@ El Administrador también registra asistencia, administra productos y vende medi
 
 1. En **Entrenamientos**, pulse **Asignar** en la rutina.
 2. Seleccione el cliente correcto y pulse **Asignar Rutina**.
-3. Para seguimiento, utilice **Monitoreo de Progreso de Clientes**, elija cliente y abra su progreso.
+3. Para seguimiento, abra **Mis clientes** desde la barra inferior o el directorio, elija un cliente y abra su progreso.
 4. Consulte marcas e historial; use el filtro de ejercicio cuando corresponda.
 
 **Resultado:** la asignación copia la rutina, sus días y ejercicios al cliente; no transfiere ni sincroniza la rutina original. El cliente puede modificar su copia. El Entrenador solo consulta progreso cuando existe una rutina atribuida a su identidad; el Administrador puede consultar cualquier cliente. La consulta no permite crear o borrar marcas del cliente.
+
+Cada cliente puede tener rutinas de varios entrenadores; el sistema no presupone un único entrenador titular. En **Entrenadores → Mis entrenadores**, el cliente ve los entrenadores activos que le han asignado rutinas, incluso cuando busca otros nombres en el directorio. El Administrador puede filtrar la lista de clientes por entrenador y revisar quién asignó cada rutina. Las relaciones se basan en el identificador del empleado, no en nombres que podrían coincidir.
 
 **Recuperación:** el selector puede listar clientes a los que el Entrenador aún no tiene acceso; un rechazo exige verificar la asignación. El nombre histórico del asignador no basta para autorizar: asignaciones antiguas sin identidad verificable requieren revisión. No repita una asignación para resolver un error de navegación sin comprobar las copias ya creadas.
 
@@ -342,12 +368,27 @@ El Administrador también registra asistencia, administra productos y vende medi
 
 **Objetivo:** revisar el progreso personal y las visitas. **Precondición:** sesión del Cliente.
 
-1. Abra **Progreso → Nuevo levantamiento**.
+1. Abra **Progreso → Registrar levantamiento**.
 2. Seleccione ejercicio activo, peso entre 0.5 y 999 kg, de 1 a 100 repeticiones y notas opcionales.
 3. Guarde y revise el historial; filtre por ejercicio o elimine un registro propio erróneo confirmando la acción.
 4. Abra **Mi Asistencia** para consultar total de visitas, visita abierta e historial de entradas y salidas.
 
-**Resultado:** Progreso calcula volumen como peso × repeticiones, destaca mejores marcas por ejercicio y muestra levantamientos recientes. El máximo de peso y la mejor marca por volumen representan medidas distintas. Mi Asistencia es de consulta; recepción registra las entradas y salidas. **Recuperación:** si hay una visita o marca incorrecta, contacte recepción o elimine únicamente su marca errónea. No hay edición directa del peso de un registro existente; puede eliminarlo y crear el correcto.
+**Resultado:** Progreso calcula volumen como peso × repeticiones, destaca una mejor serie por ejercicio y muestra levantamientos recientes. El máximo de peso y la mejor serie por volumen representan medidas distintas. La gráfica compara hasta ocho registros del mismo ejercicio en orden temporal; requiere al menos dos. El filtro permite revisar también un ejercicio archivado si ya tiene registros propios. Mi Asistencia es de consulta; recepción registra las entradas y salidas.
+
+El rango representa la constancia de registro y usa todos los levantamientos guardados, incluso al filtrar o cambiar de página. Las cuatro insignias son imágenes propias del proyecto. No evalúa fuerza, técnica ni salud, y completar una sesión de entrenamiento no crea automáticamente una marca.
+
+| Rango | Registros guardados |
+| --- | --- |
+| Iniciado | De 0 a 2 |
+| Intermedio | De 3 a 7 |
+| Avanzado | De 8 a 14 |
+| Élite | Desde 15 |
+
+La pantalla indica cuántos registros faltan para el siguiente rango. Eliminar una marca errónea actualiza resumen y rango, por lo que puede bajar de nivel. **Recuperación:** si hay una visita incorrecta, contacte recepción; para corregir una marca, elimine únicamente su registro y vuelva a crearlo. No hay edición directa del peso de un registro existente.
+
+![Progreso y rangos en celular](capturas/pantalla-progreso-y-rangos.png)
+
+![Historial de ventas adaptado a celular](capturas/pantalla-historial.png)
 
 ### 8.5. Consultar y calificar ejercicios
 
@@ -388,40 +429,36 @@ La aplicación utiliza cookies de sesión y preferencias de navegador. El servid
 
 ## 10. Fuentes y trazabilidad
 
-### 10.1. Método de comprobación y límites
+### 10.1. Revisión y comprobaciones
 
-La redacción se contrastó mediante lectura de `routes/web.php`, permisos de `app/Support/Acceso.php`, controladores, servicios, modelos, vistas Blade y pruebas de la revisión indicada. La siguiente matriz identifica fuentes para auditar cada procedimiento. Las rutas de archivo se expresan respecto a la raíz del proyecto.
+Esta edición se contrastó con rutas, permisos, controladores, modelos, servicios y vistas del árbol de trabajo del 19 de octubre de 2026. `REVISION.json` conserva la base y las huellas del contenido documentado; los resultados y límites se detallan en `VERIFICACION_PRUEBAS.md`.
 
-La lectura confirma implementación, autorización y controles definidos; no sustituye una prueba de uso real. Durante este encargo no se enviaron correos, no se utilizaron credenciales reales de Google, no se cobraron operaciones ni se modificaron datos del gimnasio. La evidencia automatizada previa del proyecto registra 166 pruebas y 1095 aserciones, sin fallos, en `output/hardening/phpunit-publish.xml`; no se presenta como una ejecución nueva del manual ni como certificación de SMTP, OAuth o concurrencia en MySQL.
+La revisión funcional ejecutó 234 pruebas con 1842 aserciones, ocho grupos de regresión de JavaScript y recorridos de navegador de los cuatro roles. Utilizó SQLite aislado y datos sintéticos. Se comprobaron ventas simuladas con cambio, rechazo y reintento; progreso por ejercicio; relaciones entrenador-cliente; permisos, vistas móviles y recursos compilados. Estas comprobaciones no acreditan cobros bancarios, entrega SMTP, Google real, concurrencia MySQL ni un dispositivo iOS físico.
 
-### 10.2. Matriz de trazabilidad
+Los ejemplos y capturas de esta edición utilizan datos de prueba. La migración de pagos simulados se aplicó además a la base local tras crear y comprobar un respaldo consistente; las ventas históricas conservaron su clasificación y no se crearon ventas de práctica en esa base para tomar capturas.
 
-| Función y sección | Fuente principal | Pruebas de referencia / comprobación |
-| --- | --- | --- |
-| Roles y navegación, 2 y 4 | `app/Support/Acceso.php`; `resources/views/partials/sidebar.blade.php` | `AdminPermisosTest`; permisos y menú contrastados. |
-| Acceso y Google, 3 | `app/Http/Controllers/Auth/ClienteLoginController.php`; `Auth/LoginController.php` | `SeguridadTest`; `GoogleTest`; flujo de proveedor no ejecutado. |
-| Recuperación, 3.3 | `app/Http/Controllers/Auth/EstablecerPasswordController.php`; vistas `auth` | `PasswordResetTest`; `PasswordResetIsolationTest`; entrega SMTP no ejecutada. |
-| Perfil y apariencia, 4 | `app/Http/Controllers/ConfiguracionController.php`; `app/Support/Apariencia.php`; `resources/views/perfil.blade.php` | `AparienciaTest`; campos y validaciones contrastados. |
-| Personal y cuentas, 5.1–5.2 | `app/Http/Controllers/EntrenadorController.php`; `CuentasController.php`; vistas homónimas | `GestionPersonalTest`; `CuentasAdministracionTest`; alta/invitación contrastadas. |
-| Planes, 5.3 | `app/Http/Controllers/PlanMembresiaController.php`; vista `membresias` | `PlanesMembresiaTest`; límites y estados contrastados. |
-| Ejercicios, 5.4 y 8.5 | `app/Http/Controllers/EjercicioController.php`; vista `ejercicios` | `EjerciciosGestionTest`; `RutinasTest`; calificación y permisos contrastados. |
-| Analítica, 5.5 | `app/Http/Controllers/AnaliticaFinancieraController.php`; `app/Services/AnaliticaFinancieraService.php` | `AnaliticaFinancieraTest`; `ReporteExcelSeguridadTest`; cálculo y rango contrastados. |
-| Membresías, 6.1 y 8.1 | `app/Http/Controllers/MembresiaController.php`; `app/Models/Membresia.php`; vista `membresias` | `MembresiasTest`; activación y renovación contrastadas. |
-| Pausas, 6.2 y 8.2 | `MembresiaController.php`; `Membresia.php`; vista `membresias` | `PausasMembresiaTest`; `PausaRenovacionIntegridadTest`; fechas y límite contrastados. |
-| Asistencia, 6.3 y 8.4 | `app/Http/Controllers/AsistenciaController.php`; `app/Services/RegistroAsistencia.php` | `AsistenciaClienteTest`; `AsistenciaAvanzadaTest`; consulta y registro contrastados. |
-| Productos y ventas, 6.4–6.5 | `app/Http/Controllers/ProductoController.php`; `VentaController.php`; vistas `productos` y `ventas` | `ProductosTest`; `VentasTest`; `ComprobanteVentaTest`; correo real no ejecutado. |
-| Rutinas y asignación, 7 | `app/Http/Controllers/RutinaController.php`; vistas `entrenamientos` | `RutinasTest`; `RutinasAvanzadasTest`; `IntegridadFinancieraPrivacidadTest`. |
-| Sesiones e historial, 8.3 | `RutinaController.php`; `resources/views/entrenamientos/entrenar.blade.php` e `historial.blade.php` | `SesionEntrenamientoTest`; `SesionUuidNormalizacionTest`; reintentos contrastados. |
-| Marcas y consulta del entrenador, 7.2 y 8.4 | `app/Http/Controllers/ProgresoController.php`; vistas `progreso` | `ProgresoTest`; `ProgresoEntrenadorTest`; privacidad y métricas contrastadas. |
-| Privacidad y errores, 9 | `resources/views/privacidad.blade.php`; vistas `errors`; `routes/web.php` | `HardeningRegressionTest`; contenido y rutas contrastados. |
+### 10.2. Referencias para mantener el manual
 
-Los nombres de pruebas de la tabla corresponden a archivos `.php` en `tests/Feature/`. Un archivo mencionado acredita la fuente inspeccionada o disponible, sin afirmar que se ejecutó nuevamente durante la documentación.
+| Función | Fuente y pruebas principales |
+| --- | --- |
+| Roles y navegación | `app/Support/Acceso.php`, `partials/sidebar`, `partials/mobile-nav`; `AdminPermisosTest`, `ProgresoMovilTest`. |
+| Acceso, invitación y recuperación | Controladores `Auth`, `EntrenadorController`, `Invitaciones`; `PasswordResetIsolationTest`, `AccesoEntrenadoresTest`, `GestionPersonalTest`, `GoogleTest`. |
+| Perfil y apariencia | `ConfiguracionController`, `Apariencia`; `AparienciaTest`. |
+| Planes, cobros y pausas | `MembresiaController`, `PlanMembresiaController`; `PlanesMembresiaTest`, `MembresiasTest`, `PausaRenovacionIntegridadTest`. |
+| Visitas | `AsistenciaController`, `RegistroAsistencia`; `AsistenciaClienteTest`, `AsistenciaExportSeguridadTest`. |
+| Productos y ventas | `ProductoController`, `VentaController`, `PagoSimulado`; `ProductosPermisosTest`, `PagosSimuladosTest`, `VentaIntegridadTest`, `ComprobanteVentaTest`. |
+| Reportes | `AnaliticaFinancieraService` y servicios de exportación; `AnaliticaFinancieraTest`, `ReporteExcelSeguridadTest`, `ReportesGerencialesTest`. |
+| Rutinas y sesiones | `RutinaController`, vistas `entrenamientos`; `RutinasAvanzadasTest`, `SesionEntrenamientoTest`, `SesionUuidNormalizacionTest`. |
+| Clientes del entrenador y progreso | `ClientesEntrenador`, `ProgresoCliente`, `RangoAtleta`; `AccesoEntrenadoresTest`, `ProgresoEntrenadorTest`, `ProgresoMovilTest`. |
+| Privacidad y protección general | Vista `privacidad`, middlewares y configuración; `SeguridadTest`, `HardeningRegressionTest`, `IntegridadFinancieraPrivacidadTest`. |
 
-### 10.3. Diferencias detectadas en documentación y pantalla
+Los controladores están en `app/Http/Controllers/`, los servicios en `app/Services/`, los soportes en `app/Support/`, las vistas en `resources/views/` y las pruebas citadas en `tests/Feature/`.
 
-El README indica que clientes pueden registrar sus propias visitas; la implementación vigente solo permite consultar **Mi Asistencia**. La pantalla de recuperación menciona personal aunque el mismo formulario atiende ambos tipos de cuenta. La política pública menciona avance temporal del entrenamiento en el navegador, pero la pantalla examinada solo conserva explícitamente la preferencia de sonido; no debe asumirse restauración de series después de recargar.
+### 10.3. Límites operativos
 
-También existen capacidades de servidor sin controles ordinarios visibles: cancelar membresía activada, anular pausa futura y gestión de pausas por Administrador. Estos límites se explican en las secciones 2 y 6 para evitar instrucciones basadas en botones inexistentes. Corresponde al responsable del producto decidir y revisar esos flujos; este entregable no modifica la aplicación.
+Hay acciones de servidor sin controles ordinarios visibles para cancelar una membresía activada o anular una pausa futura. Este manual no inventa botones para ellas. No existe una pantalla de reembolso o devolución de ventas, ni un historial formal de compras a proveedores.
+
+Las series marcadas durante una sesión abierta pueden perderse al recargar; solo una finalización confirmada guarda la sesión en la base de datos. Las invitaciones y comprobantes no se entregan mientras el correo siga en modo de prueba. La publicación requiere completar responsable y contacto de privacidad; Google sigue siendo opcional.
 
 ## 11. Glosario
 

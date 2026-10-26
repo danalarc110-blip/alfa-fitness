@@ -316,4 +316,291 @@ class AuditoriaLogicaInvariantesTest extends TestCase
         $response->assertSessionHasErrors('cliente_id');
         $this->assertDatabaseCount('ventas', 0);
     }
+
+    public function test_trainer_progress_selector_in_routines_only_lists_assigned_clients_while_admin_sees_all(): void
+    {
+        $coach = User::factory()->create(['rol' => 'Entrenador', 'name' => 'Entrenador Alfa']);
+        $admin = User::factory()->create(['rol' => 'Administrador', 'name' => 'Admin Alfa']);
+
+        $vinculado = Cliente::create([
+            'nombre' => 'Atleta Vinculado',
+            'correo' => 'vinculado@alfa.test',
+            'password' => 'Password!123',
+            'activo' => true,
+        ]);
+
+        \App\Models\Rutina::create([
+            'user_id' => $vinculado->id,
+            'user_type' => 'cliente',
+            'nombre' => 'Rutina Asignada',
+            'objetivo' => 'Fuerza',
+            'nivel' => 'Intermedio',
+            'asignado_por' => $coach->name,
+            'asignado_por_id' => $coach->id,
+            'dias_por_semana' => 3,
+        ]);
+
+        // Coach sees all active clients in $clientes (for assigning new routines),
+        // but only assigned clients in $clientesProgreso (for progress monitoring).
+        $coachResponse = $this->actingAs($coach, 'web')->get(route('entrenamientos.index'));
+        $coachResponse->assertOk()
+            ->assertViewHas('clientes', fn ($c) => $c->contains('id', $vinculado->id) && $c->contains('id', $this->cliente->id))
+            ->assertViewHas('clientesProgreso', fn ($cp) => $cp->contains('id', $vinculado->id) && ! $cp->contains('id', $this->cliente->id))
+            ->assertSee(route('entrenador.cliente.progreso', $vinculado), false)
+            ->assertDontSee(route('entrenador.cliente.progreso', $this->cliente), false);
+
+        // Administrator sees all active clients in $clientesProgreso.
+        $adminResponse = $this->actingAs($admin, 'web')->get(route('entrenamientos.index'));
+        $adminResponse->assertOk()
+            ->assertViewHas('clientesProgreso', fn ($cp) => $cp->contains('id', $vinculado->id) && $cp->contains('id', $this->cliente->id));
+    }
+
+    public function test_scheduled_future_pause_and_pending_pause_render_correct_actions_in_membresias_view(): void
+    {
+        $membresiaProgramada = Membresia::create([
+            'cliente_id' => $this->cliente->id,
+            'plan' => 'Plan Trimestral',
+            'importe' => 75.00,
+            'inicio' => today(),
+            'fin' => today()->addDays(90),
+            'cancelada' => false,
+        ]);
+
+        PausaMembresia::create([
+            'membresia_id' => $membresiaProgramada->id,
+            'cliente_id' => $this->cliente->id,
+            'dias' => 7,
+            'motivo' => 'Viaje futuro aprobado',
+            'estado' => 'aprobada',
+            'inicio_pausa' => today()->addDays(5),
+            'fin_pausa_estimada' => today()->addDays(11),
+            'aprobada_por' => $this->secretaria->id,
+        ]);
+
+        $response = $this->actingAs($this->cliente, 'cliente')->get(route('membresias.index'));
+        $response->assertOk()
+            ->assertSee('Programada:')
+            ->assertSee(route('membresias.reanudar', $membresiaProgramada), false)
+            ->assertDontSee("abrirModalPausa({$membresiaProgramada->id},", false);
+    }
+
+    public function test_late_pause_approval_shifts_start_to_today_and_does_not_charge_past_unfrozen_days(): void
+    {
+        $finOriginal = today()->addDays(30);
+
+        $membresia = Membresia::create([
+            'cliente_id' => $this->cliente->id,
+            'plan' => 'Plan Mensual',
+            'importe' => 30.00,
+            'inicio' => today()->subDays(5),
+            'fin' => $finOriginal,
+            'cancelada' => false,
+        ]);
+
+        // Request was submitted 3 days ago for 10 days, but remained pending until today
+        $pausa = PausaMembresia::create([
+            'membresia_id' => $membresia->id,
+            'cliente_id' => $this->cliente->id,
+            'dias' => 10,
+            'motivo' => 'Viaje familiar',
+            'estado' => 'pendiente',
+            'inicio_pausa' => today()->subDays(3),
+            'fin_pausa_estimada' => today()->addDays(6),
+        ]);
+
+        $this->actingAs($this->secretaria, 'web')
+            ->patch(route('membresias.pausa.aprobar', $pausa))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $pausa->refresh();
+        $membresia->refresh();
+
+        $this->assertEquals(today()->toDateString(), $pausa->inicio_pausa->toDateString());
+        $this->assertEquals(today()->addDays(9)->toDateString(), $pausa->fin_pausa_estimada->toDateString());
+        $this->assertEquals($finOriginal->copy()->addDays(10)->toDateString(), $membresia->fin->toDateString());
+
+        // Resuming on the same day of approval only consumes 1 day (today), returning 9 unused days
+        $this->actingAs($this->secretaria, 'web')
+            ->patch(route('membresias.reanudar', $membresia))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $pausa->refresh();
+        $membresia->refresh();
+
+        $this->assertSame(1, $pausa->dias);
+        $this->assertEquals($finOriginal->copy()->addDay()->toDateString(), $membresia->fin->toDateString());
+    }
+
+    public function test_workout_completion_modal_hides_pr_link_for_staff_and_shows_it_for_client(): void
+    {
+        $coach = User::factory()->create(['rol' => 'Entrenador']);
+
+        $rutinaCoach = \App\Models\Rutina::create([
+            'user_id' => $coach->id,
+            'user_type' => 'web',
+            'nombre' => 'Rutina Coach',
+            'objetivo' => 'Fuerza',
+            'nivel' => 'Avanzado',
+            'dias_por_semana' => 3,
+        ]);
+
+        $rutinaCliente = \App\Models\Rutina::create([
+            'user_id' => $this->cliente->id,
+            'user_type' => 'cliente',
+            'nombre' => 'Rutina Cliente',
+            'objetivo' => 'Salud',
+            'nivel' => 'Intermedio',
+            'dias_por_semana' => 3,
+        ]);
+
+        $this->actingAs($coach, 'web')
+            ->get(route('entrenamientos.entrenar', $rutinaCoach))
+            ->assertOk()
+            ->assertDontSee('Registrar PRs');
+
+        auth('web')->logout();
+
+        $this->actingAs($this->cliente, 'cliente')
+            ->get(route('entrenamientos.entrenar', $rutinaCliente))
+            ->assertOk()
+            ->assertSee('Registrar PRs');
+    }
+
+    public function test_orphan_visit_older_than_12h_does_not_inflate_reception_kpis_or_client_active_status(): void
+    {
+        Asistencia::create([
+            'cliente_id' => $this->cliente->id,
+            'fecha_hora' => now()->subHours(16),
+            'fecha_salida' => null,
+            'tipo_acceso' => 'entrada',
+        ]);
+
+        // Reception dashboard KPI 'Dentro ahora' matches live aforo (0)
+        $this->actingAs($this->secretaria, 'web')
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertViewHas('metricas', fn ($metricas) => collect($metricas)->firstWhere(0, 'Dentro ahora')[1] === 0);
+
+        // Reception attendance page shows dentro = 0 and huerfanasCount = 1
+        $this->actingAs($this->secretaria, 'web')
+            ->get(route('asistencia.index'))
+            ->assertOk()
+            ->assertViewHas('dentro', 0)
+            ->assertViewHas('huerfanasCount', 1);
+
+        auth('web')->logout();
+
+        // Client attendance page does not show client as currently inside the gym
+        $this->actingAs($this->cliente, 'cliente')
+            ->get(route('cliente.asistencia'))
+            ->assertOk()
+            ->assertViewHas('visitaActual', null)
+            ->assertSee('Sin sesión activa')
+            ->assertSee('Salida pendiente');
+    }
+
+    public function test_membresias_search_query_filters_solicitudes_membresias_and_pending_pauses(): void
+    {
+        $otroCliente = Cliente::create([
+            'nombre' => 'Pedro Omitido',
+            'correo' => 'pedro@alfa.test',
+            'password' => 'Password!123',
+            'activo' => true,
+        ]);
+
+        $m1 = Membresia::create([
+            'cliente_id' => $this->cliente->id,
+            'plan' => 'Plan Mensual',
+            'importe' => 30.00,
+            'inicio' => today(),
+            'fin' => today()->addDays(30),
+            'cancelada' => false,
+        ]);
+
+        $m2 = Membresia::create([
+            'cliente_id' => $otroCliente->id,
+            'plan' => 'Plan Anual',
+            'importe' => 250.00,
+            'inicio' => today(),
+            'fin' => today()->addDays(365),
+            'cancelada' => false,
+        ]);
+
+        PausaMembresia::create([
+            'membresia_id' => $m1->id,
+            'cliente_id' => $this->cliente->id,
+            'dias' => 5,
+            'motivo' => 'Pausa de Carlos',
+            'estado' => 'pendiente',
+            'inicio_pausa' => today()->addDays(2),
+            'fin_pausa_estimada' => today()->addDays(6),
+        ]);
+
+        PausaMembresia::create([
+            'membresia_id' => $m2->id,
+            'cliente_id' => $otroCliente->id,
+            'dias' => 5,
+            'motivo' => 'Pausa de Pedro',
+            'estado' => 'pendiente',
+            'inicio_pausa' => today()->addDays(2),
+            'fin_pausa_estimada' => today()->addDays(6),
+        ]);
+
+        $response = $this->actingAs($this->secretaria, 'web')
+            ->get(route('membresias.index', ['q' => 'Carlos Cliente']));
+
+        $response->assertOk()
+            ->assertViewHas('membresias', fn ($m) => $m->total() === 1 && $m->first()->cliente_id === $this->cliente->id)
+            ->assertViewHas('pausasPendientes', fn ($p) => $p->count() === 1 && $p->first()->cliente_id === $this->cliente->id)
+            ->assertSee('Pausa de Carlos')
+            ->assertDontSee('Pausa de Pedro');
+    }
+
+    public function test_banning_client_closes_open_attendance_and_frees_live_aforo(): void
+    {
+        $admin = User::factory()->create(['rol' => 'Administrador']);
+
+        $visita = Asistencia::create([
+            'cliente_id' => $this->cliente->id,
+            'fecha_hora' => now()->subMinutes(25),
+            'fecha_salida' => null,
+            'tipo_acceso' => 'entrada',
+        ]);
+
+        $this->actingAs($admin, 'web')
+            ->patch(route('cuentas.banear', $this->cliente))
+            ->assertRedirect();
+
+        $visita->refresh();
+        $this->assertNotNull($visita->fecha_salida);
+        $this->assertSame($admin->id, $visita->salida_registrada_por);
+    }
+
+    public function test_client_dashboard_omits_expiry_warning_when_future_renewal_is_already_scheduled(): void
+    {
+        Membresia::create([
+            'cliente_id' => $this->cliente->id,
+            'plan' => 'Plan Actual',
+            'importe' => 25.00,
+            'inicio' => today()->subDays(25),
+            'fin' => today()->addDays(3),
+            'cancelada' => false,
+        ]);
+
+        Membresia::create([
+            'cliente_id' => $this->cliente->id,
+            'plan' => 'Plan Renovado',
+            'importe' => 25.00,
+            'inicio' => today()->addDays(4),
+            'fin' => today()->addDays(34),
+            'cancelada' => false,
+        ]);
+
+        $this->actingAs($this->cliente, 'cliente')
+            ->get(route('cliente.dashboard'))
+            ->assertOk()
+            ->assertViewHas('porVencer', fn ($porVencer) => $porVencer->isEmpty());
+    }
 }

@@ -45,6 +45,18 @@ class Membresia extends Model
             ->first(fn ($p) => $p->estaVigenteHoy());
     }
 
+    public function pausaReanudable(): ?PausaMembresia
+    {
+        return $this->pausas
+            ->first(fn (PausaMembresia $p) => $p->estado === 'aprobada' && $p->fin_pausa_estimada && $p->fin_pausa_estimada->gte(today()));
+    }
+
+    public function pausaPendiente(): ?PausaMembresia
+    {
+        return $this->pausas
+            ->first(fn (PausaMembresia $p) => $p->estado === 'pendiente' && $p->fin_pausa_estimada && $p->fin_pausa_estimada->gte(today()));
+    }
+
     public function diasPausadosAcumulados(): int
     {
         if ($this->relationLoaded('pausas')) {

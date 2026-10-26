@@ -98,7 +98,7 @@
 
 <h2 class="text-lg font-semibold mt-8 mb-4">Historial de membresías</h2>
 <div class="overflow-x-auto alpha-card rounded-2xl">
-    <table class="w-full text-sm">
+    <table class="alpha-mobile-table w-full text-sm">
         <thead>
             <tr class="text-left border-b border-white/10 text-xs text-gray-400 uppercase tracking-wider">
                 <th class="p-4">Cliente</th>
@@ -115,15 +115,17 @@
                 @php
                     $diasUsados = $membresia->diasPausadosAcumulados();
                     $pausaActiva = $membresia->pausaVigente();
+                    $pausaReanudable = $membresia->pausaReanudable();
+                    $pausaPendiente = $membresia->pausaPendiente();
                     $puedeGestionar = $guard === 'cliente' ? ($membresia->cliente_id === auth('cliente')->id()) : auth('web')->user()?->can('operaciones');
                 @endphp
                 <tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                    <td class="p-4 font-medium text-white">{{ $membresia->cliente->nombre }}</td>
-                    <td class="p-4 text-gray-300">{{ $membresia->plan }}</td>
-                    <td class="p-4 whitespace-nowrap text-xs text-gray-400">
+                    <td data-label="Cliente" class="p-4 font-medium text-white">{{ $membresia->cliente->nombre }}</td>
+                    <td data-label="Plan" class="p-4 text-gray-300">{{ $membresia->plan }}</td>
+                    <td data-label="Vigencia" class="p-4 whitespace-nowrap text-xs text-gray-400">
                         {{ $membresia->inicio->format('d/m/Y') }} — {{ $membresia->fin->format('d/m/Y') }}
                     </td>
-                    <td class="p-4">
+                    <td data-label="Estado" class="p-4">
                         @if($membresia->estado === 'En Pausa')
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
                                 <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
@@ -135,23 +137,27 @@
                             <span class="alpha-status">{{ $membresia->estado }}</span>
                         @endif
                     </td>
-                    <td class="p-4 text-xs">
+                    <td data-label="Congelamiento" class="p-4 text-xs">
                         <span class="font-mono {{ $diasUsados >= 30 ? 'text-red-400' : 'text-gray-400' }}">
                             {{ $diasUsados }}/30 d
                         </span>
                         @if($pausaActiva)
                             <p class="text-[11px] text-amber-400 mt-0.5">Hasta {{ $pausaActiva->fin_pausa_estimada->format('d/m/Y') }}</p>
+                        @elseif($pausaReanudable)
+                            <p class="text-[11px] text-amber-400 mt-0.5">Programada: {{ $pausaReanudable->inicio_pausa->format('d/m/Y') }} al {{ $pausaReanudable->fin_pausa_estimada->format('d/m/Y') }}</p>
+                        @elseif($pausaPendiente)
+                            <p class="text-[11px] text-yellow-400 mt-0.5">Solicitud pendiente ({{ $pausaPendiente->dias }} d)</p>
                         @endif
                     </td>
-                    <td class="p-4 text-xs">
+                    <td data-label="Pago" class="p-4 text-xs">
                         <strong class="text-yellow-400">${{ number_format((float)$membresia->importe, 2) }}</strong>
                         @if($membresia->pago)
                             <br><span class="text-[11px] text-gray-500">{{ $membresia->pago->pagado_en->format('d/m/Y') }}</span>
                         @endif
                     </td>
-                    <td class="p-4 text-right whitespace-nowrap">
+                    <td data-label="Acción" class="p-4 text-right whitespace-nowrap">
                         @if($puedeGestionar)
-                            @if($membresia->estado === 'En Pausa')
+                            @if(! $membresia->cancelada && $pausaReanudable)
                                 <form method="POST" action="{{ route('membresias.reanudar', $membresia) }}" class="inline-block" onsubmit="return confirm('¿Deseas reanudar esta membresía hoy? Los días no consumidos de la pausa se reajustarán automáticamente sin perder días.')">
                                     @csrf
                                     @method('PATCH')
@@ -159,12 +165,14 @@
                                         Reanudar
                                     </button>
                                 </form>
-                            @elseif($membresia->estado === 'Vigente' && $diasUsados < 30)
+                            @elseif($membresia->estado === 'Vigente' && ! $pausaPendiente && $diasUsados < 30)
                                 <button type="button"
                                     onclick="abrirModalPausa({{ $membresia->id }}, '{{ addslashes($membresia->cliente->nombre) }}', {{ 30 - $diasUsados }})"
                                     class="alpha-btn-secondary px-3 py-1.5 rounded-lg text-xs font-semibold hover:border-amber-400/50 hover:text-amber-400 transition-colors">
                                     Pausar
                                 </button>
+                            @elseif($pausaPendiente)
+                                <span class="text-xs text-amber-400 font-medium">Pausa en revisión</span>
                             @endif
                         @endif
                     </td>

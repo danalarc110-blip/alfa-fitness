@@ -14,6 +14,13 @@
                         <td style="padding: 28px 32px; background: linear-gradient(180deg, rgba(250,204,21,0.12) 0%, rgba(18,20,24,0) 100%); border-bottom: 1px solid rgba(255,255,255,0.08); text-align: center;">
                             <h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 2px; color: #facc15; text-transform: uppercase;">ALPHA FITNESS</h1>
                             <p style="margin: 4px 0 0 0; font-size: 13px; color: #9ca3af; letter-spacing: 0.5px;">Comprobante Digital de Compra</p>
+                            @if ($venta->pago_simulado)
+                                <p style="font-size:16px;font-weight:bold;color:#fff;">SIMULACIÓN · SIN COBRO REAL</p>
+                                <p style="font-size:13px;color:#e5e7eb;">Comprobante de práctica. No acredita un pago real.<br>Referencia: {{ $venta->referencia_pago }}</p>
+                                @if ($venta->metodo_pago === 'Efectivo')
+                                    <p style="font-size:13px;color:#e5e7eb;">Recibido: ${{ number_format($venta->efectivo_recibido, 2) }} · Cambio: ${{ number_format($venta->cambio, 2) }}</p>
+                                @endif
+                            @endif
                         </td>
                     </tr>
 
@@ -78,7 +85,7 @@
                                 <tfoot>
                                     <tr>
                                         <td colspan="2" align="right" style="padding: 18px 0 6px 0; font-size: 14px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px;">
-                                            Total Pagado:
+                                            {{ $venta->pago_simulado ? 'Total simulado:' : 'Total Pagado:' }}
                                         </td>
                                         <td align="right" style="padding: 18px 0 6px 0; font-size: 22px; font-weight: 800; color: #facc15;">
                                             ${{ number_format($venta->total, 2) }}
@@ -103,7 +110,7 @@
                     <tr>
                         <td style="padding: 24px 32px; background-color: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.06); text-align: center;">
                             <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #facc15;">¡Gracias por tu compra en Alpha Fitness!</p>
-                            <p style="margin: 0; font-size: 11px; color: #6b7280;">Cada repetición, cada serie y cada día cuenta. Este es un comprobante electrónico oficial.</p>
+                            <p style="margin: 0; font-size: 11px; color: #6b7280;">Cada repetición, cada serie y cada día cuenta. {{ $venta->pago_simulado ? 'Demostración sin valor de pago.' : 'Comprobante electrónico de la operación registrada.' }}</p>
                         </td>
                     </tr>
                 </table>

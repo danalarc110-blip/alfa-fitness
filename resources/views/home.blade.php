@@ -13,6 +13,12 @@
 <section class="alpha-metrics" aria-label="Resumen de actividad">
     @foreach($metricas as [$etiqueta, $valor])<article class="alpha-metric"><p>{{ $etiqueta }}</p><strong>{{ $valor }}</strong></article>@endforeach
 </section>
+@if ($perfil === 'administrador' && count($pendientesConfiguracion))
+<details class="alpha-card p-5 mb-6">
+    <summary class="font-semibold cursor-pointer">Configuración pendiente: {{ count($pendientesConfiguracion) }} servicios o datos por completar</summary>
+    <ul class="space-y-3 mt-4">@foreach ($pendientesConfiguracion as [$servicio, $detalle])<li class="text-sm"><strong>{{ $servicio }}</strong><p class="text-gray-400 mt-1">{{ $detalle }}</p></li>@endforeach</ul>
+</details>
+@endif
 
 @if(isset($aforo))
 <section class="alpha-card p-6 mb-6" data-animate="card">
@@ -43,7 +49,7 @@
         <div class="flex items-center justify-between gap-3 mb-4">
             <div>
                 <h3 class="text-sm font-semibold text-white">Distribución de Horas Pico</h3>
-                <p class="text-xs text-gray-400">Frecuencia histórica de asistencia (06:00 a 21:00) en los últimos 30 días</p>
+                <p class="text-xs text-gray-400">Frecuencia histórica de asistencia (06:00 a 22:00) en los últimos 30 días</p>
             </div>
             <span class="text-[11px] text-amber-400/90 font-medium hidden sm:inline-flex items-center gap-1">
                 ★ Pico histórico
@@ -83,7 +89,7 @@
     @if($perfil === 'administrador')
     <section class="alpha-card overflow-hidden" data-animate="card">
         <div class="alpha-panel-heading">
-            <h2>Últimas ventas (TPV)</h2>
+            <h2>Últimas ventas</h2>
             <a href="{{ route('ventas.index') }}">Ver mostrador →</a>
         </div>
         @forelse($actividad as $venta)
@@ -94,6 +100,7 @@
                     </strong>
                     <p class="text-xs text-gray-400 mt-1">
                         {{ $venta->created_at->format('d/m/Y · H:i') }} · {{ $venta->metodo_pago }}
+                        @if ($venta->pago_simulado) · Simulado @endif
                     </p>
                 </div>
                 <div class="text-right shrink-0">
@@ -136,7 +143,8 @@
             @can('asistencia')<a href="{{ route('asistencia.index') }}">Ver historial →</a>@endcan
         </div>
         @forelse($actividad as $visita)
-            <div class="alpha-list-row"><div><strong class="text-sm">{{ $guard === 'cliente' ? 'Entrada al gimnasio' : ($visita->cliente?->nombre ?? 'Miembro') }}</strong><p class="text-xs text-gray-400 mt-1">{{ $visita->fecha_hora->format('d/m/Y · H:i') }}</p></div><span class="alpha-status {{ !$visita->fecha_salida ? 'alpha-status-active' : '' }}">{{ $visita->fecha_salida ? 'Visita completada' : 'En el gimnasio' }}</span></div>
+            @php($enGimnasio = ! $visita->fecha_salida && $visita->fecha_hora->gte(now()->subHours(12)))
+            <div class="alpha-list-row"><div><strong class="text-sm">{{ $guard === 'cliente' ? 'Entrada al gimnasio' : ($visita->cliente?->nombre ?? 'Miembro') }}</strong><p class="text-xs text-gray-400 mt-1">{{ $visita->fecha_hora->format('d/m/Y · H:i') }}</p></div><span class="alpha-status {{ $enGimnasio ? 'alpha-status-active' : '' }}">{{ $visita->fecha_salida ? 'Visita completada' : ($enGimnasio ? 'En el gimnasio' : 'Salida pendiente') }}</span></div>
         @empty<p class="text-sm text-gray-400 py-10 text-center">{{ $guard === 'cliente' ? 'Tus visitas al gimnasio se registrarán aquí.' : 'Las próximas visitas aparecerán aquí.' }}</p>@endforelse
     </section>
     @endif

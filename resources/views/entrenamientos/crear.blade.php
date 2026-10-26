@@ -106,7 +106,7 @@
         if (state) { state.textContent = message; state.classList.remove('opacity-0'); state.setAttribute('role', 'alert'); }
         window.showAlphaToast?.(message, 'error');
     }
-    async function api(url, method, body) {
+    async function api(url, method, body, contenido = null) {
         const write = method !== 'GET';
         if (write) pending++;
         try {
@@ -115,8 +115,17 @@
                 headers: { 'X-CSRF-TOKEN': CSRF, 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: body ? JSON.stringify(body) : undefined,
             });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(response.status === 419 || response.status === 401 ? 'Tu sesión expiró. Vuelve a iniciar sesión.' : (Object.values(data.errors || {}).flat()[0] || data.message || 'No se pudo completar la operación.'));
+            if (response.status === 419 || response.status === 401) throw new Error('Tu sesión expiró. Vuelve a iniciar sesión.');
+            let data;
+            try { data = await response.json(); }
+            catch { throw new Error('El servidor no confirmó la operación. Revisa tu conexión e intenta nuevamente.'); }
+            if (!data || typeof data !== 'object' || Array.isArray(data) || data.ok === false) throw new Error('El servidor no confirmó la operación. Intenta nuevamente.');
+            if (!response.ok) throw new Error(Object.values(data.errors || {}).flat()[0] || data.message || 'No se pudo completar la operación.');
+            const confirmado = contenido === 'ejercicios' ? Array.isArray(data.ejercicios)
+                : contenido ? data[contenido] && Number.isInteger(data[contenido].id)
+                    && (contenido !== 'rutina' || data.ok === true)
+                : data.ok === true;
+            if (!confirmado) throw new Error('El servidor no confirmó la operación. Intenta nuevamente.');
             return data;
         } finally { if (write) pending--; }
     }
@@ -281,7 +290,7 @@
         if (creatingDay) return;
         creatingDay = true;
         document.getElementById('btn-add-dia').disabled = true;
-        api(URLS.crearDia, 'POST').then(({dia}) => {
+        api(URLS.crearDia, 'POST', null, 'dia').then(({dia}) => {
             DIAS.push({ id: dia.id, titulo: dia.titulo, ejercicios: [] });
             diaActivoId = dia.id;
             render();
@@ -295,7 +304,7 @@
         const dia = DIAS.find(d => d.id === id);
         const nuevo = prompt('Nombre del día:', dia.titulo);
         if (!nuevo?.trim()) return;
-        api(URLS.renombrarDia(id), 'PUT', { titulo: nuevo.trim() }).then(({dia: d}) => {
+        api(URLS.renombrarDia(id), 'PUT', { titulo: nuevo.trim() }, 'dia').then(({dia: d}) => {
             dia.titulo = d.titulo;
             render();
         }).catch(mostrarError);
@@ -319,7 +328,7 @@
         if (addingExercises.has(key)) return;
         addingExercises.add(key);
         document.querySelector(`[data-add="${ejId}"]`)?.setAttribute('disabled', '');
-        api(URLS.crearEjercicio(selectedDay), 'POST', { ejercicio_id: ejId })
+        api(URLS.crearEjercicio(selectedDay), 'POST', { ejercicio_id: ejId }, 'rutina_ejercicio')
             .then(({ rutina_ejercicio: re }) => {
                 re.ejercicio.tiene_imagen          = re.ejercicio.tiene_imagen         ?? false;
                 re.ejercicio.tiene_imagen_musculos = re.ejercicio.tiene_imagen_musculos ?? false;
@@ -341,7 +350,7 @@
         const previous = record[campo];
         record[campo] = valor;
         input.disabled = true;
-        api(URLS.actualizarEjercicio(id), 'PUT', { [campo]: valor }).then(() => {
+        api(URLS.actualizarEjercicio(id), 'PUT', { [campo]: valor }, 'rutina_ejercicio').then(() => {
             for (const d of DIAS) { const ej = d.ejercicios.find(re => re.id === id); if (ej) ej[campo] = valor; }
             marcarGuardado();
         }).catch(error => {
@@ -374,7 +383,7 @@
                 objetivo:       document.getElementById('campo-objetivo').value,
                 nivel:          document.getElementById('campo-nivel').value,
                 dias_por_semana:document.getElementById('campo-dias').value,
-            })).then(() => { if (version === saveVersion) { unsaved = false; marcarGuardado(); } }).catch(mostrarError);
+            }, 'rutina')).then(() => { if (version === saveVersion) { unsaved = false; marcarGuardado(); } }).catch(mostrarError);
         }, 600);
     }
     ['campo-nombre','campo-objetivo','campo-dias'].forEach(id =>
@@ -413,7 +422,7 @@
         searchTmt = setTimeout(() => {
             const q     = document.getElementById('catalogo-buscar').value;
             const grupo = document.getElementById('catalogo-grupo').value;
-            api(`${URLS.catalogo}?q=${encodeURIComponent(q)}&grupo=${encodeURIComponent(grupo)}`, 'GET')
+            api(`${URLS.catalogo}?q=${encodeURIComponent(q)}&grupo=${encodeURIComponent(grupo)}`, 'GET', null, 'ejercicios')
                 .then(({ ejercicios }) => { if (version === searchVersion) renderCatalogo(ejercicios); }).catch(mostrarError);
         }, 250);
     }

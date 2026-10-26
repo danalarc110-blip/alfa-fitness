@@ -1,21 +1,48 @@
-# Documentación integral de Alpha Fitness
+# Documentación del proyecto Alpha Fitness
 
-Edición 1.0, preparada el 7 de octubre de 2026 para la revisión de aplicación `26b511f692c10fcb2e2d982ac94b407fbdc3b0fd`.
+Edición 2.0, 19 de octubre de 2026. Describe la base `06d31c2` y los cambios locales de ventas simuladas, progreso, entrenadores y navegación móvil. Las huellas de las fuentes están en [REVISION.json](REVISION.json); esta edición no acredita que esos cambios ya estén publicados en GitHub.
 
-La documentación se organiza por responsabilidad. El manual técnico permite al equipo de desarrollo y administración comprender la implementación, preparar instalaciones y conservar los datos. El manual de usuario explica las tareas disponibles para Administrador, Secretaria, Entrenador y Cliente.
+## Documentos
 
-| Documento | Público y contenido |
-| --- | --- |
-| [Manual técnico y de administración en PDF](MANUAL_TECNICO.pdf) | Arquitectura, requisitos, instalación, configuración, permisos, reglas, contratos, diccionario de datos, despliegue, respaldo, recuperación y mantenimiento. |
-| [Manual de usuario en PDF](MANUAL_USUARIO.pdf) | Acceso, configuración personal, catálogos, recepción, membresías, ventas, asistencia, rutinas, entrenamiento, progreso e incidencias por rol. |
-| [Auditoría integral previa en el repositorio](https://github.com/danalarc110-blip/alfa-fitness/blob/26b511f692c10fcb2e2d982ac94b407fbdc3b0fd/docs/AUDITORIA_INTEGRAL.md) | Evidencia histórica de revisión y pruebas de la aplicación. Es un informe separado; no sustituye los procedimientos de estos manuales. |
+| Documento | Contenido | PDF | Fuente editable |
+| --- | --- | --- | --- |
+| Proyecto y requisitos | Contexto, objetivos, alcance, actores, requisitos, reglas y aceptación. | [Leer](PROYECTO_REQUISITOS.pdf) | [Markdown](PROYECTO_REQUISITOS.md) |
+| Manual de usuario | Acceso y uso por Administrador, Secretaria, Entrenador y Cliente; ejemplos y capturas móviles. | [Leer](MANUAL_USUARIO.pdf) | [Markdown](MANUAL_USUARIO.md) |
+| Manual técnico | Arquitectura implementada, módulos, contratos, permisos, servicios y configuración. | [Leer](MANUAL_TECNICO.pdf) | [Markdown](MANUAL_TECNICO.md) |
+| Diccionario de datos | Tablas, campos relevantes, relaciones, índices y conservación del historial. | [Leer](DICCIONARIO_DATOS.pdf) | [Markdown](DICCIONARIO_DATOS.md) |
+| Operación y despliegue | Instalación, actualización, correo, Google, publicación, respaldos y recuperación. | [Leer](OPERACION_DESPLIEGUE.pdf) | [Markdown](OPERACION_DESPLIEGUE.md) |
+| Verificación y pruebas | Comandos ejecutados, escenarios, resultados, reproducción y límites reales. | [Leer](VERIFICACION_PRUEBAS.pdf) | [Markdown](VERIFICACION_PRUEBAS.md) |
 
-Los PDF de entrega se encuentran en esta carpeta. Las fuentes editables se conservan en [MANUAL_TECNICO.md](MANUAL_TECNICO.md) y [MANUAL_USUARIO.md](MANUAL_USUARIO.md).
+Para aprender a usar el sistema, empiece por el manual de usuario y su rol. Para instalarlo o actualizarlo, lea primero operación y despliegue; no utilice procedimientos de instalación nueva sobre una base existente. Para desarrollar, consulte el manual técnico, el diccionario y los requisitos. El informe de pruebas distingue comprobaciones ejecutadas de controles pendientes.
 
-## Alcance de la verificación
+Los PDF tienen texto seleccionable y marcadores de navegación. Los Markdown pueden editarse en un editor de texto sin modificar el formato de la aplicación. Las imágenes de [capturas](capturas/) contienen exclusivamente datos sintéticos del entorno de revisión; se conservan nueve capturas finales.
 
-Los procedimientos y referencias se contrastan con el código de la revisión indicada. La evidencia archivada de pruebas se identifica como histórica. Esta elaboración documental no equivale a un nuevo despliegue ni acredita servicios externos de correo, Google o una base de producción. Cada manual detalla esos límites.
+El inventario [RUTAS.json](RUTAS.json) contiene las 93 rutas propias obtenidas con `php artisan route:list --json --except-vendor`, con verbo, URI, acción y middleware. Es una referencia interna del sistema web; no declara una API pública estable.
 
-## Mantenimiento de los manuales
+## Datos que debe completar el responsable
 
-Cuando cambien rutas, permisos, validaciones, migraciones o controles visibles, el responsable del cambio debe revisar las secciones y tablas de trazabilidad afectadas. La edición siguiente debe indicar su fecha y revisión de código, comprobar los procedimientos y volver a generar e inspeccionar Word y PDF. Los secretos, credenciales y datos reales de clientes deben permanecer fuera de la documentación pública.
+- Responsable y correo de privacidad, y criterio de conservación de datos y respaldos.
+- Proveedor y remitente de correo real, seguido de una prueba de entrega. `MAIL_MAILER=log` genera mensajes privados de desarrollo y no los entrega.
+- Dominio, HTTPS y configuración del servidor de publicación.
+- Credenciales y callback de Google solo si se ofrecerá esa alternativa de acceso.
+
+Los nuevos cobros realizados desde Ventas son simulados: ajustan stock y generan comprobantes, pero no mueven dinero ni se suman a los ingresos reales. La activación de membresías registra el pago presencial confirmado por Secretaria. No hay integración bancaria.
+
+## Actualizar y generar los PDF
+
+Edite la fuente correspondiente y compruebe primero el comportamiento real. El generador `tools/build_project_docs.py` lee solo los seis manuales y sus capturas; no abre `.env`, Laravel ni bases de datos. Requiere Python con ReportLab (generación comprobada con 4.4.9) y fuentes Arial y Consolas disponibles; estos requisitos son para generar documentación, no para ejecutar la aplicación.
+
+```sh
+python tools/build_project_docs.py --font-dir C:/Windows/Fonts
+```
+
+En otro sistema, indique una carpeta de fuentes compatible o adapte el registro de fuentes del generador. Antes de distribuir, renderice los PDF a imágenes con Poppler y revise tablas, cortes de página, capturas y caracteres. Compruebe enlaces, datos de revisión y resultados de pruebas; no copie resultados antiguos como si fueran actuales. Los PDF deben regenerarse si se modifica su Markdown.
+
+Para una entrega, incluya esta carpeta con sus fuentes, PDF, capturas y `REVISION.json`. Mantenga los logs, bases de datos, `.env`, contraseñas y respaldos fuera del paquete público. El generador vive en `tools/` dentro del repositorio; la copia de documentación por sí sola no es una copia instalable de la aplicación.
+
+## Historial documental
+
+- Edición 1.0, 7 de octubre: manuales originales para la revisión `26b511f`.
+- Edición 2.0, 19 de octubre: actualización de manuales, cuatro documentos complementarios, capturas de celular y revisión de fuentes y resultados actuales.
+
+`docs/AUDITORIA_INTEGRAL.md` se conserva como informe histórico. La carpeta previa `docs/presentacion-2026-10-14/` se preserva y no es la documentación vigente de esta edición.

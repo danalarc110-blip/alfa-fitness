@@ -16,8 +16,7 @@ use Laravel\Socialite\Facades\Socialite;
 class ConfiguracionController extends Controller
 {
     /**
-     * Devuelve ['guard' => 'web'|'cliente', 'user' => modelo autenticado].
-     * Así el resto del controlador no necesita saber si es empleado o cliente.
+     * Muestra el perfil y las preferencias de la cuenta autenticada.
      */
     public function show()
     {

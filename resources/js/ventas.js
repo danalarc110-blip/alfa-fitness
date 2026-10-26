@@ -7,6 +7,30 @@ if (formularioVenta) {
     const contenedorItems = document.getElementById('items-contenedor');
     let ventaRevisada = false;
     let ventaEnviando = false;
+    let totalVentaCentavos = 0;
+    const esSimulada = document.getElementById('venta-simulado').value === '1';
+    const efectivoVenta = document.getElementById('venta-efectivo');
+    const resultadoTarjeta = document.getElementById('venta-tarjeta-resultado');
+
+    function actualizarPago() {
+        const metodo = document.getElementById('venta-metodo').value;
+        const esEfectivo = esSimulada && metodo === 'Efectivo';
+        const esTarjeta = esSimulada && metodo === 'Tarjeta';
+        document.getElementById('venta-efectivo-panel').classList.toggle('hidden', !esEfectivo);
+        document.getElementById('venta-tarjeta-panel').classList.toggle('hidden', !esTarjeta);
+        document.getElementById('venta-transferencia-aviso').classList.toggle('hidden', !esSimulada || metodo !== 'Transferencia');
+        efectivoVenta.disabled = !esEfectivo;
+        efectivoVenta.required = esEfectivo;
+        efectivoVenta.min = (totalVentaCentavos / 100).toFixed(2);
+        resultadoTarjeta.disabled = !esTarjeta;
+        resultadoTarjeta.required = esTarjeta;
+        const recibido = Math.round(Number(efectivoVenta.value) * 100);
+        document.getElementById('venta-cambio').textContent = efectivoVenta.value === ''
+            ? 'Indica el importe recibido para calcular el cambio.'
+            : recibido >= totalVentaCentavos
+                ? 'Cambio a entregar: ' + monedaVenta(recibido - totalVentaCentavos)
+                : 'Faltan ' + monedaVenta(totalVentaCentavos - recibido) + ' para completar el importe.';
+    }
 
     const monedaVenta = centavos => '$' + (centavos / 100).toFixed(2);
     const mensajeVenta = mensaje => { document.getElementById('venta-mensaje').textContent = mensaje; };
@@ -52,6 +76,8 @@ if (formularioVenta) {
             totalCentavos += subtotal;
         });
         document.getElementById('gran-total').textContent = monedaVenta(totalCentavos);
+        totalVentaCentavos = totalCentavos;
+        actualizarPago();
         document.getElementById('venta-vacia').classList.toggle('hidden', carritoVenta.size > 0);
         const unidades = [...carritoVenta.values()].reduce((total, item) => {
             const cantidad = Number(item.cantidad);
@@ -208,7 +234,12 @@ if (formularioVenta) {
         });
         const cliente = document.getElementById('venta-cliente');
         document.getElementById('venta-resumen-cliente').textContent = 'Cliente: ' + cliente.options[cliente.selectedIndex].textContent;
-        document.getElementById('venta-resumen-pago').textContent = 'Pago presencial: ' + document.getElementById('venta-metodo').value;
+        const metodo = document.getElementById('venta-metodo').value;
+        document.getElementById('venta-resumen-pago').textContent = (esSimulada ? 'Pago simulado: ' : 'Pago presencial: ') + metodo;
+        document.getElementById('venta-resumen-simulacion').textContent = !esSimulada ? '' : metodo === 'Efectivo'
+            ? 'Recibido: ' + monedaVenta(Math.round(Number(efectivoVenta.value) * 100)) + ' · ' + document.getElementById('venta-cambio').textContent
+            : metodo === 'Tarjeta' ? 'Tarjeta virtual de prueba: ' + (resultadoTarjeta.value === 'aprobada' ? 'aprobada.' : 'rechazada. La venta no se registrará; podrás corregirla y reintentar.')
+                : 'Transferencia de prueba. No se mueve dinero.';
         document.getElementById('venta-resumen-notas').textContent = document.getElementById('venta-notas').value;
         document.getElementById('venta-edicion').classList.add('hidden');
         document.getElementById('venta-revision').classList.remove('hidden');
@@ -226,7 +257,14 @@ if (formularioVenta) {
         editarVenta();
         document.getElementById('venta-busqueda').focus();
     });
-    ['venta-cliente', 'venta-metodo', 'venta-notas'].forEach(id => document.getElementById(id).addEventListener('input', editarVenta));
+    ['venta-cliente', 'venta-metodo', 'venta-notas', 'venta-efectivo', 'venta-tarjeta-resultado'].forEach(id => document.getElementById(id).addEventListener('input', () => { editarVenta(); actualizarPago(); }));
+    document.getElementById('venta-efectivo-exacto').addEventListener('click', () => {
+        if (ventaEnviando) return;
+        efectivoVenta.value = (totalVentaCentavos / 100).toFixed(2);
+        editarVenta();
+        actualizarPago();
+        efectivoVenta.focus();
+    });
     formularioVenta.addEventListener('submit', event => {
         if (ventaEnviando || !ventaRevisada) {
             event.preventDefault();
@@ -246,7 +284,7 @@ if (formularioVenta) {
         if (!event.persisted) return;
         ventaEnviando = false;
         formularioVenta.removeAttribute('aria-busy');
-        document.getElementById('venta-registrar').textContent = 'Registrar venta';
+        document.getElementById('venta-registrar').textContent = esSimulada ? 'Simular cobro y registrar' : 'Registrar venta';
         document.getElementById('venta-editar').disabled = false;
         document.querySelectorAll('[data-venta-ir]').forEach(boton => { boton.disabled = false; });
         editarVenta();

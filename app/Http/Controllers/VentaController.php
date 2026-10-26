@@ -6,6 +6,7 @@ use App\Mail\ComprobanteVentaMail;
 use App\Models\Cliente;
 use App\Models\Producto;
 use App\Models\Venta;
+use App\Services\PagoSimulado;
 use App\Support\Dinero;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
@@ -55,9 +56,10 @@ class VentaController extends Controller
             });
         }
         $ventas = $query->paginate(15)->withQueryString();
-        $hoyTotal = Venta::whereDate('created_at', today())->sum('total');
-        $hoyConteo = Venta::whereDate('created_at', today())->count();
-        $mesTotal = Venta::whereYear('created_at', now()->year)->whereMonth('created_at', now()->month)->sum('total');
+        $hoyTotal = Venta::reales()->whereDate('created_at', today())->sum('total');
+        $hoyConteo = Venta::reales()->whereDate('created_at', today())->count();
+        $mesTotal = Venta::reales()->whereYear('created_at', now()->year)->whereMonth('created_at', now()->month)->sum('total');
+        $simulacionesHoy = Venta::where('pago_simulado', true)->whereDate('created_at', today())->count();
         $productos = Producto::where('activo', true)->orderBy('nombre')->get();
         $clientes = Cliente::where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'correo']);
         $itemsAnteriores = $request->session()->getOldInput('items', []);
@@ -85,6 +87,7 @@ class VentaController extends Controller
             'hoyTotal' => $hoyTotal,
             'hoyConteo' => $hoyConteo,
             'mesTotal' => $mesTotal,
+            'simulacionesHoy' => $simulacionesHoy,
             'productos' => $productos,
             'clientes' => $clientes,
             'catalogoVenta' => $catalogoVenta,
@@ -115,6 +118,13 @@ class VentaController extends Controller
             'cliente_id' => ['nullable', 'integer', Rule::exists('clientes', 'id')->where('activo', true)],
             'metodo_pago' => ['required', 'string', 'in:Efectivo,Tarjeta,Transferencia'],
             'notas' => ['nullable', 'string', 'max:255'],
+            'pago_simulado' => ['sometimes', 'boolean'],
+            'efectivo_recibido' => ['nullable', 'numeric', 'decimal:0,2', 'min:0', 'max:99999999.99'],
+            'resultado_tarjeta' => ['nullable', Rule::in(['aprobada', 'rechazada'])],
+            'numero_tarjeta' => ['prohibited'],
+            'cvv' => ['prohibited'],
+            'card_number' => ['prohibited'],
+            'cvc' => ['prohibited'],
             'items' => ['required', 'array', 'min:1', 'max:100'],
             'items.*.producto_id' => ['required', 'integer', 'exists:productos,id'],
             'items.*.cantidad' => ['required', 'integer', 'min:1', 'max:999'],
@@ -176,6 +186,7 @@ class VentaController extends Controller
                         'subtotal' => Dinero::decimal($subtotalCentavos),
                     ];
                 }
+                $pago = app(PagoSimulado::class)->resolver($data, $totalCentavos);
                 $venta = Venta::create([
                     'venta_uuid' => $data['venta_uuid'],
                     'user_id' => $user->id,
@@ -183,7 +194,7 @@ class VentaController extends Controller
                     'total' => Dinero::decimal($totalCentavos),
                     'metodo_pago' => $data['metodo_pago'],
                     'notas' => $data['notas'] ?? null,
-                ]);
+                ] + $pago);
                 foreach ($detalles as $detalle) {
                     $productos->get($detalle['producto_id'])->decrement('stock', $detalle['cantidad']);
                     $venta->detalles()->create($detalle);
@@ -205,7 +216,9 @@ class VentaController extends Controller
 
     private function ventaRegistrada(Venta $venta)
     {
-        return back()->with('status', "Venta #{$venta->id} registrada exitosamente por \${$venta->total}.")->with('venta_creada_id', $venta->id);
+        $tipo = $venta->pago_simulado ? ' Pago simulado: no se ha realizado ningún cobro real.' : '';
+
+        return back()->with('status', "Venta #{$venta->id} registrada exitosamente por \${$venta->total}.".$tipo)->with('venta_creada_id', $venta->id);
     }
 
     public function comprobante(Venta $venta)
@@ -234,6 +247,10 @@ class VentaController extends Controller
             Log::warning('Fallo al enviar comprobante de venta por correo.', ['venta_id' => $venta->id, 'exception' => get_class($e)]);
 
             return back()->with('error', 'No se pudo enviar el correo en este momento. Verifique la conexión o intente más tarde.');
+        }
+
+        if (in_array(config('mail.mailers.'.config('mail.default').'.transport'), ['log', 'array'], true)) {
+            return back()->with('status', 'Comprobante generado en modo de prueba. No se entregó por correo; puedes imprimirlo desde esta pantalla.');
         }
 
         return back()->with('status', "Comprobante de la venta #{$venta->id} enviado exitosamente a {$data['correo']}.");

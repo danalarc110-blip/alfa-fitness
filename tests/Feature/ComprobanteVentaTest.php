@@ -97,6 +97,26 @@ class ComprobanteVentaTest extends TestCase
         });
     }
 
+    public function test_mail_failure_is_visible_and_preserves_the_sale(): void
+    {
+        $secretaria = User::factory()->create(['rol' => 'Secretaria']);
+        $venta = Venta::create(['user_id' => $secretaria->id, 'total' => '20.00']);
+        Mail::shouldReceive('to')->once()->with('recibo@example.test')->andReturnSelf();
+        Mail::shouldReceive('send')->once()->andThrow(new \RuntimeException('SMTP unavailable'));
+
+        $this->actingAs($secretaria)->from(route('ventas.comprobante', $venta))
+            ->post(route('ventas.enviar-correo', $venta), ['correo' => 'recibo@example.test'])
+            ->assertRedirect(route('ventas.comprobante', $venta))
+            ->assertSessionHas('error');
+
+        $this->get(route('ventas.comprobante', $venta))->assertOk()
+            ->assertSee('No se pudo enviar el correo en este momento.')
+            ->assertSee('role="alert"', false)
+            ->assertDontSee('SMTP unavailable');
+        $this->assertDatabaseCount('ventas', 1);
+        $this->assertSame('20.00', $venta->fresh()->total);
+    }
+
     public function test_unauthenticated_or_client_cannot_access_receipt_routes(): void
     {
         $admin = User::create([

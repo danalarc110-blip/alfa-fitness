@@ -12,6 +12,7 @@ use App\Models\Rutina;
 use App\Models\SolicitudMembresia;
 use App\Models\User;
 use App\Models\Venta;
+use App\Services\ClientesEntrenador;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -28,29 +29,43 @@ class DashboardController extends Controller
         $acciones = match ($perfil) {
             'administrador' => [['cuentas.index', 'Gestionar cuentas'], ['productos.index', 'Gestionar productos'], ['ventas.index', 'Punto de Venta (TPV)'], ['analitica.index', 'Analítica']],
             'recepcion' => [['asistencia.index', 'Registrar entrada o salida'], ['membresias.index', 'Cobros y membresías'], ['ventas.index', 'Ventas mostrador']],
-            'entrenador' => [['entrenamientos.index', 'Mis rutinas'], ['ejercicios.index', 'Ejercicios']],
+            'entrenador' => [['entrenador.clientes', 'Mis clientes'], ['entrenamientos.index', 'Mis rutinas'], ['ejercicios.index', 'Ejercicios']],
             default => [['entrenamientos.index', 'Mis entrenamientos'], ['progreso.index', 'Progreso y marcas personales']],
         };
         $rutinas = Rutina::deUsuario($guard, $user->id)->withCount('dias')->latest()->limit(4)->get();
         $actividad = collect();
         $porVencer = collect();
+        $pendientesConfiguracion = [];
+        if ($perfil === 'administrador') {
+            if (in_array(config('mail.mailers.'.config('mail.default').'.transport'), ['log', 'array'], true)) {
+                $pendientesConfiguracion[] = ['Correo', 'El modo de prueba no entrega invitaciones ni comprobantes. Configura el envío para utilizarlos por correo.'];
+            }
+            if (! config('privacy.responsible_name') || ! config('privacy.contact_email')) {
+                $pendientesConfiguracion[] = ['Privacidad', 'Completa el nombre del responsable y su correo de contacto antes de publicar el sistema.'];
+            }
+            if (! config('services.google.client_id') || ! config('services.google.client_secret')) {
+                $pendientesConfiguracion[] = ['Google (opcional)', 'El acceso por correo está disponible. La vinculación con Google requiere configurar el servicio.'];
+            }
+        }
 
         if ($perfil === 'cliente') {
             $visitas = Asistencia::where('cliente_id', $user->id);
             $membresias = Membresia::with('cliente:id,nombre')->where('cliente_id', $user->id)->where('cancelada', false)->where('inicio', '<=', today())->where('fin', '>=', today());
             $metricas = [['Mis rutinas', Rutina::deUsuario($guard, $user->id)->count()], ['Mis visitas este mes', (clone $visitas)->whereBetween('fecha_hora', [now()->startOfMonth(), now()->endOfMonth()])->count()], ['Membresias vigentes', $membresias->count()], ['Mis marcas', PersonalRecord::where('cliente_id', $user->id)->count()]];
             $actividad = $visitas->latest('fecha_hora')->limit(5)->get();
-            $porVencer = $membresias->where('fin', '<=', today()->addDays(7))->limit(5)->get();
+            $renovaciones = Membresia::where('cliente_id', $user->id)->where('cancelada', false)
+                ->where('inicio', '>', today())->get(['inicio', 'fin']);
+            $porVencer = $membresias->where('fin', '<=', today()->addDays(7))->get()
+                ->reject(fn ($membresia) => $renovaciones->contains(fn ($renovacion) => $renovacion->inicio->lte($membresia->fin->copy()->addDay())
+                    && $renovacion->fin->gt($membresia->fin)))
+                ->take(5)->values();
         } elseif ($perfil === 'recepcion') {
-            $metricas = [['Entradas hoy', Asistencia::whereBetween('fecha_hora', [today(), today()->endOfDay()])->count()], ['Dentro ahora', Asistencia::whereNull('fecha_salida')->count()], ['Solicitudes pendientes', SolicitudMembresia::where('estado', 'pendiente')->count()]];
+            $metricas = [['Entradas hoy', Asistencia::whereBetween('fecha_hora', [today(), today()->endOfDay()])->count()], ['Dentro ahora', Asistencia::whereNull('fecha_salida')->where('fecha_hora', '>=', now()->subHours(12))->count()], ['Solicitudes pendientes', SolicitudMembresia::where('estado', 'pendiente')->count()]];
             $actividad = Asistencia::with('cliente:id,nombre')->latest('fecha_hora')->limit(5)->get();
             $porVencer = Membresia::with('cliente:id,nombre')->where('cancelada', false)->whereBetween('fin', [today(), today()->addDays(7)])->limit(5)->get();
         } elseif ($perfil === 'administrador') {
             $ingresosMembresiasMes = (float) PagoMembresia::whereBetween('pagado_en', [now()->startOfMonth(), now()->endOfMonth()])->sum('importe');
-            if ($ingresosMembresiasMes <= 0) {
-                $ingresosMembresiasMes = (float) Membresia::where('cancelada', false)->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('importe');
-            }
-            $ingresosVentasMes = (float) Venta::whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('total');
+            $ingresosVentasMes = (float) Venta::reales()->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('total');
             $totalIngresosMes = $ingresosMembresiasMes + $ingresosVentasMes;
 
             $metricas = [
@@ -59,12 +74,14 @@ class DashboardController extends Controller
                 ['Membresías cobradas', '$'.number_format($ingresosMembresiasMes, 2)],
                 ['Ventas mostrador', '$'.number_format($ingresosVentasMes, 2)],
                 ['Personal activo', User::where('activo', true)->count()],
+                ['Ventas simuladas este mes', Venta::where('pago_simulado', true)->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count()],
             ];
             $actividad = Venta::with(['cliente:id,nombre', 'user:id,name'])->latest()->limit(5)->get();
             $porVencer = Membresia::with('cliente:id,nombre')->where('cancelada', false)->whereBetween('fin', [today(), today()->addDays(7)])->limit(5)->get();
         } else {
             $metricas = [
                 ['Mis rutinas', Rutina::deUsuario($guard, $user->id)->count()],
+                ['Mis clientes', app(ClientesEntrenador::class)->clientes($user->id)->count()],
                 ['Ejercicios disponibles', Ejercicio::where('activo', true)->count()],
                 ['Total entrenadores', User::where('rol', 'Entrenador')->where('activo', true)->count()],
             ];
@@ -120,6 +137,6 @@ class DashboardController extends Controller
             ];
         }
 
-        return view('home', compact('guard', 'nombre', 'rutinas', 'metricas', 'actividad', 'perfil', 'titulo', 'acciones', 'porVencer', 'aforo', 'horasPico'));
+        return view('home', compact('guard', 'nombre', 'rutinas', 'metricas', 'actividad', 'perfil', 'titulo', 'acciones', 'porVencer', 'aforo', 'horasPico', 'pendientesConfiguracion'));
     }
 }

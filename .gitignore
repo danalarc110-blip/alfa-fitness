@@ -35,6 +35,10 @@ Thumbs.db
 /report_captures
 /scripts
 /AGENTS.md
-/.agents/
+/.agents/*
+!/.agents/skills/
+/.agents/skills/*
+!/.agents/skills/product-design-integrity-audit/
+!/.agents/skills/product-design-integrity-audit/**
 /agentes/
 /agentes.zip

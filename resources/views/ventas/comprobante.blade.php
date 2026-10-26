@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app', ['active' => 'ventas'])
 
 @section('title', 'Comprobante #' . str_pad($venta->id, 6, '0', STR_PAD_LEFT))
 
@@ -30,11 +30,24 @@
         <div class="absolute -right-12 -top-12 w-48 h-48 bg-yellow-400/5 rounded-full blur-3xl pointer-events-none"></div>
 
         <div class="text-center pb-6 border-b border-white/10">
+            @if ($venta->pago_simulado)
+                <p class="font-bold text-sm mb-3">SIMULACIÓN · SIN COBRO REAL</p>
+            @endif
             <h1 class="text-2xl font-black tracking-widest text-yellow-400 uppercase">ALPHA FITNESS</h1>
             <p class="text-xs uppercase tracking-widest text-gray-400 mt-1">Comprobante de Venta Electrónico</p>
             <p class="text-sm font-mono text-gray-300 mt-2">Ticket #{{ str_pad($venta->id, 6, '0', STR_PAD_LEFT) }}</p>
         </div>
 
+        @if ($venta->pago_simulado)
+            <div class="simulated-payment mt-4 text-sm">
+                <p>Comprobante de práctica. No acredita un pago real.</p>
+                <p class="mt-1 break-all">Referencia: {{ $venta->referencia_pago }}</p>
+                @if ($venta->metodo_pago === 'Efectivo')
+                    <p class="mt-2">Efectivo de prueba recibido: ${{ number_format($venta->efectivo_recibido, 2) }}</p>
+                    <p class="font-semibold">Cambio: ${{ number_format($venta->cambio, 2) }}</p>
+                @endif
+            </div>
+        @endif
         <div class="grid grid-cols-2 gap-4 py-6 border-b border-white/10 text-xs">
             <div>
                 <p class="text-gray-400">Fecha y Hora:</p>
@@ -86,7 +99,7 @@
 
         {{-- Total --}}
         <div class="pt-6 flex items-center justify-between">
-            <span class="text-sm uppercase tracking-wider text-gray-400 font-semibold">Total Pagado:</span>
+            <span class="text-sm uppercase tracking-wider text-gray-400 font-semibold">{{ $venta->pago_simulado ? 'Total simulado:' : 'Total Pagado:' }}</span>
             <span class="text-3xl font-black text-yellow-400 font-mono tracking-tight">
                 ${{ number_format($venta->total, 2) }}
             </span>
@@ -118,6 +131,9 @@
 
         <form action="{{ route('ventas.enviar-correo', $venta) }}" method="POST" class="space-y-4">
             @csrf
+            @if (in_array(config('mail.mailers.'.config('mail.default').'.transport'), ['log', 'array'], true))
+                <p class="text-sm text-gray-400">El correo está en modo de prueba: se generará el mensaje, pero no se entregará. También puedes imprimir el comprobante.</p>
+            @endif
             <div>
                 <label for="correo_destino" class="block text-xs font-semibold text-gray-300 mb-1.5">Correo Electrónico de Destino:</label>
                 <input type="email" id="correo_destino" name="correo" required

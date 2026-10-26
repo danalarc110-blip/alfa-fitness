@@ -25,8 +25,11 @@ class AsistenciaController extends Controller
         $busqueda = $filtros['q'] ?? '';
         $clientes = Cliente::where('activo', true)
             ->when($busqueda, fn ($q) => $q->where(fn ($s) => $s->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
-            ->with(['asistencias' => fn ($q) => $q->whereNull('fecha_salida')->latest('fecha_hora'),
-                'ultimaMembresia'])
+            ->with(['asistencias' => fn ($q) => $q->whereNull('fecha_salida')->where('fecha_hora', '>=', now()->subHours(12))->latest('fecha_hora'),
+                'membresias' => fn ($q) => $q->where('cancelada', false)
+                    ->where('inicio', '<=', today())->where('fin', '>=', today())
+                    ->with('pausas')->latest('fin'),
+                'ultimaMembresia.pausas'])
             ->orderBy('nombre')->paginate(12, ['*'], 'clientes_page')->withQueryString();
 
         $asistencias = Asistencia::with(['cliente:id,nombre,correo', 'registrador:id,name', 'registradorSalida:id,name'])
@@ -38,9 +41,9 @@ class AsistenciaController extends Controller
             ->when(($filtros['estado'] ?? '') === 'cerrada', fn ($q) => $q->whereNotNull('fecha_salida'))
             ->latest('fecha_hora')->paginate(20, ['*'], 'historial_page')->withQueryString();
 
-        $dentroAhora = Asistencia::with('cliente:id,nombre,correo')->whereNull('fecha_salida')->oldest('fecha_hora')->limit(100)->get();
+        $dentroAhora = Asistencia::with('cliente:id,nombre,correo')->whereNull('fecha_salida')->where('fecha_hora', '>=', now()->subHours(12))->oldest('fecha_hora')->limit(100)->get();
         $hoy = Asistencia::whereBetween('fecha_hora', [today(), today()->endOfDay()])->count();
-        $dentro = Asistencia::whereNull('fecha_salida')->count();
+        $dentro = Asistencia::whereNull('fecha_salida')->where('fecha_hora', '>=', now()->subHours(12))->count();
         $huerfanasCount = Asistencia::whereNull('fecha_salida')->where('fecha_hora', '<', now()->subHours(12))->count();
 
         return view('asistencia.index', compact('clientes', 'busqueda', 'asistencias', 'hoy', 'dentro', 'dentroAhora', 'filtros', 'huerfanasCount'));
@@ -123,7 +126,7 @@ class AsistenciaController extends Controller
         ]);
     }
 
-    public function cerrarHuerfanas(Request $request)
+    public function cerrarHuerfanas()
     {
         abort_unless(auth('web')->user()?->can('asistencia'), 403);
 
@@ -153,7 +156,7 @@ class AsistenciaController extends Controller
     /**
      * Consulta el historial privado de asistencia del cliente autenticado.
      */
-    public function miAsistencia(Request $request)
+    public function miAsistencia()
     {
         abort_unless(auth('cliente')->check(), 403);
         $cliente = auth('cliente')->user();
@@ -165,6 +168,7 @@ class AsistenciaController extends Controller
         $totalVisitas = Asistencia::where('cliente_id', $cliente->id)->count();
         $visitaActual = Asistencia::where('cliente_id', $cliente->id)
             ->whereNull('fecha_salida')
+            ->where('fecha_hora', '>=', now()->subHours(12))
             ->latest('fecha_hora')
             ->first();
 

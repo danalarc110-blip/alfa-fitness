@@ -32,8 +32,8 @@ class AnaliticaFinancieraController extends Controller
         return view('analitica.index', [
             'datos' => $datos,
             'presetActual' => $periodo['preset'],
-            'desdeInput' => $desdeInput ?: $periodo['desde']->format('Y-m-d'),
-            'hastaInput' => $hastaInput ?: $periodo['hasta']->format('Y-m-d'),
+            'desdeInput' => $periodo['desde']->format('Y-m-d'),
+            'hastaInput' => $periodo['hasta']->format('Y-m-d'),
         ]);
     }
 

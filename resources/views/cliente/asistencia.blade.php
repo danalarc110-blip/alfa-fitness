@@ -90,6 +90,7 @@
                     </thead>
                     <tbody class="divide-y divide-white/5 text-gray-300">
                         @foreach ($asistencias as $asistencia)
+                            @php($enSala = ! $asistencia->fecha_salida && $asistencia->fecha_hora->gte(now()->subHours(12)))
                             <tr class="hover:bg-white/[0.02] transition-colors">
                                 <td class="py-3.5 px-5 font-medium text-white">
                                     {{ $asistencia->fecha_hora->format('d/m/Y') }}
@@ -101,16 +102,20 @@
                                     {{ $asistencia->fecha_salida ? $asistencia->fecha_salida->format('H:i') . ' hrs' : '—' }}
                                 </td>
                                 <td class="py-3.5 px-5">
-                                    {{ $asistencia->duracion ?: ($asistencia->fecha_salida ? 'Menos de 1m' : 'En curso') }}
+                                    {{ $asistencia->duracion ?: ($asistencia->fecha_salida ? 'Menos de 1m' : ($enSala ? 'En curso' : 'Sin cierre registrado')) }}
                                 </td>
                                 <td class="py-3.5 px-5">
                                     @if ($asistencia->fecha_salida)
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/5 text-gray-400 border border-white/10">
                                             Completada
                                         </span>
-                                    @else
+                                    @elseif ($enSala)
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
                                             ● En sala
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                                            Salida pendiente
                                         </span>
                                     @endif
                                 </td>
@@ -123,6 +128,7 @@
             {{-- TARJETAS MÓVILES (< md) --}}
             <div class="md:hidden divide-y divide-white/5">
                 @foreach ($asistencias as $asistencia)
+                    @php($enSala = ! $asistencia->fecha_salida && $asistencia->fecha_hora->gte(now()->subHours(12)))
                     <div class="p-4 space-y-2">
                         <div class="flex items-center justify-between">
                             <span class="font-bold text-white text-sm">{{ $asistencia->fecha_hora->format('d/m/Y') }}</span>
@@ -130,9 +136,13 @@
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/5 text-gray-400">
                                     Completada
                                 </span>
-                            @else
+                            @elseif ($enSala)
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-300">
                                     ● En sala
+                                </span>
+                            @else
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-300">
+                                    Salida pendiente
                                 </span>
                             @endif
                         </div>
@@ -143,12 +153,12 @@
                             </div>
                             <div>
                                 <span class="block text-[10px] text-gray-500 uppercase">Salida</span>
-                                <span class="text-white">{{ $asistencia->fecha_salida ? $asistencia->fecha_salida->format('H:i') . ' hrs' : 'En curso' }}</span>
+                                <span class="text-white">{{ $asistencia->fecha_salida ? $asistencia->fecha_salida->format('H:i') . ' hrs' : ($enSala ? 'En curso' : '—') }}</span>
                             </div>
                         </div>
                         <div class="text-xs text-gray-400 pt-1">
                             <span class="text-gray-500">Duración:</span>
-                            <span class="text-yellow-400 font-medium">{{ $asistencia->duracion ?: ($asistencia->fecha_salida ? 'Menos de 1m' : 'Entrenando actualmente') }}</span>
+                            <span class="text-yellow-400 font-medium">{{ $asistencia->duracion ?: ($asistencia->fecha_salida ? 'Menos de 1m' : ($enSala ? 'Entrenando actualmente' : 'Sin cierre registrado')) }}</span>
                         </div>
                     </div>
                 @endforeach
