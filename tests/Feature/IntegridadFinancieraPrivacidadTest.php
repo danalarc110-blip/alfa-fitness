@@ -119,7 +119,7 @@ class IntegridadFinancieraPrivacidadTest extends TestCase
         $secretaria = User::factory()->create(['rol' => 'Secretaria']);
         $producto = Producto::create(['nombre' => 'Agua', 'precio' => '0.29', 'stock' => 1000, 'activo' => true]);
 
-        $this->actingAs($secretaria)->post(route('ventas.store'), ['venta_uuid' => (string) \Illuminate\Support\Str::uuid(), 'metodo_pago' => 'Efectivo', 'items' => [['producto_id' => $producto->id, 'cantidad' => 999]]])->assertRedirect()->assertSessionHasNoErrors();
+        $this->actingAs($secretaria)->post(route('ventas.store'), ['venta_uuid' => (string) Str::uuid(), 'metodo_pago' => 'Efectivo', 'items' => [['producto_id' => $producto->id, 'cantidad' => 999]]])->assertRedirect()->assertSessionHasNoErrors();
         $venta = Venta::firstOrFail();
         $this->assertSame('289.71', $venta->total);
         $this->assertSame('289.71', $venta->detalles()->firstOrFail()->subtotal);
@@ -131,7 +131,7 @@ class IntegridadFinancieraPrivacidadTest extends TestCase
         $secretaria = User::factory()->create(['rol' => 'Secretaria']);
         $producto = Producto::create(['nombre' => 'Equipo', 'precio' => '999999.00', 'stock' => 999, 'activo' => true]);
 
-        $this->actingAs($secretaria)->post(route('ventas.store'), ['venta_uuid' => (string) \Illuminate\Support\Str::uuid(), 'metodo_pago' => 'Efectivo', 'items' => [['producto_id' => $producto->id, 'cantidad' => 999]]])->assertSessionHasErrors('items');
+        $this->actingAs($secretaria)->post(route('ventas.store'), ['venta_uuid' => (string) Str::uuid(), 'metodo_pago' => 'Efectivo', 'items' => [['producto_id' => $producto->id, 'cantidad' => 999]]])->assertSessionHasErrors('items');
         $this->assertDatabaseCount('ventas', 0);
         $this->assertSame(999, $producto->fresh()->stock);
     }

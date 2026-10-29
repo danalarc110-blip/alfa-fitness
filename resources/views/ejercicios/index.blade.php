@@ -1,7 +1,7 @@
 @extends('layouts.app', ['active' => 'ejercicios'])
 @section('title', 'Ejercicios')
 @section('page-header')
-<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
+<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5">
     <div>
         <div class="flex items-center gap-2">
             <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Ejercicios Populares</h1>
@@ -14,7 +14,7 @@
 
     <div class="flex items-center gap-3 self-end sm:self-auto">
         @can('administrar')
-            <button type="button" onclick="document.getElementById('modal-nuevo-ejercicio').classList.remove('hidden')"
+            <button type="button" onclick="window.alphaAnimateModalOpen('#modal-nuevo-ejercicio')"
                 class="alpha-btn-primary px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-yellow-400/10">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
                 Nuevo Ejercicio
@@ -29,7 +29,7 @@
 @endsection
 @section('content')
 {{-- BARRA DE FILTROS Y BÚSQUEDA --}}
-<div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-6 sm:mb-8" data-animate="card">
+<div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-6 sm:mb-8">
     {{-- Filtros por Grupo Muscular (desplazable en móvil) --}}
     <div class="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap">
         <a href="{{ route('ejercicios.index', ['grupo' => 'Todos', 'q' => $busqueda]) }}"
@@ -56,7 +56,7 @@
 <p class="text-xs text-gray-400 mb-3">{{ $ejercicios->total() }} ejercicios</p>
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
     @forelse ($ejercicios as $index => $ejercicio)
-        <div class="alpha-card rounded-2xl p-5 border border-white/10 flex flex-col justify-between relative overflow-hidden group shadow-lg" data-animate="card">
+        <div class="alpha-card rounded-2xl p-5 border border-white/10 flex flex-col justify-between relative overflow-hidden group shadow-lg">
 
             {{-- Top Ranking Badge & Estado --}}
             <div class="flex items-center justify-between mb-3">
@@ -151,7 +151,7 @@
         </div>
     @empty
         <div class="col-span-full alpha-card rounded-2xl p-12 text-center">
-            <div class="w-12 h-12 rounded-2xl bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 flex items-center justify-center mx-auto mb-4 anim-icono">
+            <div class="w-12 h-12 rounded-2xl bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 flex items-center justify-center mx-auto mb-4">
                 <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
             </div>
             <h3 class="text-base font-bold text-white mb-1">No se encontraron ejercicios</h3>
@@ -166,14 +166,14 @@
 
 @can('administrar')
 {{-- MODAL NUEVO EJERCICIO --}}
-<div id="modal-nuevo-ejercicio" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
+<div id="modal-nuevo-ejercicio" aria-labelledby="titulo-nuevo-ejercicio" onclick="if (event.target === this) window.alphaAnimateModalClose('#modal-nuevo-ejercicio')" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
     <div class="alpha-card bg-[#141416] border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-5 pb-3 border-b border-white/10">
-            <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <h3 id="titulo-nuevo-ejercicio" class="text-base font-bold text-white flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
                 Nuevo Ejercicio
             </h3>
-            <button type="button" onclick="document.getElementById('modal-nuevo-ejercicio').classList.add('hidden')" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
+            <button type="button" onclick="window.alphaAnimateModalClose('#modal-nuevo-ejercicio')" aria-label="Cerrar nuevo ejercicio" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
         </div>
         <form method="POST" action="{{ route('ejercicios.store') }}" enctype="multipart/form-data" class="space-y-4">
             @csrf
@@ -212,7 +212,7 @@
                 <span class="block mt-1 text-[11px] text-gray-500">JPG, PNG o WebP · Diagrama anatómico</span>
             </div>
             <div class="flex justify-end gap-3 pt-3 border-t border-white/5">
-                <button type="button" onclick="document.getElementById('modal-nuevo-ejercicio').classList.add('hidden')" class="alpha-btn-secondary px-4 py-2 text-xs font-semibold">Cancelar</button>
+                <button type="button" onclick="window.alphaAnimateModalClose('#modal-nuevo-ejercicio')" class="alpha-btn-secondary px-4 py-2 text-xs font-semibold">Cancelar</button>
                 <button type="submit" class="alpha-btn-primary px-5 py-2 text-xs font-semibold">Guardar Ejercicio</button>
             </div>
         </form>
@@ -220,14 +220,14 @@
 </div>
 
 {{-- MODAL EDITAR EJERCICIO --}}
-<div id="modal-editar-ejercicio" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
+<div id="modal-editar-ejercicio" aria-labelledby="titulo-editar-ejercicio" onclick="if (event.target === this) window.alphaAnimateModalClose('#modal-editar-ejercicio')" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
     <div class="alpha-card bg-[#141416] border border-white/10 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-5 pb-3 border-b border-white/10">
-            <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <h3 id="titulo-editar-ejercicio" class="text-base font-bold text-white flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-yellow-400"></span>
                 Editar Ejercicio
             </h3>
-            <button type="button" onclick="document.getElementById('modal-editar-ejercicio').classList.add('hidden')" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
+            <button type="button" onclick="window.alphaAnimateModalClose('#modal-editar-ejercicio')" aria-label="Cerrar edición de ejercicio" class="text-gray-400 hover:text-white text-lg font-bold">&times;</button>
         </div>
         <form id="form-editar-ejercicio" method="POST" action="" enctype="multipart/form-data" class="space-y-4">
             @csrf
@@ -255,7 +255,7 @@
                 <input type="file" name="imagen_musculos" accept="image/jpeg,image/png,image/webp" class="w-full text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-yellow-400/10 file:text-yellow-400 hover:file:bg-yellow-400/20">
             </div>
             <div class="flex justify-end gap-3 pt-3 border-t border-white/5">
-                <button type="button" onclick="document.getElementById('modal-editar-ejercicio').classList.add('hidden')" class="alpha-btn-secondary px-4 py-2 text-xs font-semibold">Cancelar</button>
+                <button type="button" onclick="window.alphaAnimateModalClose('#modal-editar-ejercicio')" class="alpha-btn-secondary px-4 py-2 text-xs font-semibold">Cancelar</button>
                 <button type="submit" class="alpha-btn-primary px-5 py-2 text-xs font-semibold">Actualizar Ejercicio</button>
             </div>
         </form>
@@ -374,7 +374,7 @@
         document.getElementById('edit-nombre').value = ej.nombre;
         document.getElementById('edit-grupo').value = ej.grupo_muscular;
         document.getElementById('edit-subgrupo').value = ej.subgrupo || '';
-        document.getElementById('modal-editar-ejercicio').classList.remove('hidden');
+        window.alphaAnimateModalOpen('#modal-editar-ejercicio');
     }
 </script>
 @endpush

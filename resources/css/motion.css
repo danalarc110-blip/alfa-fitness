@@ -1,0 +1,51 @@
+/* Interaction feedback only: no loading gates, layout animation or extra assets. */
+.alpha-app ::selection {background:var(--alpha-primary);color:var(--alpha-on-primary);}
+.alpha-app :is(input, textarea) {caret-color:var(--alpha-primary-text);}
+.alpha-app :is(table, #timer-display) {font-variant-numeric:tabular-nums;}
+.alpha-content :is(h1, h2, h3) {overflow-wrap:anywhere;}
+.alpha-theme-control, .alpha-avatar {min-width:44px;min-height:44px;}
+#alpha-mobile-drawer {overscroll-behavior:contain;}
+#alpha-mobile-drawer button {min-height:44px;}
+@media (max-width:767px) {
+    /* The mobile header already contains account and appearance controls. */
+    .alpha-topbar {display:none;}
+    .alpha-panel-heading {flex-wrap:wrap;}
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .alpha-app :is(.alpha-btn-primary, .alpha-btn-secondary, .alpha-theme-control, .alpha-avatar) {
+        transition: transform 120ms ease-out, opacity 120ms ease-out,
+            background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
+    }
+
+    .alpha-theme-control:active, .alpha-avatar:active {
+        transform: scale(.96);
+    }
+
+    .alpha-login-tabs button {
+        transition: color 140ms ease-out, border-color 140ms ease-out;
+    }
+
+    :is(.alpha-login-form, .alpha-form) :is(input, select, textarea) {
+        transition: border-color 120ms ease-out, background-color 120ms ease-out;
+    }
+
+    a.alpha-list-row {
+        transition: background-color 120ms ease-out;
+    }
+
+    .alpha-feedback:not([hidden]) {
+        animation: alpha-feedback-in 160ms cubic-bezier(.16, 1, .3, 1);
+    }
+}
+
+@media (hover: hover) and (pointer: fine) {
+    a.alpha-list-row:hover, .alpha-theme-control:hover {
+        background-color: var(--alpha-subtle);
+    }
+}
+
+@keyframes alpha-feedback-in {
+    from { opacity: .7; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}

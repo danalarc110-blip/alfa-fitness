@@ -2,6 +2,7 @@
 const { chromium } = require(process.env.ALPHA_PLAYWRIGHT_MODULE || 'playwright');
 const fs = require('node:fs');
 const assert = require('node:assert/strict');
+const {acceptPrivacyPlaywright} = require('./privacy_qa.cjs');
 
 (async () => {
     const config = JSON.parse(fs.readFileSync('storage/app/private/browser-qa.json', 'utf8'));
@@ -19,6 +20,7 @@ const assert = require('node:assert/strict');
         };
         const login = async (email, client = false) => {
             await visit('/login');
+            await acceptPrivacyPlaywright(page);
             if (client) await page.locator('#tab-btn-clientes').click();
             const form = page.locator(client ? '#form-cliente-login' : '#seccion-usuarios form');
             await form.locator(client ? '[name=correo]' : '[name=email]').fill(email);
@@ -92,6 +94,7 @@ const assert = require('node:assert/strict');
             const tab = await staff.newPage();
             tab.on('pageerror', e => errors.push(e.message));
             await tab.goto(config.url + '/login');
+            await acceptPrivacyPlaywright(tab);
             await tab.locator('#seccion-usuarios [name=email]').fill(role + '@example.test');
             await tab.locator('#seccion-usuarios [name=password]').fill(config.password);
             await Promise.all([tab.waitForURL('**/dashboard', { waitUntil: 'domcontentloaded' }), tab.locator('#seccion-usuarios button[type=submit]').click()]);
@@ -103,7 +106,6 @@ const assert = require('node:assert/strict');
                     for (const product of ['Agua mineral 600 ml', 'Bebida isotónica', 'Barra de proteína', 'Proteína whey 2 lb', 'Creatina monohidratada 300 g']) {
                         assert.equal(await tab.getByText(product, { exact: true }).count(), 1, product);
                     }
-                    assert.match(await tab.locator('main').innerText(), /Catálogo completo: 5\/5/);
                     await tab.screenshot({ path: 'storage/app/private/qa-admin-products.png', fullPage: true });
                 }
                 if (role === 'administrador' && path === '/cuentas') {

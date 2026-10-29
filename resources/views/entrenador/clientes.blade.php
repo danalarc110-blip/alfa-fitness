@@ -4,7 +4,7 @@
 
 @section('content')
 <section class="space-y-5">
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4" data-animate="header">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div class="max-w-xl">
             <p class="text-sm text-gray-400">{{ $esAdmin ? 'Consulta quién entrena a cada cliente. Filtra por entrenador para revisar sus asignaciones.' : 'Aquí están los clientes a quienes has asignado rutinas. Puedes consultar sus entrenamientos y su progreso.' }}</p>
             <a href="{{ route('entrenamientos.index') }}" class="alpha-btn-secondary inline-block rounded-xl px-4 py-2 mt-3">Asignar una rutina desde Entrenamientos</a>
@@ -30,7 +30,7 @@
     <p class="text-xs text-gray-400" aria-live="polite">{{ $clientes->total() }} {{ $clientes->total() === 1 ? 'cliente' : 'clientes' }}</p>
     <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
         @forelse ($clientes as $cliente)
-            <article class="alpha-card rounded-2xl p-5 space-y-4" data-cliente-id="{{ $cliente->id }}" data-animate="card">
+            <article class="alpha-card rounded-2xl p-5 space-y-4" data-cliente-id="{{ $cliente->id }}">
                 <div class="flex gap-3 items-center">
                     <div class="w-12 h-12 rounded-xl bg-yellow-400/10 text-yellow-400 flex items-center justify-center shrink-0 overflow-hidden">
                         @if ($cliente->avatar_url)

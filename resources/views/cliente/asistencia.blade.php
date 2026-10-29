@@ -5,7 +5,7 @@
 
 @section('content')
 <section class="space-y-6">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4" data-animate="header">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold tracking-tight text-white">Mi Historial de Asistencia</h1>
             <p class="text-sm text-gray-400 mt-1">Consulta tus ingresos y permanencia en las instalaciones de Alpha Fitness.</p>
@@ -20,7 +20,7 @@
     </div>
 
     {{-- TARJETAS DE RESUMEN --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-animate="card">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="alpha-card rounded-2xl p-5 border border-white/10">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-semibold uppercase tracking-wider text-gray-400">Total Visitas</span>
@@ -61,7 +61,7 @@
     </div>
 
     {{-- LISTADO DE ASISTENCIAS --}}
-    <div class="alpha-card rounded-2xl border border-white/10 overflow-hidden" data-animate="card">
+    <div class="alpha-card rounded-2xl border border-white/10 overflow-hidden">
         <div class="p-5 border-b border-white/10 flex items-center justify-between">
             <h2 class="font-bold text-white text-base">Historial detallado</h2>
             <span class="text-xs text-gray-400">{{ $asistencias->total() }} registros</span>

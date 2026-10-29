@@ -109,12 +109,12 @@ class MembresiaController extends Controller
         $esPropietario = auth('cliente')->check() && $solicitud->cliente_id === auth('cliente')->id();
         $esSecretaria = ! auth('cliente')->check() && auth('web')->user()?->rol === 'Secretaria';
         abort_unless($esSecretaria || $esPropietario, 403);
-        DB::transaction(function () use ($solicitud) {
+        DB::transaction(function () use ($solicitud, $esSecretaria) {
             $bloqueada = SolicitudMembresia::whereKey($solicitud->id)->lockForUpdate()->firstOrFail();
             if ($bloqueada->estado !== 'pendiente') {
                 throw ValidationException::withMessages(['solicitud' => 'Solo se puede cancelar una solicitud pendiente.']);
             }
-            $bloqueada->update(['estado' => 'cancelada', 'resuelta_en' => now(), 'resuelta_por' => auth('web')->id()]);
+            $bloqueada->update(['estado' => 'cancelada', 'resuelta_en' => now(), 'resuelta_por' => $esSecretaria ? auth('web')->id() : null]);
         });
 
         return back()->with('status', 'Solicitud cancelada.');
@@ -136,7 +136,7 @@ class MembresiaController extends Controller
     public function solicitarPausa(Request $request, Membresia $membresia)
     {
         $esPropietario = auth('cliente')->check() && $membresia->cliente_id === auth('cliente')->id();
-        $esStaff = auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true);
+        $esStaff = ! auth('cliente')->check() && Gate::allows('operaciones');
         abort_unless($esPropietario || $esStaff, 403);
 
         $data = $request->validate([
@@ -208,7 +208,7 @@ class MembresiaController extends Controller
 
     public function aprobarPausa(Request $request, PausaMembresia $pausa)
     {
-        abort_unless(auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true), 403);
+        Gate::authorize('operaciones');
 
         DB::transaction(function () use ($pausa) {
             // Todas las operaciones toman cliente, membresía y pausa en ese orden.
@@ -272,7 +272,7 @@ class MembresiaController extends Controller
 
     public function rechazarPausa(Request $request, PausaMembresia $pausa)
     {
-        abort_unless(auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true), 403);
+        Gate::authorize('operaciones');
 
         DB::transaction(function () use ($pausa) {
             $pausaBloqueada = PausaMembresia::whereKey($pausa->id)->lockForUpdate()->firstOrFail();
@@ -289,7 +289,7 @@ class MembresiaController extends Controller
     public function reanudar(Request $request, Membresia $membresia)
     {
         $esPropietario = auth('cliente')->check() && $membresia->cliente_id === auth('cliente')->id();
-        $esStaff = auth('web')->check() && in_array(auth('web')->user()?->rol, ['Secretaria', 'Administrador'], true);
+        $esStaff = ! auth('cliente')->check() && Gate::allows('operaciones');
         abort_unless($esPropietario || $esStaff, 403);
 
         DB::transaction(function () use ($membresia) {

@@ -1,5 +1,5 @@
 @php
-    $panelUser = auth('cliente')->user() ?? auth('web')->user();
+    $panelUser = auth($guard ?? auth()->getDefaultDriver())->user();
     $panelName = $panelUser?->nombre ?? $panelUser?->name ?? 'Mi espacio';
     $panelAvatar = $panelUser?->avatar_url;
     $topbarAforoActual = \Illuminate\Support\Facades\Cache::remember('aforo_en_vivo', 15, function () {
@@ -11,7 +11,7 @@
 <header class="alpha-topbar">
     <p>Alpha Fitness <span>/</span> <strong>@yield('title', 'Mi espacio')</strong></p>
     <div class="alpha-topbar-actions">
-        <div class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs shadow-sm" title="Aforo en vivo: {{ $topbarAforoActual }} de {{ $topbarCapacidad }} personas ({{ $topbarPct }}%)">
+        <div class="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs shadow-sm" title="Aforo al cargar la página: {{ $topbarAforoActual }} de {{ $topbarCapacidad }} personas ({{ $topbarPct }}%)">
             <span class="w-2 h-2 rounded-full {{ $topbarPct >= 85 ? 'bg-red-400 animate-pulse' : ($topbarPct >= 50 ? 'bg-amber-400' : 'bg-emerald-400') }}"></span>
             <span class="text-gray-400 font-medium">Aforo:</span>
             <strong class="text-white font-semibold">{{ $topbarAforoActual }}/{{ $topbarCapacidad }}</strong>

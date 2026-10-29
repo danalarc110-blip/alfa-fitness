@@ -1,24 +1,7 @@
-# Alpha Fitness — paquete visual instalable
+# Instalación de Alpha Fitness
 
-## Instalación
+La aplicación completa se instala siguiendo [Uso local en el README](README.md#uso-local). La guía incluye los requisitos de PHP y Node.js, la configuración del entorno, la base de datos y la creación del administrador.
 
-Descomprime el contenido de esta carpeta en la raíz de tu proyecto Laravel y permite combinar carpetas.
+Los estilos y las animaciones ya están integrados en el proyecto. No hace falta copiar paquetes visuales ni añadir imports CSS manuales. Después de instalar las dependencias o modificar el frontend, ejecuta `npm run build`.
 
-Estructura incluida:
-- `public/images/` — imágenes de ejercicios.
-- `resources/js/animations.js` — motor de animaciones mejorado.
-- `resources/css/alpha-effects.css` — efectos visuales.
-
-Después, en `resources/css/app.css`, añade al final:
-
-```css
-@import './alpha-effects.css';
-```
-
-Después ejecuta:
-
-```bash
-npm run build
-```
-
-**Nota:** `animations-enhanced.js` fue colocado como `resources/js/animations.js`, por lo que al copiarlo reemplazará el archivo existente con ese nombre. Haz una copia de seguridad si quieres conservar la versión anterior.
+Antes de publicar, revisa [Datos y despliegue](README.md#datos-y-despliegue) y ejecuta las [comprobaciones](README.md#verificación). En una instalación existente, respalda la base de datos antes de aplicar migraciones; no uses `migrate:fresh`.

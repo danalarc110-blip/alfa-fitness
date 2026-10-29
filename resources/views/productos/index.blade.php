@@ -3,7 +3,7 @@
 @section('title', 'Productos')
 
 @section('page-header')
-    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5">
         <div>
             <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Productos</h1>
             <p class="text-gray-400 text-xs mt-1">Catálogo de productos y suplementos, con precio y disponibilidad al día.</p>
@@ -35,7 +35,7 @@
 
     <section class="grid grid-cols-1 xl:grid-cols-[340px_1fr] gap-5">
         <aside class="space-y-5">
-            <form method="GET" action="{{ route('productos.index') }}" class="alpha-card rounded-2xl p-5 sm:p-6" data-animate="card" role="search">
+            <form method="GET" action="{{ route('productos.index') }}" class="alpha-card rounded-2xl p-5 sm:p-6" role="search">
                 <label class="block" for="buscar-producto">
                     <span class="block text-xs font-semibold text-gray-400 mb-1.5">Buscar producto</span>
                     <input id="buscar-producto" type="search" name="q" value="{{ $busqueda }}" maxlength="100" placeholder="Nombre o categoría">
@@ -48,7 +48,7 @@
             </form>
 
             @if ($puedeGestionar)
-                <form method="POST" action="{{ route('productos.store') }}" enctype="multipart/form-data" class="alpha-card rounded-2xl p-5 sm:p-6" data-animate="card">
+                <form method="POST" action="{{ route('productos.store') }}" enctype="multipart/form-data" class="alpha-card rounded-2xl p-5 sm:p-6">
                     @csrf
                     <div class="flex items-center justify-between gap-3 mb-4">
                         <h2 class="text-base font-bold text-white">Nuevo producto</h2>
@@ -95,7 +95,7 @@
             @endif
         </aside>
 
-        <section class="alpha-card rounded-2xl p-5 sm:p-6 min-w-0" data-animate="card">
+        <section class="alpha-card rounded-2xl p-5 sm:p-6 min-w-0">
             <div class="flex items-center justify-between gap-3 mb-5">
                 <h2 class="text-base font-bold text-white">Catálogo</h2>
                 <span class="text-xs font-semibold text-gray-500">{{ $productos->total() }} {{ $productos->total() === 1 ? 'producto' : 'productos' }}</span>

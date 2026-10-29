@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between gap-4 mb-5"><a href="{{ route('entrenamientos.index') }}" class="text-sm text-gray-400">← Mis rutinas</a><form method="POST" action="{{ route('entrenamientos.eliminar', $rutina) }}" data-confirm="Eliminar la rutina {{ $rutina->nombre }} y todos sus días y ejercicios. Esta acción no se puede deshacer.">@csrf @method('DELETE')<button class="text-sm text-red-400">Eliminar rutina</button></form></div>
         <h1 class="sr-only">Editar rutina</h1>
 
-        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 pb-6 border-b border-white/5" data-animate="header">
+        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 pb-6 border-b border-white/5">
             <div class="min-w-0 flex-1">
                 <input id="campo-nombre" aria-label="Nombre de la rutina" maxlength="100" value="{{ $rutina->nombre }}"
                     class="bg-transparent text-xl sm:text-2xl font-bold text-white outline-none border-b-2 border-transparent focus:border-yellow-400 w-full max-w-md truncate transition-colors duration-200">

@@ -2,7 +2,7 @@
 @section('title', 'Progreso y Marcas Personales')
 
 @section('page-header')
-<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
+<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5">
     <div>
         <div class="flex items-center gap-2">
             <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Progreso Personal</h1>
@@ -22,7 +22,7 @@
 
 @section('content')
 {{-- MÉTRICAS RESUMEN DE FUERZA --}}
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6 sm:mb-8" data-animate="card">
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6 sm:mb-8">
     <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden">
         <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Volumen Acumulado</span>
         <p class="text-2xl sm:text-3xl font-black text-yellow-400 mt-2">{{ number_format($totalVolumenKg, 0) }} <span class="text-base text-gray-400 font-normal">kg</span></p>
@@ -60,7 +60,7 @@
 
 {{-- GRÁFICO DE EVOLUCIÓN EN SVG (SI HAY REGISTROS) --}}
 @if($ultimosLevantamientos->count() >= 2)
-    <div class="alpha-card rounded-2xl p-5 sm:p-6 border border-white/10 mb-6" data-animate="card">
+    <div class="alpha-card rounded-2xl p-5 sm:p-6 border border-white/10 mb-6">
         <div class="flex items-center justify-between gap-3 mb-4">
             <div>
                 <h2 class="text-base font-bold text-white flex items-center gap-2">
@@ -127,7 +127,7 @@
 
 <section class="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-5">
     {{-- FORMULARIO DE NUEVO LEVANTAMIENTO --}}
-    <form method="POST" action="{{ route('progreso.store') }}" class="alpha-card rounded-2xl p-5 sm:p-6 h-fit" data-animate="card">
+    <form method="POST" action="{{ route('progreso.store') }}" class="alpha-card rounded-2xl p-5 sm:p-6 h-fit">
         @csrf
 
         <div class="mb-5">
@@ -178,7 +178,7 @@
 
     <div class="space-y-5 min-w-0">
         {{-- MEJORES MARCAS / PODIO --}}
-        <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" data-animate="card">
+        <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             @forelse ($mejoresMarcas as $index => $record)
                 <div class="alpha-card rounded-2xl p-4 border border-white/10 relative overflow-hidden">
                     <div class="flex items-center justify-between mb-2">
@@ -212,7 +212,7 @@
         </section>
 
         {{-- HISTORIAL DE LEVANTAMIENTOS --}}
-        <section class="alpha-card rounded-2xl p-5 sm:p-6" data-animate="card">
+        <section class="alpha-card rounded-2xl p-5 sm:p-6">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/5">
                 <div>
                     <h2 class="text-base font-bold text-white">Historial de levantamientos</h2>

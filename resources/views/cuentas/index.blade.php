@@ -5,7 +5,7 @@
 
 @section('content')
     <section class="space-y-5">
-        <div class="alpha-card rounded-2xl p-5 sm:p-6" data-animate="card">
+        <div class="alpha-card rounded-2xl p-5 sm:p-6">
             <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
                 <p class="max-w-2xl text-sm text-gray-400">
                     Busca usuarios, consulta cuándo se registraron y controla únicamente su acceso.
@@ -42,7 +42,7 @@
 
         <div class="grid gap-3">
             @forelse ($cuentas as $cuenta)
-                <article class="alpha-card rounded-2xl p-5 sm:p-6" data-animate="card">
+                <article class="alpha-card rounded-2xl p-5 sm:p-6">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2 mb-2">
@@ -89,7 +89,7 @@
                     </div>
                 </article>
             @empty
-                <div class="alpha-card rounded-2xl p-10 text-center" data-animate="card">
+                <div class="alpha-card rounded-2xl p-10 text-center">
                     <h2 class="font-semibold text-white">No se encontraron usuarios</h2>
                     <p class="mt-2 text-sm text-gray-400">Prueba con otro nombre o correo.</p>
                 </div>

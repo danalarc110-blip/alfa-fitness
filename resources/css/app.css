@@ -2,6 +2,8 @@
 @import './refinements.css';
 @import './design.css';
 @import './ventas.css';
+@import './motion.css';
+@import './privacy.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../**/*.blade.php';
@@ -71,13 +73,9 @@
 
 /* Mobile Drawer Smooth Slide & Backdrop */
 #alpha-mobile-backdrop {
-    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.16s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 #alpha-mobile-drawer {
-    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-#alpha-mobile-drawer.translate-x-0 {
-    will-change: transform;
+    transition: translate 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }

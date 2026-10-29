@@ -34,6 +34,7 @@ class DashboardController extends Controller
         $rutinas = Rutina::deUsuario($guard, $user->id)->withCount('dias')->latest()->limit(4)->get();
         $actividad = collect();
         $porVencer = collect();
+        $dentroAhora = Asistencia::whereNull('fecha_salida')->where('fecha_hora', '>=', now()->subHours(12))->count();
 
         if ($perfil === 'cliente') {
             $visitas = Asistencia::where('cliente_id', $user->id);
@@ -42,14 +43,11 @@ class DashboardController extends Controller
             $actividad = $visitas->latest('fecha_hora')->limit(5)->get();
             $porVencer = $membresias->where('fin', '<=', today()->addDays(7))->limit(5)->get();
         } elseif ($perfil === 'recepcion') {
-            $metricas = [['Entradas hoy', Asistencia::whereBetween('fecha_hora', [today(), today()->endOfDay()])->count()], ['Dentro ahora', Asistencia::whereNull('fecha_salida')->count()], ['Solicitudes pendientes', SolicitudMembresia::where('estado', 'pendiente')->count()]];
+            $metricas = [['Entradas hoy', Asistencia::whereBetween('fecha_hora', [today(), today()->endOfDay()])->count()], ['Dentro ahora', $dentroAhora], ['Solicitudes pendientes', SolicitudMembresia::where('estado', 'pendiente')->count()]];
             $actividad = Asistencia::with('cliente:id,nombre')->latest('fecha_hora')->limit(5)->get();
             $porVencer = Membresia::with('cliente:id,nombre')->where('cancelada', false)->whereBetween('fin', [today(), today()->addDays(7)])->limit(5)->get();
         } elseif ($perfil === 'administrador') {
             $ingresosMembresiasMes = (float) PagoMembresia::whereBetween('pagado_en', [now()->startOfMonth(), now()->endOfMonth()])->sum('importe');
-            if ($ingresosMembresiasMes <= 0) {
-                $ingresosMembresiasMes = (float) Membresia::where('cancelada', false)->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('importe');
-            }
             $ingresosVentasMes = (float) Venta::whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('total');
             $totalIngresosMes = $ingresosMembresiasMes + $ingresosVentasMes;
 
@@ -78,7 +76,6 @@ class DashboardController extends Controller
         }
 
         $capacidadMaxima = 80;
-        $dentroAhora = Asistencia::whereNull('fecha_salida')->where('fecha_hora', '>=', now()->subHours(12))->count();
         $porcentajeAforo = min(100, (int) round(($dentroAhora / $capacidadMaxima) * 100));
         $estadoAforo = match (true) {
             $porcentajeAforo >= 85 => ['etiqueta' => 'Afluencia Alta', 'color' => 'text-red-400', 'bg' => 'bg-red-500', 'badge' => 'bg-red-500/10 text-red-400 border-red-500/20', 'bar' => 'bg-red-500'],

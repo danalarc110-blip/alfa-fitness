@@ -72,7 +72,7 @@ class ProductoController extends Controller
                 $anterior = $producto->imagen;
                 $producto->update([
                     'nombre' => $data['nombre'], 'precio' => $data['precio'], 'categoria' => $data['categoria'] ?? null,
-                    ... (Gate::allows('existencias') ? ['stock' => $data['stock']] : []),
+                    ...(Gate::allows('existencias') ? ['stock' => $data['stock']] : []),
                     'activo' => $request->boolean('activo'),
                     'imagen' => $nuevo ?: ($request->boolean('eliminar_imagen') ? null : $anterior),
                 ]);

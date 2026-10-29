@@ -37,3 +37,7 @@
         <div class="flex flex-wrap gap-3 mt-5"><button type="submit" class="alpha-btn-primary rounded-xl px-5 py-3 text-sm">Guardar apariencia</button><button type="button" id="appearance-reset" class="alpha-btn-secondary rounded-xl px-5 py-3 text-sm">Restaurar predeterminados</button></div>
     </form>
 </section>
+
+@push('scripts')
+@vite('resources/js/appearance-settings.js')
+@endpush

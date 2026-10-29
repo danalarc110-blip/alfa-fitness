@@ -6,6 +6,7 @@ const os = require('node:os');
 const net = require('node:net');
 const {spawn, spawnSync} = require('node:child_process');
 const puppeteer = require('puppeteer-core');
+const {acceptPrivacyPuppeteer} = require('./privacy_qa.cjs');
 const root = path.resolve(__dirname, '..');
 const php = process.env.ALPHA_QA_PHP || 'C:/xampp/php/php.exe';
 const chrome = process.env.ALPHA_QA_BROWSER || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
@@ -56,6 +57,7 @@ const portAvailable = () => new Promise((resolve, reject) => {
     };
     const login = async (email, cliente = false) => {
         await visit('/login');
+        await acceptPrivacyPuppeteer(page);
         if (cliente) await page.click('#tab-btn-clientes');
         const form = cliente ? '#form-cliente-login' : '#form-usuario';
         await fill(form + (cliente ? ' [name=correo]' : ' [name=email]'), email);

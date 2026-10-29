@@ -32,6 +32,24 @@ function trainingEnvironment(fetchImpl) {
 }
 
 (async()=> {
+    const progressFunction=read('resources/views/entrenamientos/entrenar.blade.php')
+        .match(/function actualizarProgreso\(\) \{[\s\S]*?\n    \}/)[0];
+    await check('an empty routine has no progress controls and does not crash',()=> {
+        vm.runInNewContext(progressFunction+'; actualizarProgreso();',{
+            document:{getElementById:()=>null,querySelectorAll:()=>[]},
+        });
+    });
+    await check('completed series update visual and accessible progress together',()=> {
+        const attributes={};
+        const bar={style:{}}, text={textContent:''}, indicator={setAttribute:(key,value)=>attributes[key]=value};
+        const nodes={'progreso-barra':bar,'progreso-texto':text,'progreso-series':indicator};
+        vm.runInNewContext(progressFunction+'; actualizarProgreso();',{
+            document:{getElementById:id=>nodes[id],querySelectorAll:selector=>selector.includes('data-completada')?[{}]:[{},{}]},
+        });
+        assert.equal(bar.style.transform,'scaleX(0.5)');
+        assert.equal(attributes['aria-valuenow'],'50');
+        assert.equal(text.textContent,'1 / 2 series completadas (50%)');
+    });
     await check('blocked localStorage does not stop timer or sound controls',()=> {
         const env=trainingEnvironment(async()=>({ok:true,json:async()=>({ok:true})}));
         env.run('ajustarTimer(90); alphaToggleSonidoTimer(); iniciarTimer();');
@@ -149,11 +167,11 @@ function trainingEnvironment(fetchImpl) {
         const listeners={};
         const document={activeElement:null,body:{style:{overflow:'auto'}},
             addEventListener:(name,handler)=>listeners[name]=handler,querySelectorAll:()=>[]};
-        const makeButton=()=>({tabIndex:0,getClientRects:()=>[{}],focus(){document.activeElement=this;}});
+        const makeButton=()=>({tabIndex:0,isConnected:true,getClientRects:()=>[{}],focus(){document.activeElement=this;}});
         const trigger=makeButton(),first=makeButton(),last=makeButton(),attrs={};
         const modal={id:'qa-modal',classList:{add(){},remove(){}},
             hasAttribute:key=>key in attrs,setAttribute:(key,value)=>attrs[key]=value,
-            querySelector:selector=>selector==='button'?first:null,
+            querySelector:selector=>selector==='button:not(:disabled), [href], input:not(:disabled)'?first:null,
             querySelectorAll:()=>[first,last],contains:node=>[first,last].includes(node),
             focus(){document.activeElement=this;}};
         document.querySelector=()=>modal;document.activeElement=trigger;

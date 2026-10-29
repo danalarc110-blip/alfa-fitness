@@ -14,6 +14,7 @@ class GoogleTest extends TestCase
 
     private function provider(string $id, string $email, bool $verified = true): void
     {
+        $this->reconocerPrivacidad();
         $user = (new User)->setRaw(['email_verified' => $verified])->map(['id' => $id, 'email' => $email, 'name' => 'Google User', 'avatar' => null]);
         Socialite::shouldReceive('driver')->with('google')->andReturnSelf();
         Socialite::shouldReceive('user')->once()->andReturn($user);
@@ -59,6 +60,7 @@ class GoogleTest extends TestCase
 
     public function test_login_view_renders_google_login_button(): void
     {
+        $this->reconocerPrivacidad();
         $this->get(route('login'))
             ->assertOk()
             ->assertSee('Continuar con Google')

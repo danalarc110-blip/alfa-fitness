@@ -33,7 +33,7 @@
 </div>
 {{ $solicitudes->links() }}
 @if($pausasPendientes->isNotEmpty())
-    <section class="mt-8 mb-8" data-animate="card">
+    <section class="mt-8 mb-8">
         <div class="flex items-center justify-between mb-4">
             <div>
                 <h2 class="text-lg font-bold text-white flex items-center gap-2">
@@ -115,6 +115,8 @@
                 @php
                     $diasUsados = $membresia->diasPausadosAcumulados();
                     $pausaActiva = $membresia->pausaVigente();
+                    $pausaPorResolver = $membresia->pausas->first(fn ($pausa) => in_array($pausa->estado, ['pendiente', 'aprobada'], true) && $pausa->fin_pausa_estimada->gte(today()));
+                    $pausaProgramada = $membresia->pausas->first(fn ($pausa) => $pausa->estado === 'aprobada' && $pausa->inicio_pausa->isAfter(today()));
                     $puedeGestionar = $guard === 'cliente' ? ($membresia->cliente_id === auth('cliente')->id()) : auth('web')->user()?->can('operaciones');
                 @endphp
                 <tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
@@ -141,6 +143,10 @@
                         </span>
                         @if($pausaActiva)
                             <p class="text-[11px] text-amber-400 mt-0.5">Hasta {{ $pausaActiva->fin_pausa_estimada->format('d/m/Y') }}</p>
+                        @elseif($pausaProgramada && ! $membresia->cancelada)
+                            <p class="text-[11px] text-amber-400 mt-0.5">Programada desde {{ $pausaProgramada->inicio_pausa->format('d/m/Y') }}</p>
+                        @elseif($pausaPorResolver?->estado === 'pendiente' && ! $membresia->cancelada)
+                            <p class="text-[11px] text-amber-400 mt-0.5">Pausa pendiente de aprobación</p>
                         @endif
                     </td>
                     <td class="p-4 text-xs">
@@ -152,14 +158,20 @@
                     <td class="p-4 text-right whitespace-nowrap">
                         @if($puedeGestionar)
                             @if($membresia->estado === 'En Pausa')
-                                <form method="POST" action="{{ route('membresias.reanudar', $membresia) }}" class="inline-block" onsubmit="return confirm('¿Deseas reanudar esta membresía hoy? Los días no consumidos de la pausa se reajustarán automáticamente sin perder días.')">
+                                <form method="POST" action="{{ route('membresias.reanudar', $membresia) }}" class="inline-block" data-confirm="¿Deseas reanudar esta membresía hoy? Los días no consumidos de la pausa se reajustarán automáticamente sin perder días.">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" class="alpha-btn-primary px-3 py-1.5 rounded-lg text-xs font-semibold">
                                         Reanudar
                                     </button>
                                 </form>
-                            @elseif($membresia->estado === 'Vigente' && $diasUsados < 30)
+                            @elseif($pausaProgramada && ! $membresia->cancelada)
+                                <form method="POST" action="{{ route('membresias.reanudar', $membresia) }}" class="inline-block" data-confirm="¿Anular esta pausa programada? No se consumirán días de pausa y la membresía recuperará su vencimiento anterior.">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="alpha-btn-secondary px-3 py-1.5 rounded-lg text-xs font-semibold">Anular pausa programada</button>
+                                </form>
+                            @elseif($membresia->estado === 'Vigente' && ! $pausaPorResolver && $diasUsados < 30)
                                 <button type="button"
                                     onclick="abrirModalPausa({{ $membresia->id }}, '{{ addslashes($membresia->cliente->nombre) }}', {{ 30 - $diasUsados }})"
                                     class="alpha-btn-secondary px-3 py-1.5 rounded-lg text-xs font-semibold hover:border-amber-400/50 hover:text-amber-400 transition-colors">
@@ -167,6 +179,15 @@
                                 </button>
                             @endif
                         @endif
+                        @can('operaciones')
+                            @if(in_array($membresia->estado, ['Vigente', 'Programada', 'En Pausa'], true))
+                                <form method="POST" action="{{ route('membresias.cancelar', $membresia) }}" class="inline-block ml-2" data-confirm="¿Cancelar esta membresía? Se conserva el pago y el historial; esta acción no genera un reembolso.">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="alpha-btn-secondary px-3 py-1.5 text-xs" aria-label="Cancelar membresía de {{ $membresia->cliente->nombre }}">Cancelar membresía</button>
+                                </form>
+                            @endif
+                        @endcan
                     </td>
                 </tr>
             @empty
@@ -230,7 +251,7 @@
 </script>
 
 @can('administrar')
-<section class="mt-10 pt-8 border-t border-white/10" data-animate="card">
+<section class="mt-10 pt-8 border-t border-white/10">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
             <h2 class="text-xl font-bold text-white">Configuración de Planes de Membresía</h2>

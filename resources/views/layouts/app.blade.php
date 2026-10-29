@@ -20,7 +20,7 @@
                 @yield('page-header')
             @else
             <header class="flex items-center justify-between gap-4 mb-8">
-                <div><p class="text-xs uppercase tracking-widest text-gray-400 mb-2">Alpha Fitness / @yield('eyebrow', 'Mi espacio')</p><h1 class="text-2xl sm:text-3xl font-bold tracking-tight">@yield('title', 'Inicio')</h1></div>
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">@yield('title', 'Inicio')</h1>
             </header>
             @endif
             @include('partials.feedback')

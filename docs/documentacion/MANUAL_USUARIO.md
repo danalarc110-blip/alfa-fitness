@@ -55,7 +55,7 @@ La autorización depende del rol y de que la cuenta esté activa. Una opción pu
 | Consultar marcas deportivas de clientes | Cualquier cliente | No | Con asignación propia | Propias |
 | Crear y eliminar marcas deportivas | No | No | No | Propias |
 
-**Matices de la versión.** El Administrador no hereda todas las tareas de recepción: carece del permiso de operaciones de membresías. El servidor admite que solicite una pausa directamente aprobada y que reanude, pero la pantalla no muestra esos botones para su rol. Por ello, el recorrido operativo de pausa se describe para Secretaria y Cliente. La cancelación de una membresía activada tiene una acción de servidor reservada a Secretaria, sin control visible en esta pantalla; no existe un procedimiento ordinario de cancelación desde el menú.
+**Matices de la versión.** El Administrador no hereda las tareas de recepción: consulta membresías y administra planes, pero no opera pagos ni pausas. Secretaría gestiona esas operaciones. El cliente solicita pausas y reanuda únicamente su propia membresía. Secretaría puede cancelar una membresía desde el historial, con confirmación; se conservan el pago y los registros, sin emitir un reembolso.
 
 Todos los perfiles autenticados pueden consultar el directorio de entrenadores. El Administrador ve además secretarias y personal inactivo para administrarlo. Los demás perfiles ven entrenadores activos y no sus controles de edición.
 
@@ -218,7 +218,7 @@ El Administrador también registra asistencia, administra productos y vende medi
 
 **Resultado:** se conservan cobro, fecha y empleado registrador. El importe real se admite entre $0.01 y $999,999.00 con hasta dos decimales. Una solicitud resuelta no puede cobrarse otra vez. Si hay períodos no cancelados cuyo fin es hoy o posterior, la nueva membresía empieza al día siguiente del último fin; de otro modo empieza hoy. Renovar requiere una nueva solicitud, sin sobrescribir el período anterior.
 
-**Recuperación:** si la solicitud ya está resuelta, revise el historial antes de intentar otro registro. Para una solicitud pendiente que no procede, pulse **Cancelar solicitud** y confirme. No se ofrece en esta pantalla un botón para cancelar una membresía ya activada ni para emitir reembolsos; derive ese caso al responsable de la operación.
+**Recuperación:** si la solicitud ya está resuelta, revise el historial antes de intentar otro registro. Para una solicitud pendiente que no procede, pulse **Cancelar solicitud** y confirme. Secretaría puede usar **Cancelar membresía** en el historial para períodos vigentes, programados o en pausa. La confirmación informa que se conservarán el pago y el historial; no se emiten reembolsos desde esta acción.
 
 ### 6.2. Gestionar pausas y reanudación
 
@@ -231,7 +231,7 @@ El Administrador también registra asistencia, administra productos y vende medi
 
 **Resultado:** la solicitud del cliente queda pendiente hasta aprobarse; la pausa introducida por Secretaria se aprueba directamente. Aprobar extiende el vencimiento por los días autorizados. El límite acumulado es de 30 días por membresía; no se admite otra pausa activa o pendiente ni una extensión que se solape con otra membresía no cancelada.
 
-**Recuperación:** corrija fechas fuera de la vigencia o días superiores al saldo. Una pausa pasada o ya resuelta no se aprueba nuevamente. Reanudar en curso ajusta la extensión a días usados, contando el día de reanudación; conserva solo esos días como pausa consumida. La pantalla no presenta el botón Reanudar para anular pausas programadas antes de comenzar, aunque el servidor contempla ese caso; solicite apoyo autorizado para resolverlo.
+**Recuperación:** corrija fechas fuera de la vigencia o días superiores al saldo. Una pausa pasada o ya resuelta no se aprueba nuevamente. Reanudar en curso ajusta la extensión a días usados, contando el día de reanudación; conserva solo esos días como pausa consumida. Antes de que comience una pausa aprobada, use **Anular pausa programada** y confirme: se retira la extensión completa sin consumir días de pausa. Mientras exista una pausa pendiente o aprobada no se ofrece otra solicitud de pausa.
 
 ### 6.3. Registrar entradas, salidas y consultar historial
 
@@ -322,7 +322,7 @@ El Administrador también registra asistencia, administra productos y vende medi
 3. Pulse **Confirmar Pausa** y espere aprobación de recepción.
 4. Cuando la pausa esté en curso y desee volver, pulse **Reanudar** y confirme.
 
-**Resultado:** el estado pendiente no congela todavía el acceso; aprobar extiende el vencimiento y una pausa vigente bloquea entradas. El límite de 30 días es acumulado por membresía. **Recuperación:** contacte recepción si necesita corregir una solicitud pendiente o anular una pausa futura; la pantalla no ofrece todos esos controles. No introduzca diagnóstico ni documentación médica sensible en el motivo: basta una referencia operativa.
+**Resultado:** el estado pendiente no congela todavía el acceso; aprobar extiende el vencimiento y una pausa vigente bloquea entradas. El límite de 30 días es acumulado por membresía. **Recuperación:** si una pausa aprobada aún no comienza, pulse **Anular pausa programada** y confirme para no consumir días. Contacte recepción para corregir una solicitud todavía pendiente. No introduzca diagnóstico ni documentación médica sensible en el motivo: basta una referencia operativa.
 
 ### 8.3. Entrenar y guardar la sesión
 
@@ -380,7 +380,9 @@ Al informar una incidencia, proporcione rol, módulo, mensaje visible, hora apro
 
 ### 9.2. Uso y conservación de datos
 
-La página pública **Política de privacidad**, en `/privacidad`, describe cuenta, Google, membresías, asistencia, entrenamiento y operaciones registradas. El responsable y contacto de privacidad dependen de la configuración del gimnasio; si aparecen pendientes, presente la solicitud en recepción.
+Antes del acceso aparece un resumen de privacidad. Abra la política completa, marque **He leído la política de privacidad** y pulse **Continuar al acceso**. El servidor comprueba este paso para personal, clientes, registro y Google, y registra la versión y fecha de lectura al acceder. Al cerrar sesión se requiere nuevamente; una versión anterior no habilita otro inicio de sesión.
+
+La página pública **Política de privacidad**, en `/privacidad`, explica datos y finalidades, permisos, Google, cookies, conservación, derechos y menores. En esta demostración académica se indican responsable y correo ficticios; use datos de prueba y dirija las consultas al equipo o docente. Confirmar la lectura no autoriza publicidad ni renuncia a derechos.
 
 Las cuentas usan su propia información y el personal consulta lo autorizado por su función. La analítica exporta cifras agregadas, mientras que comprobantes e informes de asistencia pueden contener información identificable: entréguelos únicamente al destinatario correcto. Los avatares publicados son imágenes de perfil; no suba documentos privados. Banear o desactivar no equivale a eliminar historia.
 
@@ -417,11 +419,11 @@ La lectura confirma implementación, autorización y controles definidos; no sus
 
 Los nombres de pruebas de la tabla corresponden a archivos `.php` en `tests/Feature/`. Un archivo mencionado acredita la fuente inspeccionada o disponible, sin afirmar que se ejecutó nuevamente durante la documentación.
 
-### 10.3. Diferencias detectadas en documentación y pantalla
+### 10.3. Alcance de las pantallas
 
-El README indica que clientes pueden registrar sus propias visitas; la implementación vigente solo permite consultar **Mi Asistencia**. La pantalla de recuperación menciona personal aunque el mismo formulario atiende ambos tipos de cuenta. La política pública menciona avance temporal del entrenamiento en el navegador, pero la pantalla examinada solo conserva explícitamente la preferencia de sonido; no debe asumirse restauración de series después de recargar.
+El cliente consulta **Mi Asistencia**; Secretaria y Administrador registran las entradas y salidas. El formulario de recuperación atiende ambos tipos de cuenta. El navegador conserva las preferencias de apariencia y sonido; no debe asumirse restauración de series después de recargar. Las sesiones finalizadas sí se guardan en el sistema.
 
-También existen capacidades de servidor sin controles ordinarios visibles: cancelar membresía activada, anular pausa futura y gestión de pausas por Administrador. Estos límites se explican en las secciones 2 y 6 para evitar instrucciones basadas en botones inexistentes. Corresponde al responsable del producto decidir y revisar esos flujos; este entregable no modifica la aplicación.
+La anulación de una pausa futura aprobada se ofrece al propietario y a Secretaría. La cancelación de membresía se ofrece a Secretaría con confirmación. Administración no tiene permisos operativos sobre pausas; esta restricción se aplica también en el servidor.
 
 ## 11. Glosario
 

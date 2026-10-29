@@ -1,5 +1,11 @@
 # Auditoría y mejoras de Alpha Fitness
 
+## Revisión vigente: 28 de octubre de 2026
+
+Consulta [REVISION_FINAL.md](REVISION_FINAL.md) para los cambios actuales, la matriz de roles, las pruebas y los pendientes. El acceso ahora exige confirmar la lectura del aviso de privacidad vigente. También se corrigieron los permisos de pausas, la navegación móvil y la carga de JavaScript por pantalla.
+
+El contenido siguiente es histórico. Sus referencias al límite de cinco productos, a dependencias sin avisos y a las animaciones de entrada describen revisiones anteriores; no deben usarse como estado actual del proyecto. El catálogo actual pagina de cinco en cinco sin limitar las altas.
+
 ## Revisión final del 14 de septiembre de 2026
 
 - El catálogo incluye exactamente cinco productos iniciales editables. El servidor bloquea un sexto producto y muestra cinco por página sin borrar datos heredados.

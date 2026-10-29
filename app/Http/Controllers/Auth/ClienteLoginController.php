@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Support\AvisoPrivacidad;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,8 +17,6 @@ class ClienteLoginController extends Controller
 {
     /**
      * Registra un cliente nuevo con correo + contraseña propia.
-     * Antes de esto no existía ninguna forma de crear un cliente
-     * sin pasar por Google, así que el login local nunca podía funcionar.
      */
     public function registrar(Request $request): RedirectResponse
     {
@@ -43,6 +42,7 @@ class ClienteLoginController extends Controller
         ]);
 
         Auth::guard('cliente')->login($cliente, false);
+        AvisoPrivacidad::registrar($request, $cliente);
 
         Auth::guard('web')->logout();
         $request->session()->regenerate();
@@ -52,8 +52,7 @@ class ClienteLoginController extends Controller
 
     /**
      * Procesa el login del cliente con correo + contraseña propia.
-     * Siempre se recuerda al cliente para que no tenga que volver
-     * a iniciar sesión la próxima vez que entre.
+     * Solo mantiene el acceso entre sesiones si se solicita explícitamente.
      */
     public function login(Request $request): RedirectResponse
     {
@@ -72,6 +71,7 @@ class ClienteLoginController extends Controller
             ]);
         }
 
+        AvisoPrivacidad::registrar($request, Auth::guard('cliente')->user());
         Auth::guard('web')->logout();
         $request->session()->regenerate();
 
@@ -88,9 +88,7 @@ class ClienteLoginController extends Controller
     }
 
     /**
-     * "Cerrar sesión": cierra la sesión por completo. Si el cliente
-     * entró con Google, además lo saca de su sesión de Google para
-     * que no vuelva a entrar automáticamente con esa cuenta.
+     * Cierra la sesión local; no modifica la sesión del proveedor Google.
      */
     public function logout(Request $request): RedirectResponse
     {
@@ -165,6 +163,7 @@ class ClienteLoginController extends Controller
             ]);
         }
 
+        AvisoPrivacidad::registrar($request, $cliente);
         Auth::guard('cliente')->login($cliente, false);
 
         Auth::guard('web')->logout();

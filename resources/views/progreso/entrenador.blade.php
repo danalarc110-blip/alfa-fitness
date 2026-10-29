@@ -2,7 +2,7 @@
 @section('title', 'Progreso de ' . $cliente->nombre)
 
 @section('page-header')
-<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
+<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5">
     <div class="flex items-center gap-3">
         <a href="{{ route('entrenador.clientes') }}" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all shadow-sm" title="Volver a clientes" aria-label="Volver a clientes">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
@@ -27,7 +27,7 @@
 
 @section('content')
 {{-- MÉTRICAS RESUMEN DE FUERZA --}}
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6 sm:mb-8" data-animate="card">
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6 sm:mb-8">
     <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden">
         <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Volumen Acumulado</span>
         <p class="text-2xl sm:text-3xl font-black text-yellow-400 mt-2">{{ number_format($totalVolumenKg, 0) }} <span class="text-base text-gray-400 font-normal">kg</span></p>
@@ -65,7 +65,7 @@
 
 {{-- GRÁFICO DE EVOLUCIÓN EN SVG (SI HAY REGISTROS) --}}
 @if($ultimosLevantamientos->count() >= 2)
-    <div class="alpha-card rounded-2xl p-5 sm:p-6 border border-white/10 mb-6" data-animate="card">
+    <div class="alpha-card rounded-2xl p-5 sm:p-6 border border-white/10 mb-6">
         <div class="flex items-center justify-between gap-3 mb-4">
             <div>
                 <h2 class="text-base font-bold text-white flex items-center gap-2">
@@ -129,7 +129,7 @@
 {{-- MEJORES MARCAS / PODIO --}}
 <div class="mb-6">
     <h2 class="text-base font-bold text-white mb-3">Mejores Marcas del Atleta</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" data-animate="card">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         @forelse ($mejoresMarcas as $index => $record)
             <div class="alpha-card rounded-2xl p-4 border border-white/10 relative overflow-hidden">
                 <div class="flex items-center justify-between mb-2">
@@ -163,7 +163,7 @@
 </div>
 
 {{-- HISTORIAL COMPLETO DE REGISTROS --}}
-<section class="alpha-card rounded-2xl p-5 sm:p-6" data-animate="card">
+<section class="alpha-card rounded-2xl p-5 sm:p-6">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/5">
         <div>
             <h2 class="text-base font-bold text-white">Historial de levantamientos</h2>

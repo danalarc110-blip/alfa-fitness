@@ -19,6 +19,7 @@ class SeguridadTest extends TestCase
 
     public function test_login_is_rate_limited_and_inactive_session_is_revoked(): void
     {
+        $this->reconocerPrivacidad();
         $user = User::factory()->create(['password' => 'Password!123']);
         for ($i = 0; $i < 5; $i++) {
             $this->post('/login', ['email' => $user->email, 'password' => 'incorrecta']);
@@ -31,6 +32,7 @@ class SeguridadTest extends TestCase
 
     public function test_clients_self_register_with_a_strong_password(): void
     {
+        $this->reconocerPrivacidad();
         $this->post(route('cliente.registro'), ['nombre' => 'Debil', 'correo' => 'debil@example.com', 'password' => 'password123', 'password_confirmation' => 'password123'])->assertSessionHasErrors('password');
         $this->post(route('cliente.registro'), ['nombre' => 'Fuerte', 'correo' => 'fuerte@example.com', 'password' => 'Fuerte!2026Clave', 'password_confirmation' => 'Fuerte!2026Clave'])->assertSessionHasNoErrors();
         $this->assertDatabaseHas('clientes', ['correo' => 'fuerte@example.com', 'activo' => true]);

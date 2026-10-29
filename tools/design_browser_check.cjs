@@ -2,6 +2,7 @@
 const {chromium}=require(process.env.ALPHA_PLAYWRIGHT_MODULE || process.env.TEMP+'/alpha-fitness-qa-tooling/node_modules/playwright');
 const fs=require('node:fs');
 const assert=require('node:assert/strict');
+const {acceptPrivacyPlaywright}=require('./privacy_qa.cjs');
 const cfg=JSON.parse(fs.readFileSync('storage/app/private/design-browser-qa.json','utf8'));
 assert.equal(cfg.url,'http://127.0.0.1:8021');
 const out='storage/app/private/design-check';fs.mkdirSync(out,{recursive:true});
@@ -18,6 +19,7 @@ const out='storage/app/private/design-check';fs.mkdirSync(out,{recursive:true});
  };
  const login=async(email,client=false,tab=page)=>{
   await visit('/login',tab);
+  await acceptPrivacyPlaywright(tab);
   if(client)await tab.locator('#tab-btn-clientes').click();
   const form=tab.locator(client?'#form-cliente-login':'#form-usuario');
   await form.locator(client?'[name=correo]':'[name=email]').fill(email);
@@ -33,6 +35,7 @@ const out='storage/app/private/design-check';fs.mkdirSync(out,{recursive:true});
   assert.equal(await page.locator('html').getAttribute('data-theme'),mode);
  };
  await visit('/login');
+ await acceptPrivacyPlaywright(page);
  await page.screenshot({path:out+'/elegant-login.png',fullPage:true});
  await page.locator('#tab-btn-clientes').click();
  assert.equal(await page.locator('#form-cliente-registro').isVisible(),false);

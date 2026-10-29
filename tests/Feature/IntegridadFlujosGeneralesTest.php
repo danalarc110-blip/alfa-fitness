@@ -15,6 +15,7 @@ use App\Models\Venta;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\TestDataSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class IntegridadFlujosGeneralesTest extends TestCase
@@ -133,14 +134,14 @@ class IntegridadFlujosGeneralesTest extends TestCase
 
         // Empty items array
         $this->post(route('ventas.store'), [
-            'venta_uuid' => (string) \Illuminate\Support\Str::uuid(),
+            'venta_uuid' => (string) Str::uuid(),
             'metodo_pago' => 'Efectivo',
             'items' => [],
         ])->assertSessionHasErrors('items');
 
         // Non-existent product
         $this->post(route('ventas.store'), [
-            'venta_uuid' => (string) \Illuminate\Support\Str::uuid(),
+            'venta_uuid' => (string) Str::uuid(),
             'metodo_pago' => 'Efectivo',
             'items' => [['producto_id' => 99999, 'cantidad' => 1]],
         ])->assertSessionHasErrors('items.0.producto_id');
@@ -148,7 +149,7 @@ class IntegridadFlujosGeneralesTest extends TestCase
         // Invalid quantity (0 or negative)
         $producto = Producto::create(['nombre' => 'Proteina', 'precio' => 30.00, 'stock' => 10, 'activo' => true]);
         $this->post(route('ventas.store'), [
-            'venta_uuid' => (string) \Illuminate\Support\Str::uuid(),
+            'venta_uuid' => (string) Str::uuid(),
             'metodo_pago' => 'Efectivo',
             'items' => [['producto_id' => $producto->id, 'cantidad' => 0]],
         ])->assertSessionHasErrors('items.0.cantidad');

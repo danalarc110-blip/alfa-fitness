@@ -8,7 +8,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="alpha-app alpha-public min-h-screen bg-black text-white flex items-center justify-center p-5">
-    <main class="alpha-card rounded-2xl p-7 w-full max-w-md shadow-2xl border border-white/10" data-animate="card">
+    <main class="alpha-card rounded-2xl p-7 w-full max-w-md shadow-2xl border border-white/10">
         <div class="flex items-center gap-3 mb-6">
             <div class="w-10 h-10 rounded-xl bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 flex items-center justify-center shrink-0">
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

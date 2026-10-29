@@ -3,9 +3,13 @@
 @section('content')
 <section class="alpha-hero">
     <div class="alpha-hero-copy">
-        <p class="alpha-eyebrow mb-4">{{ $guard === 'web' ? 'Control del gimnasio' : 'Tu entrenamiento, a tu ritmo' }}</p>
         <h2 class="mb-3">Hola, {{ $nombre }}.</h2>
-        <p class="alpha-hero-description text-gray-400 text-sm mb-6">Organiza tu día, sigue tus avances y haz que cada entrenamiento cuente.</p>
+        <p class="alpha-hero-description text-gray-400 text-sm mb-6">{{ match ($perfil) {
+            'administrador' => 'Consulta los ingresos, revisa las membresías y mantén el control de las operaciones del gimnasio.',
+            'recepcion' => 'Registra las visitas, atiende las membresías y gestiona las ventas del día.',
+            'entrenador' => 'Organiza tus rutinas y acompaña el progreso de tus clientes.',
+            default => 'Organiza tu día, sigue tus avances y haz que cada entrenamiento cuente.',
+        } }}</p>
         <div class="flex flex-wrap gap-3">@foreach($acciones as [$ruta, $etiqueta])<a href="{{ route($ruta) }}" class="{{ $loop->first ? 'alpha-btn-primary' : 'alpha-btn-secondary' }} px-5 py-3">{{ $etiqueta }}</a>@endforeach</div>
     </div>
     <div class="alpha-hero-seal" aria-hidden="true"><img src="{{ asset('images/logo-sidebar.webp') }}" alt="" width="110" height="94"><p>Tu mejor versión</p></div>
@@ -15,17 +19,18 @@
 </section>
 
 @if(isset($aforo))
-<section class="alpha-card p-6 mb-6" data-animate="card">
+<section class="alpha-card p-6 mb-6">
     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-white/10">
         <div>
             <div class="flex items-center gap-2 mb-1">
                 <span class="inline-block w-2.5 h-2.5 rounded-full {{ $aforo['bg'] }} animate-pulse"></span>
-                <span class="text-xs uppercase tracking-wider font-semibold {{ $aforo['color'] }}">Aforo en Vivo</span>
+                <span class="text-xs uppercase tracking-wider font-semibold {{ $aforo['color'] }}">Aforo actual</span>
             </div>
             <h2 class="text-2xl font-bold text-white tracking-tight">
                 {{ $aforo['actual'] }} <span class="text-gray-400 font-normal text-base">/ {{ $aforo['capacidad'] }} personas en sala</span>
             </h2>
             <p class="text-xs text-gray-400 mt-1">Capacidad máxima orientativa: {{ $aforo['capacidad'] }} socios simultáneos.</p>
+            <p class="text-xs text-gray-400 mt-1">Consulta de las {{ now()->format('H:i') }} · Recarga la página para actualizar.</p>
         </div>
 
         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -43,7 +48,7 @@
         <div class="flex items-center justify-between gap-3 mb-4">
             <div>
                 <h3 class="text-sm font-semibold text-white">Distribución de Horas Pico</h3>
-                <p class="text-xs text-gray-400">Frecuencia histórica de asistencia (06:00 a 21:00) en los últimos 30 días</p>
+                <p class="text-xs text-gray-400">Frecuencia histórica de asistencia (06:00 a 22:00) en los últimos 30 días</p>
             </div>
             <span class="text-[11px] text-amber-400/90 font-medium hidden sm:inline-flex items-center gap-1">
                 ★ Pico histórico
@@ -81,7 +86,7 @@
         @endforelse
     </section>
     @if($perfil === 'administrador')
-    <section class="alpha-card overflow-hidden" data-animate="card">
+    <section class="alpha-card overflow-hidden">
         <div class="alpha-panel-heading">
             <h2>Últimas ventas (TPV)</h2>
             <a href="{{ route('ventas.index') }}">Ver mostrador →</a>
@@ -108,7 +113,7 @@
         @endforelse
     </section>
     @elseif($perfil === 'entrenador')
-    <section class="alpha-card overflow-hidden" data-animate="card">
+    <section class="alpha-card overflow-hidden">
         <div class="alpha-panel-heading">
             <h2>Ejercicios populares</h2>
             <a href="{{ route('ejercicios.index') }}">Catálogo completo →</a>
@@ -130,10 +135,14 @@
         @endforelse
     </section>
     @else
-    <section class="alpha-card overflow-hidden" data-animate="card">
+    <section class="alpha-card overflow-hidden">
         <div class="alpha-panel-heading">
             <h2>{{ $guard === 'cliente' ? 'Mis visitas recientes' : 'Actividad reciente' }}</h2>
-            @can('asistencia')<a href="{{ route('asistencia.index') }}">Ver historial →</a>@endcan
+            @if($guard === 'cliente')
+                <a href="{{ route('cliente.asistencia') }}">Ver historial →</a>
+            @else
+                @can('asistencia')<a href="{{ route('asistencia.index') }}">Ver historial →</a>@endcan
+            @endif
         </div>
         @forelse($actividad as $visita)
             <div class="alpha-list-row"><div><strong class="text-sm">{{ $guard === 'cliente' ? 'Entrada al gimnasio' : ($visita->cliente?->nombre ?? 'Miembro') }}</strong><p class="text-xs text-gray-400 mt-1">{{ $visita->fecha_hora->format('d/m/Y · H:i') }}</p></div><span class="alpha-status {{ !$visita->fecha_salida ? 'alpha-status-active' : '' }}">{{ $visita->fecha_salida ? 'Visita completada' : 'En el gimnasio' }}</span></div>

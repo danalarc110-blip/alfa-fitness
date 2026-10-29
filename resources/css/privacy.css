@@ -1,0 +1,22 @@
+.alpha-privacy-intro { font-size: .9rem; line-height: 1.65; }
+.alpha-privacy-demo { padding: .8rem 1rem; background: var(--alpha-subtle); border-radius: 12px; color: var(--alpha-text); }
+.alpha-privacy-summary { padding: 0; margin: 1.25rem 0; list-style: none; }
+.alpha-privacy-summary li + li { margin-top: .85rem; }
+.alpha-privacy-summary strong { font-weight: 650; }
+.alpha-privacy-link { display: inline-flex; align-items: center; gap: .65rem; font-weight: 650; text-decoration: underline; text-underline-offset: .22em; }
+.alpha-privacy-form { display: grid; gap: 1rem; margin-top: 1.5rem; }
+.alpha-privacy-check { display: flex; align-items: flex-start; gap: .75rem; cursor: pointer; }
+.alpha-privacy-check input { width: 1.15rem; height: 1.15rem; flex: 0 0 auto; margin-top: .25rem; accent-color: var(--alpha-accent, #717b56); }
+.alpha-privacy-note { font-size: .78rem; line-height: 1.6; }
+.alpha-privacy-page { width: min(100% - 2.5rem, 72ch); margin: 0 auto; padding: 2.5rem 0 4rem; font-size: 1rem; line-height: 1.75; }
+.alpha-privacy-page h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; font-weight: 700; margin: 2rem 0 1rem; letter-spacing: -.025em; text-wrap: balance; }
+.alpha-privacy-page h2 { font-size: 1.25rem; font-weight: 650; line-height: 1.35; margin-bottom: .75rem; }
+.alpha-privacy-page section { margin-top: 2rem; scroll-margin-top: 1.5rem; }
+.alpha-privacy-page p + p { margin-top: .75rem; }
+.alpha-privacy-page ul { list-style: disc; padding-left: 1.3rem; }
+.alpha-privacy-page li + li { margin-top: .6rem; }
+.alpha-privacy-page a { text-decoration: underline; text-underline-offset: .2em; }
+.alpha-privacy-page nav { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; }
+.alpha-privacy-index { padding: 1rem 0; border-block: 1px solid var(--alpha-border, #bbbdb6); margin-top: 1.5rem; }
+.alpha-privacy-version { font-size: .8rem; }
+@media print { .alpha-privacy-page { width: 100%; padding: 0; } .alpha-privacy-page nav, .alpha-privacy-back { display: none; } }

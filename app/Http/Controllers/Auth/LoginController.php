@@ -3,14 +3,34 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\AvisoPrivacidad;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class LoginController extends Controller
 {
+    public function reconocerPrivacidad(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'privacy_read' => ['accepted'],
+            'privacy_version' => ['required', Rule::in([config('privacy.version')])],
+        ], [
+            'privacy_read.accepted' => 'Confirma que has leído la política de privacidad.',
+            'privacy_version.in' => 'La política se actualizó. Recarga la página y revisa la versión vigente.',
+        ]);
+
+        $request->session()->put('privacy_notice', [
+            'version' => config('privacy.version'),
+            'accepted_at' => now()->toDateTimeString(),
+        ]);
+
+        return redirect()->route('login');
+    }
+
     /**
      * Muestra el formulario de login.
      * Si ya hay una sesión activa (empleado o cliente), lo mandamos
@@ -31,8 +51,7 @@ class LoginController extends Controller
 
     /**
      * Procesa el intento de inicio de sesión.
-     * Siempre se recuerda al usuario para que no tenga que volver
-     * a iniciar sesión la próxima vez que entre.
+     * Solo mantiene el acceso entre sesiones si se solicita explícitamente.
      */
     public function login(Request $request): RedirectResponse
     {
@@ -52,6 +71,7 @@ class LoginController extends Controller
         }
 
         Auth::guard('cliente')->logout();
+        AvisoPrivacidad::registrar($request, Auth::guard('web')->user());
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard'));

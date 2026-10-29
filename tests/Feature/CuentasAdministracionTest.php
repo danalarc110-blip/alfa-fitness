@@ -157,6 +157,7 @@ class CuentasAdministracionTest extends TestCase
             ->assertRedirect(route('login'));
         $this->assertGuest('cliente');
 
+        $this->reconocerPrivacidad();
         $this->post(route('cliente.login.submit'), [
             'correo' => $cliente->correo,
             'password' => 'Fuerte!2026Clave',
@@ -175,6 +176,7 @@ class CuentasAdministracionTest extends TestCase
         $this->assertTrue($cliente->fresh()->activo);
 
         auth('web')->logout();
+        $this->reconocerPrivacidad();
         $this->post(route('cliente.login.submit'), [
             'correo' => $cliente->correo,
             'password' => 'Fuerte!2026Clave',

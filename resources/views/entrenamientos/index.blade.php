@@ -2,7 +2,7 @@
 @section('title', 'Entrenamientos')
 
 @section('page-header')
-<header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
+<header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5">
     <div>
         <div class="flex items-center gap-2">
             <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Entrenamientos</h1>
@@ -35,7 +35,7 @@
 
 @section('content')
 @if($guard === 'web' && \App\Support\Acceso::permite(auth('web')->user(), 'asignar_rutinas') && $clientes->isNotEmpty())
-<div class="alpha-card rounded-2xl p-4 sm:p-5 border border-white/10 mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4" data-animate="card">
+<div class="alpha-card rounded-2xl p-4 sm:p-5 border border-white/10 mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
     <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 flex items-center justify-center shrink-0">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -66,7 +66,7 @@
 
 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
     @forelse($rutinas as $rutina)
-        <div class="alpha-card rounded-2xl p-5 border border-white/10 flex flex-col justify-between relative overflow-hidden group shadow-lg" data-animate="card">
+        <div class="alpha-card rounded-2xl p-5 border border-white/10 flex flex-col justify-between relative overflow-hidden group shadow-lg">
             <div>
                 <div class="flex items-center justify-between gap-2 mb-3">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/5 text-gray-300 border border-white/5">

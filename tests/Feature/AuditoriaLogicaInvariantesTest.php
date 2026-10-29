@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Venta;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class AuditoriaLogicaInvariantesTest extends TestCase
@@ -302,7 +303,7 @@ class AuditoriaLogicaInvariantesTest extends TestCase
 
         $response = $this->actingAs($this->secretaria, 'web')
             ->post(route('ventas.store'), [
-                'venta_uuid' => (string) \Illuminate\Support\Str::uuid(),
+                'venta_uuid' => (string) Str::uuid(),
                 'cliente_id' => $inactiveClient->id,
                 'metodo_pago' => 'Efectivo',
                 'items' => [

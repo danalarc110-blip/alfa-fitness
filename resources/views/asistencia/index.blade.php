@@ -1,7 +1,7 @@
 @extends('layouts.app', ['active' => 'asistencia'])
 @section('title', 'Asistencia')
 @section('page-header')
-<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
+<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5">
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Asistencia</h1>
                     <p class="text-gray-400 text-xs mt-1">Control de entrada y salida de clientes.</p>
@@ -15,7 +15,7 @@
 @endsection
 @section('content')
 @if(!empty($huerfanasCount) && $huerfanasCount > 0)
-    <div class="mb-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs" data-animate="card">
+    <div class="mb-5 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
         <div class="flex items-center gap-3 text-amber-200">
             <svg class="w-5 h-5 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             <span>Hay <strong>{{ $huerfanasCount }} {{ $huerfanasCount === 1 ? 'visita abierta' : 'visitas abiertas' }}</strong> de días anteriores sin salida registrada.</span>
@@ -29,7 +29,7 @@
     </div>
 @endif
 
-<section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5" data-animate="card">
+<section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
                 <div class="alpha-card rounded-2xl p-5 border border-white/10">
                     <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Entradas hoy</span>
                     <p class="text-4xl font-bold text-yellow-400 mt-2">{{ $hoy }}</p>
@@ -57,7 +57,7 @@
                 </div>
             </section>
 
-            <section class="alpha-card rounded-2xl p-5 mb-5" data-animate="card">
+            <section class="alpha-card rounded-2xl p-5 mb-5">
                 <h2 class="text-base font-bold text-white mb-3">Dentro del gimnasio</h2>
                 <div class="flex flex-wrap gap-2">@forelse($dentroAhora as $visita)<span class="px-3 py-2 rounded-xl bg-green-400/10 border border-green-400/20 text-sm text-green-200">{{ $visita->cliente->nombre }} · desde {{ $visita->fecha_hora->format('H:i') }}</span>@empty<span class="text-sm text-gray-400">No hay visitas abiertas.</span>@endforelse</div>
             </section>
@@ -78,7 +78,7 @@
             </form>
 
             <section class="grid grid-cols-1 xl:grid-cols-[1fr_430px] gap-5">
-                <div class="alpha-card rounded-2xl p-5 sm:p-6 min-w-0" data-animate="card">
+                <div class="alpha-card rounded-2xl p-5 sm:p-6 min-w-0">
                     <div class="flex items-center justify-between gap-3 mb-4">
                         <h2 class="text-base font-bold text-white">Clientes</h2>
                         <span class="text-xs font-semibold text-gray-500">{{ $clientes->count() }} visibles</span>
@@ -137,7 +137,7 @@
                     @endif
                 </div>
 
-                <aside class="alpha-card rounded-2xl p-5 sm:p-6 h-fit min-w-0" data-animate="card">
+                <aside class="alpha-card rounded-2xl p-5 sm:p-6 h-fit min-w-0">
                     <div class="flex items-center justify-between gap-3 mb-4">
                         <h2 class="text-base font-bold text-white">Historial mensual</h2>
                         <span class="text-xs font-semibold text-gray-500">{{ now()->format('m/Y') }}</span>

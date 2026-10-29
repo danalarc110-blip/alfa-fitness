@@ -2,6 +2,7 @@
 const {chromium}=require(process.env.ALPHA_PLAYWRIGHT_MODULE || process.env.TEMP+'/alpha-fitness-qa-tooling/node_modules/playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
+const {acceptPrivacyPlaywright}=require('./privacy_qa.cjs');
 const out='storage/app/private/login-check';fs.mkdirSync(out,{recursive:true});
 (async()=>{
  const browser=await chromium.launch({channel:'chrome',headless:true});
@@ -10,6 +11,7 @@ const out='storage/app/private/login-check';fs.mkdirSync(out,{recursive:true});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   const response=await page.goto('http://127.0.0.1:8000/login',{waitUntil:'networkidle'});
   assert.equal(response.status(),200);
+  await acceptPrivacyPlaywright(page);
   const visible=async(id,expected)=>assert.equal(await page.locator('#'+id).isVisible(),expected,id);
   for(const width of [1440,390]) {
    await page.setViewportSize({width,height:width===1440?1000:844});

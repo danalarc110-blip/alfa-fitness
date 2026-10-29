@@ -70,7 +70,7 @@
    ========================================================= --}}
 <header id="alpha-mobile-header" class="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-black/90 backdrop-blur-md border-b border-white/10 select-none">
     <div class="flex items-center gap-3">
-        <button type="button" id="alpha-hamburger-btn" onclick="alphaToggleMobileMenu()" aria-label="Abrir menú de navegación"
+        <button type="button" id="alpha-hamburger-btn" onclick="alphaToggleMobileMenu()" aria-label="Abrir menú de navegación" aria-controls="alpha-mobile-drawer" aria-expanded="false"
             class="alpha-hamburger-btn">
             <span></span>
             <span></span>
@@ -102,9 +102,9 @@
 {{-- =========================================================
    MENÚ DESPLEGABLE MÓVIL (Off-Canvas Drawer con animación fluida)
    ========================================================= --}}
-<div id="alpha-mobile-backdrop" onclick="alphaCloseMobileMenu()" class="md:hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity duration-300"></div>
+<div id="alpha-mobile-backdrop" onclick="alphaCloseMobileMenu()" aria-hidden="true" class="md:hidden fixed inset-0 bg-black/75 z-40 opacity-0 pointer-events-none"></div>
 
-<nav id="alpha-mobile-drawer" class="md:hidden fixed top-0 left-0 bottom-0 w-[280px] max-w-[85vw] bg-black/95 backdrop-blur-xl border-r border-white/10 z-50 p-5 flex flex-col justify-between transform -translate-x-full shadow-2xl overflow-y-auto" aria-label="Menú principal móvil">
+<nav id="alpha-mobile-drawer" class="md:hidden fixed top-0 left-0 bottom-0 w-[280px] max-w-[85vw] bg-black/95 border-r border-white/10 z-50 p-5 flex flex-col justify-between transform -translate-x-full shadow-2xl overflow-y-auto" aria-label="Menú principal móvil" aria-hidden="true" tabindex="-1" inert>
     <div>
         {{-- Cabecera del Drawer --}}
         <div class="flex items-center justify-between pb-4 mb-4 border-b border-white/10">
@@ -181,7 +181,7 @@
 {{-- =========================================================
    SIDEBAR DE ESCRITORIO (Solo visible en pantallas >= md)
    ========================================================= --}}
-<aside class="alpha-desktop-sidebar hidden md:flex flex-col w-[230px] shrink-0 bg-black/95 backdrop-blur-md border-r border-white/10 px-4 pt-6 pb-5 select-none" data-animate="sidebar">
+<aside class="alpha-desktop-sidebar hidden md:flex flex-col w-[230px] shrink-0 bg-black/95 backdrop-blur-md border-r border-white/10 px-4 pt-6 pb-5 select-none">
 
     <div class="mb-8 px-2 flex items-center justify-between">
         <a href="{{ $inicioRoute }}">
@@ -247,73 +247,3 @@
         </form>
     </div>
 </aside>
-
-<script>
-    function alphaOpenMobileMenu() {
-        const drawer = document.getElementById('alpha-mobile-drawer');
-        const backdrop = document.getElementById('alpha-mobile-backdrop');
-        const btn = document.getElementById('alpha-hamburger-btn');
-        if (!drawer || !backdrop) return;
-
-        backdrop.classList.remove('opacity-0', 'pointer-events-none');
-        backdrop.classList.add('opacity-100', 'pointer-events-auto');
-
-        drawer.classList.remove('-translate-x-full');
-        drawer.classList.add('translate-x-0');
-
-        if (btn) { btn.classList.add('is-active'); btn.setAttribute('aria-expanded', 'true'); }
-        drawer.inert = false;
-        drawer.querySelector('button, a')?.focus();
-        document.body.style.overflow = 'hidden';
-    }
-
-    function alphaCloseMobileMenu() {
-        const drawer = document.getElementById('alpha-mobile-drawer');
-        const backdrop = document.getElementById('alpha-mobile-backdrop');
-        const btn = document.getElementById('alpha-hamburger-btn');
-        if (!drawer || !backdrop) return;
-
-        backdrop.classList.remove('opacity-100', 'pointer-events-auto');
-        backdrop.classList.add('opacity-0', 'pointer-events-none');
-
-        drawer.classList.remove('translate-x-0');
-        drawer.classList.add('-translate-x-full');
-
-        const wasOpen = btn?.classList.contains('is-active');
-        if (btn) { btn.classList.remove('is-active'); btn.setAttribute('aria-expanded', 'false'); }
-        drawer.inert = true;
-        if (wasOpen) btn?.focus();
-        document.body.style.overflow = '';
-    }
-
-    function alphaToggleMobileMenu() {
-        const drawer = document.getElementById('alpha-mobile-drawer');
-        if (!drawer) return;
-        if (drawer.classList.contains('translate-x-0')) {
-            alphaCloseMobileMenu();
-        } else {
-            alphaOpenMobileMenu();
-        }
-    }
-
-    // Cerrar menú con la tecla Escape o al cambiar a pantalla de escritorio
-    window.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') alphaCloseMobileMenu();
-        const drawer = document.getElementById('alpha-mobile-drawer');
-        if (e.key === 'Tab' && drawer?.classList.contains('translate-x-0')) {
-            const items = drawer.querySelectorAll('a[href], button:not([disabled])');
-            const first = items[0], last = items[items.length - 1];
-            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
-            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
-        }
-    });
-    document.getElementById('alpha-mobile-drawer').inert = true;
-    document.getElementById('alpha-hamburger-btn').setAttribute('aria-expanded', 'false');
-    document.getElementById('alpha-hamburger-btn').setAttribute('aria-controls', 'alpha-mobile-drawer');
-
-    window.addEventListener('resize', function() {
-        if (window.innerWidth >= 768) {
-            alphaCloseMobileMenu();
-        }
-    });
-</script>

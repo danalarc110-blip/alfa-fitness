@@ -2,7 +2,7 @@
 @section('title', 'Entrenar: ' . $rutina->nombre)
 
 @section('page-header')
-<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
+<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5">
     <div>
         <div class="flex items-center gap-2">
             <a href="{{ route('entrenamientos.index') }}" class="text-gray-400 hover:text-yellow-400 transition-colors p-1" title="Volver a entrenamientos">
@@ -33,7 +33,7 @@
 @section('content')
 {{-- SELECTOR DE DÍAS (TABS) --}}
 @if($rutina->dias->count() > 1)
-    <div class="flex items-center gap-2 overflow-x-auto pb-2 mb-6 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap" data-animate="card">
+    <div class="flex items-center gap-2 overflow-x-auto pb-2 mb-6 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar whitespace-nowrap">
         @foreach($rutina->dias as $d)
             <a href="{{ route('entrenamientos.entrenar', ['rutina' => $rutina, 'dia' => $d->id]) }}"
                 class="px-4 py-2 rounded-xl text-xs font-semibold border shrink-0 transition-all {{ $diaSeleccionado && $diaSeleccionado->id === $d->id ? 'bg-yellow-400 text-black border-yellow-400 shadow-md shadow-yellow-400/20' : 'bg-[#141414] text-gray-300 border-white/10 hover:border-white/30 hover:bg-white/5' }}">
@@ -55,13 +55,13 @@
             </div>
 
             {{-- BARRA DE PROGRESO DE SERIES --}}
-            <div class="w-full bg-white/5 rounded-full h-2 overflow-hidden mb-4 border border-white/5">
-                <div id="progreso-barra" class="bg-gradient-to-r from-yellow-400 to-amber-500 h-2 rounded-full transition-all duration-300" style="width: 0%;"></div>
+            <div id="progreso-series" role="progressbar" aria-label="Series completadas" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" class="w-full bg-white/5 rounded-full h-2 overflow-hidden mb-4 border border-white/5">
+                <div id="progreso-barra" class="bg-yellow-400 h-2 rounded-full origin-left transition-transform duration-200" style="transform: scaleX(0);"></div>
             </div>
 
             @foreach($diaSeleccionado->ejercicios as $index => $re)
                 @php($ej = $re->ejercicio)
-                <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden" data-animate="card">
+                <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden">
                     <div class="flex items-start gap-4">
                         <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-black/60 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
                             @if($ej && $ej->tiene_imagen)
@@ -96,7 +96,7 @@
                                     <button type="button"
                                         onclick="toggleSerie(this, {{ $re->descanso_segundos ?: 60 }})"
                                         class="serie-btn px-3 py-1.5 rounded-xl text-xs font-bold border transition-all duration-150 flex items-center gap-1.5 bg-black/40 border-white/10 text-gray-300 hover:border-yellow-400/50 hover:text-white"
-                                        data-completada="false">
+                                        data-completada="false" aria-pressed="false">
                                         <span class="w-3.5 h-3.5 rounded-full border border-current flex items-center justify-center text-[10px]">&check;</span>
                                         Serie {{ $s }}
                                     </button>
@@ -124,7 +124,7 @@
 
     {{-- PANEL LATERAL: CRONÓMETRO DE DESCANSO INTERACTIVO --}}
     <div class="space-y-5 lg:sticky lg:top-6">
-        <div class="alpha-card rounded-2xl p-6 border border-white/10 shadow-2xl relative overflow-hidden" data-animate="card">
+        <div class="alpha-card rounded-2xl p-6 border border-white/10 shadow-2xl relative overflow-hidden">
             <div class="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
                 <h3 class="text-sm font-bold text-white flex items-center gap-2">
                     <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -185,8 +185,8 @@
 {{-- MODAL CELEBRACIÓN FINAL --}}
 <div id="modal-fin-entrenamiento" aria-labelledby="titulo-fin-entrenamiento" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 hidden">
     <div class="alpha-card bg-[#141416] border border-white/10 rounded-2xl w-full max-w-md p-6 text-center shadow-2xl relative">
-        <div class="w-16 h-16 rounded-full bg-yellow-400/20 text-yellow-400 flex items-center justify-center mx-auto mb-4 text-3xl">
-            🏆
+        <div class="w-16 h-16 rounded-full bg-yellow-400/20 text-yellow-400 flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+            <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8v5a4 4 0 0 1-8 0V3ZM8 5H4v2a4 4 0 0 0 4 4M16 5h4v2a4 4 0 0 1-4 4M12 12v6M8 21h8M9 18h6v3"/></svg>
         </div>
         <h3 id="titulo-fin-entrenamiento" class="text-xl font-black text-white mb-1">¡Entrenamiento registrado!</h3>
         <p id="resumen-fin-entrenamiento" class="text-gray-400 text-xs mb-5">Tu sesión se guardó en el historial.</p>
@@ -353,6 +353,7 @@
     function toggleSerie(btn, descanso) {
         obtenerAudioCtx();
         const completada = btn.dataset.completada === 'true';
+        btn.setAttribute('aria-pressed', String(!completada));
         if (!completada) {
             btn.dataset.completada = 'true';
             btn.classList.remove('bg-black/40', 'border-white/10', 'text-gray-300');
@@ -369,12 +370,17 @@
     }
 
     function actualizarProgreso() {
+        const barra = document.getElementById('progreso-barra');
+        const indicador = document.getElementById('progreso-series');
+        const texto = document.getElementById('progreso-texto');
+        if (!barra || !indicador || !texto) return;
         const total = document.querySelectorAll('.serie-btn').length;
         const hechas = document.querySelectorAll('.serie-btn[data-completada="true"]').length;
         const pct = total > 0 ? Math.round((hechas / total) * 100) : 0;
 
-        document.getElementById('progreso-barra').style.width = `${pct}%`;
-        document.getElementById('progreso-texto').textContent = `${hechas} / ${total} series completadas (${pct}%)`;
+        barra.style.transform = `scaleX(${pct / 100})`;
+        indicador.setAttribute('aria-valuenow', String(pct));
+        texto.textContent = `${hechas} / ${total} series completadas (${pct}%)`;
     }
 
     const sesionIniciadaTimestamp = Date.now();

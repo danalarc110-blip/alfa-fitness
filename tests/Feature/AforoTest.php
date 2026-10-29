@@ -49,7 +49,7 @@ class AforoTest extends TestCase
 
         $response = $this->actingAs($admin, 'web')->get(route('dashboard'));
         $response->assertOk();
-        $response->assertSee('Aforo en Vivo');
+        $response->assertSee('Aforo actual');
         $response->assertSee('2'); // 2 personas presentes
         $response->assertSee('/ 80 personas en sala');
         $response->assertSee('Distribución de Horas Pico');

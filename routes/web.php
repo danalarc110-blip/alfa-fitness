@@ -16,6 +16,7 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProgresoController;
 use App\Http\Controllers\RutinaController;
 use App\Http\Controllers\VentaController;
+use App\Http\Middleware\ExigirAvisoPrivacidad;
 use App\Models\PlanMembresia;
 use Illuminate\Support\Facades\Route;
 
@@ -25,16 +26,17 @@ Route::get('/', function () {
 });
 
 Route::view('/privacidad', 'privacidad')->name('privacidad');
+Route::post('/privacidad/continuar', [LoginController::class, 'reconocerPrivacidad'])->middleware('throttle:20,1,privacy-notice')->name('privacidad.continuar');
 
 // Login (empleados)
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1')->name('login.submit');
+Route::post('/login', [LoginController::class, 'login'])->middleware(['throttle:5,1', ExigirAvisoPrivacidad::class])->name('login.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::post('/salir', [LoginController::class, 'salir'])->name('salir');
 
 // Login (clientes)
-Route::post('/cliente/login', [ClienteLoginController::class, 'login'])->middleware('throttle:5,1')->name('cliente.login.submit');
-Route::post('/cliente/registro', [ClienteLoginController::class, 'registrar'])->middleware('throttle:5,1')->name('cliente.registro');
+Route::post('/cliente/login', [ClienteLoginController::class, 'login'])->middleware(['throttle:5,1', ExigirAvisoPrivacidad::class])->name('cliente.login.submit');
+Route::post('/cliente/registro', [ClienteLoginController::class, 'registrar'])->middleware(['throttle:5,1', ExigirAvisoPrivacidad::class])->name('cliente.registro');
 // Recuperación de contraseña
 Route::get('/olvide-mi-contrasena', [EstablecerPasswordController::class, 'showForgotPasswordForm'])->name('password.request');
 Route::post('/olvide-mi-contrasena', [EstablecerPasswordController::class, 'sendResetLinkEmail'])->middleware('throttle:5,1')->name('password.email');
@@ -44,8 +46,8 @@ Route::post('/cliente/logout', [ClienteLoginController::class, 'logout'])->name(
 Route::post('/cliente/salir', [ClienteLoginController::class, 'salir'])->name('cliente.salir');
 
 // Google (clientes)
-Route::get('/cliente/google', [ClienteLoginController::class, 'redirectToGoogle'])->middleware('throttle:20,1')->name('cliente.google');
-Route::get('/cliente/google/callback', [ClienteLoginController::class, 'handleGoogleCallback'])->middleware('throttle:20,1')->name('cliente.google.callback');
+Route::get('/cliente/google', [ClienteLoginController::class, 'redirectToGoogle'])->middleware(['throttle:20,1', ExigirAvisoPrivacidad::class])->name('cliente.google');
+Route::get('/cliente/google/callback', [ClienteLoginController::class, 'handleGoogleCallback'])->middleware(['throttle:20,1', ExigirAvisoPrivacidad::class])->name('cliente.google.callback');
 
 // Información del gimnasio (pública, no requiere login)
 Route::get('/informacion', function () {

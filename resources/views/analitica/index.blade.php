@@ -14,9 +14,6 @@
                 </span>
                 <span class="text-xs font-semibold" style="color: var(--alpha-muted);">{{ $datos['periodo']['abierto'] ? 'En curso' : 'Cerrado' }}</span>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1" style="color: var(--alpha-text);">
-                Analítica <span class="text-rose-500">Financiera</span>
-            </h1>
             <p class="text-sm mt-1" style="color: var(--alpha-muted);">
                 Período efectivo: <strong style="color: var(--alpha-text);">{{ $datos['periodo']['desde'] }}</strong> al <strong style="color: var(--alpha-text);">{{ $datos['periodo']['hasta'] }}</strong>
                 ({{ $datos['periodo']['dias'] }} días) · Comparado con: {{ $datos['periodo']['prev_desde'] }} al {{ $datos['periodo']['prev_hasta'] }}

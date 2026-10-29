@@ -12,6 +12,10 @@
 
     <div class="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-14">
 
+        @if(config('privacy.demo'))
+            <p class="alpha-privacy-demo mb-6"><strong>Demostración estudiantil.</strong> Los horarios, servicios y contactos mostrados son ejemplos para la evaluación del proyecto.</p>
+        @endif
+
         {{-- BARRA SUPERIOR --}}
         <header class="flex items-center justify-between gap-4 mb-8 sm:mb-12">
             <a href="{{ route('login') }}" class="alpha-btn-secondary inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold">
@@ -24,8 +28,8 @@
         </header>
 
         {{-- HERO --}}
-        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8 pb-6 border-b border-white/10" data-animate="header">
-            <div class="w-14 h-14 rounded-2xl bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 flex items-center justify-center anim-icono shrink-0 shadow-lg shadow-yellow-400/5">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8 pb-6 border-b border-white/10">
+            <div class="w-14 h-14 rounded-2xl bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 flex items-center justify-center shrink-0 shadow-lg shadow-yellow-400/5">
                 <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M4 9v6M2 10v4M20 9v6M22 10v4M7 12h10M6 8v8M18 8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -38,7 +42,7 @@
 
         {{-- PLANES DE MEMBRESÍA DISPONIBLES --}}
         @if(isset($planes) && $planes->isNotEmpty())
-            <section class="mb-10" data-animate="card">
+            <section class="mb-10">
                 <div class="mb-4">
                     <h2 class="text-xl font-bold text-white flex items-center gap-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
@@ -75,7 +79,7 @@
 
         {{-- INFORMACIÓN DE OPERACIÓN --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-            <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden" data-animate="card">
+            <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-8 h-8 rounded-lg bg-yellow-400/10 flex items-center justify-center text-yellow-400 shrink-0">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -89,7 +93,7 @@
                 </div>
             </div>
 
-            <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden" data-animate="card">
+            <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-8 h-8 rounded-lg bg-yellow-400/10 flex items-center justify-center text-yellow-400 shrink-0">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -104,7 +108,7 @@
                 </div>
             </div>
 
-            <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden" data-animate="card">
+            <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-8 h-8 rounded-lg bg-yellow-400/10 flex items-center justify-center text-yellow-400 shrink-0">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
@@ -114,7 +118,7 @@
                 <div class="text-xs text-gray-400 space-y-1.5 leading-relaxed">
                     <p><strong class="text-gray-300">Atención en recepción:</strong> Mostrador principal del gimnasio.</p>
                     <p><strong class="text-gray-300">Gestión de membresías:</strong> Pagos y renovaciones presenciales.</p>
-                    <p><strong class="text-gray-300">Soporte técnico web:</strong> administracion@alphafitness.local</p>
+                    <p><strong class="text-gray-300">Contacto de referencia:</strong> {{ config('privacy.contact_email') }}{{ config('privacy.demo') ? ' (ficticio, sin recepción de mensajes)' : '' }}</p>
                 </div>
             </div>
         </div>

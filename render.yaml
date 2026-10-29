@@ -1,0 +1,60 @@
+# Free student demonstration. The web service can sleep; PostgreSQL keeps its records separately.
+services:
+  - type: web
+    name: alpha-fitness
+    runtime: docker
+    repo: https://github.com/danalarc110-blip/alfa-fitness
+    branch: main
+    region: oregon
+    plan: free
+    numInstances: 1
+    autoDeployTrigger: commit
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /up
+    envVars:
+      - key: APP_NAME
+        value: Alpha Fitness
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_TIMEZONE
+        value: America/El_Salvador
+      - key: APP_LOCALE
+        value: es
+      - key: ALPHA_DATA_DIR
+        value: /tmp/alpha-data
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: alpha-fitness-db
+          property: connectionString
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_ENCRYPT
+        value: "true"
+      - key: SESSION_SECURE_COOKIE
+        value: "true"
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: warning
+      - key: MAIL_MAILER
+        value: log
+      - key: PRIVACY_DEMO
+        value: "true"
+      # APP_KEY and the first import are supplied through private environment variables.
+      # Neither the database nor those values belong in this file or in Git.
+
+databases:
+  - name: alpha-fitness-db
+    plan: free
+    region: oregon
+    postgresMajorVersion: "17"
+    ipAllowList: []

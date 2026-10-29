@@ -11,14 +11,36 @@
 <main class="alpha-login">
     <section class="alpha-login-visual" aria-label="Alpha Fitness">
         <img src="{{ asset('images/logo-sidebar.webp') }}" alt="Alpha Fitness" width="135" height="115">
-        <div class="alpha-login-story"><span class="alpha-eyebrow">Tu mejor versión</span><h2>Disciplina hoy.<br><em>Resultados mañana.</em></h2><p>Tu espacio para entrenar con propósito y hacer que cada día cuente.</p></div>
+        <div class="alpha-login-story"><h2>Disciplina hoy.<br><em>Resultados mañana.</em></h2><p>Tu espacio para entrenar con propósito y hacer que cada día cuente.</p></div>
         <footer>ALPHA FITNESS CLUB · FUERZA · CONSTANCIA · PROGRESO</footer>
     </section>
     <section class="alpha-login-panel" id="login-content">
         <button class="alpha-theme-control text-xs" type="button" onclick="alphaToggleTema()" aria-label="Cambiar tema">◐ Claro / Oscuro</button>
         <div class="alpha-login-inner">
-            <p class="alpha-eyebrow">Bienvenido a Alpha Fitness</p><h1>Un nuevo día.<br>Una mejor versión.</h1><p class="alpha-login-subtitle">Ingresa a tu cuenta para continuar.</p>
+            @php($privacyReady = \App\Support\AvisoPrivacidad::vigente(request()))
+            <h1>{{ $privacyReady ? 'Tu entrenamiento empieza aquí.' : 'Tus datos, con claridad.' }}</h1>
+            <p class="alpha-login-subtitle">{{ $privacyReady ? 'Ingresa a tu cuenta para continuar.' : 'Antes de iniciar sesión, conoce cómo se utiliza tu información.' }}</p>
             @include('partials.feedback')
+            @if (! $privacyReady)
+                <div class="alpha-privacy-intro">
+                    @if (config('privacy.demo'))
+                        <p class="alpha-privacy-demo"><strong>Demostración estudiantil.</strong> Usa datos de prueba. El responsable y el correo indicados son ficticios.</p>
+                    @endif
+                    <ul class="alpha-privacy-summary">
+                        <li><strong>Cuenta y actividad.</strong> Nombre, correo, rutinas, asistencia y registros del gimnasio.</li>
+                        <li><strong>Acceso según la función.</strong> Cada cuenta consulta la información autorizada; los entrenadores solo acceden al seguimiento de sus clientes asignados.</li>
+                        <li><strong>Tú eliges.</strong> Google y el avatar son opcionales. No se solicitan números de tarjeta ni se procesan pagos en línea.</li>
+                    </ul>
+                    <a href="{{ route('privacidad') }}" class="alpha-privacy-link" target="_blank" rel="noopener">Leer la política de privacidad completa <span class="sr-only">(se abre en otra pestaña)</span><span aria-hidden="true">↗</span></a>
+                    <form method="POST" action="{{ route('privacidad.continuar') }}" class="alpha-privacy-form">
+                        @csrf
+                        <input type="hidden" name="privacy_version" value="{{ config('privacy.version') }}">
+                        <label class="alpha-privacy-check"><input type="checkbox" name="privacy_read" value="1" required><span>He leído la política de privacidad y conozco el uso de mis datos.</span></label>
+                        <p class="alpha-privacy-note">Esta confirmación no autoriza publicidad ni implica renunciar a tus derechos. Se registrarán la versión y la fecha de lectura al acceder.</p>
+                        <button type="submit" class="alpha-btn-primary px-4 py-3">Continuar al acceso <span aria-hidden="true">→</span></button>
+                    </form>
+                </div>
+            @else
             @php($clientTab = $errors->has('correo') || $errors->has('nombre') || old('correo') || old('nombre'))
             <div class="alpha-login-tabs" role="tablist" aria-label="Tipo de cuenta">
                 <button id="tab-btn-usuarios" type="button" role="tab" aria-controls="seccion-usuarios" aria-selected="{{ $clientTab ? 'false' : 'true' }}" tabindex="{{ $clientTab ? '-1' : '0' }}">Personal</button>
@@ -66,6 +88,7 @@
                     <p class="text-xs text-center text-gray-400">¿Ya tienes cuenta? <button id="btnMostrarLogin" type="button" class="text-yellow-400 font-semibold">Inicia sesión</button></p>
                 </form>
             </div>
+            @endif
             <div class="alpha-login-help"><span>¿Dudas sobre el club?</span><a href="{{ route('informacion') }}">Información y horarios ↗</a></div><p class="text-xs mt-4 text-gray-400"><a href="{{ route('privacidad') }}" class="underline">Aviso de privacidad</a></p><p class="alpha-login-caption">ALPHA FITNESS · CADA DÍA CUENTA</p>
         </div>
     </section>

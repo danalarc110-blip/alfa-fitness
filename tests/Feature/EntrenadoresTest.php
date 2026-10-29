@@ -38,6 +38,7 @@ class EntrenadoresTest extends TestCase
         $this->assertSame('Entrenador', $trainer->rol);
         $this->assertFalse($trainer->password_establecida);
         Notification::assertSentTo($trainer, ResetPassword::class);
+        $this->reconocerPrivacidad();
         $this->post(route('login.submit'), ['email' => $trainer->email, 'password' => 'cualquier-cosa'])->assertSessionHasErrors('email');
         $token = Password::broker('users')->createToken($trainer);
         $this->post(route('password.update'), ['token' => $token, 'email' => $trainer->email, 'password' => 'Entrenador!2026', 'password_confirmation' => 'Entrenador!2026'])->assertRedirect(route('login'));

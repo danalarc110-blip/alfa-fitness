@@ -10,7 +10,7 @@
     </div>
     <p class="text-sm text-gray-400">{{ $esAdmin ? 'Rutinas asignadas al cliente.' : 'Rutinas que has asignado a este cliente.' }}</p>
     @forelse ($rutinas as $rutina)
-        <article class="alpha-card rounded-2xl p-5 sm:p-6" data-rutina-id="{{ $rutina->id }}" data-animate="card">
+        <article class="alpha-card rounded-2xl p-5 sm:p-6" data-rutina-id="{{ $rutina->id }}">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div class="min-w-0">
                     <h2 class="text-lg font-semibold break-words">{{ $rutina->nombre }}</h2>

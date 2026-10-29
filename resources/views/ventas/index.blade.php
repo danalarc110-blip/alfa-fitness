@@ -2,7 +2,7 @@
 @section('title', 'Punto de Venta')
 
 @section('page-header')
-<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5" data-animate="header">
+<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5">
     <div>
         <div class="flex items-center gap-2">
             <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Ventas</h1>
@@ -22,7 +22,7 @@
     <button type="button" data-venta-ir="historial" aria-controls="venta-historial" aria-pressed="{{ $mostrarHistorial ? 'true' : 'false' }}" class="alpha-btn-secondary px-4 py-2">Historial y comprobantes</button>
 </nav>
 @if(session('venta_creada_id'))
-<div class="mb-6 p-4 rounded-2xl bg-yellow-400/10 border border-yellow-400/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs" data-animate="card">
+<div class="mb-6 p-4 rounded-2xl bg-yellow-400/10 border border-yellow-400/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
     <div class="flex items-center gap-2.5 text-yellow-400 font-semibold">
         <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
         <span>¡Venta registrada exitosamente! Puedes consultar el comprobante digital o enviarlo por correo:</span>
@@ -38,7 +38,7 @@
 
 <section id="venta-historial" aria-label="Historial y comprobantes" @class(['hidden' => !$mostrarHistorial])>
 {{-- MÉTRICAS DE VENTAS --}}
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 sm:mb-8" data-animate="card">
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 sm:mb-8">
     <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden">
         <div class="flex items-center justify-between mb-2">
             <span class="text-xs font-semibold text-gray-400">Ventas Hoy</span>
@@ -74,7 +74,7 @@
 </div>
 
 {{-- FILTROS DE FECHA Y LISTADO DE VENTAS --}}
-<div class="alpha-card rounded-2xl p-5 sm:p-6 border border-white/10 mb-6" data-animate="card">
+<div class="alpha-card rounded-2xl p-5 sm:p-6 border border-white/10 mb-6">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-white/5">
         <div class="flex items-center gap-2">
             <h2 class="text-base font-bold text-white">Historial de Ventas</h2>
@@ -321,5 +321,6 @@
 @endsection
 
 @push('scripts')
+@vite('resources/js/ventas.js')
 <script id="venta-config" type="application/json">{!! json_encode(['productos' => $catalogoVenta, 'itemsAnteriores' => $itemsAnteriores, 'recuperarVenta' => $recuperarVenta && $errors->any()], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!}</script>
 @endpush

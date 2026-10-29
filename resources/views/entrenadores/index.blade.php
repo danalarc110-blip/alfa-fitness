@@ -32,7 +32,7 @@
                 <a href="{{ route('entrenador.clientes') }}" class="alpha-btn-primary rounded-xl px-4 py-2">Ver mis clientes</a>
             </div>
         @endif
-        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4" data-animate="header">
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
             <p class="max-w-2xl text-sm text-gray-400">
                 Conoce a quienes acompañan el entrenamiento de nuestros miembros.
             </p>
@@ -68,7 +68,7 @@
                 @endforeach
             </div>
 
-            <details class="alpha-card rounded-2xl p-5 sm:p-6" data-animate="card" @if ($errors->any()) open @endif>
+            <details class="alpha-card rounded-2xl p-5 sm:p-6" @if ($errors->any()) open @endif>
                 <summary class="font-semibold cursor-pointer text-white">Crear cuenta de entrenador o secretaría</summary>
                 <form method="POST" action="{{ route('entrenadores.store') }}" enctype="multipart/form-data" class="alpha-form grid sm:grid-cols-2 gap-4 mt-5">
                     @csrf
@@ -112,7 +112,7 @@
 
         <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
             @forelse ($entrenadores as $entrenador)
-                <article class="alpha-card alpha-card-interactive rounded-2xl p-6" data-animate="card" data-entrenador-id="{{ $entrenador->id }}">
+                <article class="alpha-card alpha-card-interactive rounded-2xl p-6" data-entrenador-id="{{ $entrenador->id }}">
                     <div class="flex items-start justify-between gap-4">
                         <div class="w-20 h-20 rounded-2xl bg-yellow-400/10 flex items-center justify-center text-yellow-400 text-2xl font-bold overflow-hidden shrink-0">
                             @if ($entrenador->avatar_url)
@@ -232,7 +232,7 @@
                     @endif
                 </article>
             @empty
-                <div class="alpha-card rounded-2xl p-10 sm:col-span-2 xl:col-span-3 text-center" data-animate="card">
+                <div class="alpha-card rounded-2xl p-10 sm:col-span-2 xl:col-span-3 text-center">
                     <h2 class="font-semibold text-white">No se encontraron entrenadores</h2>
                     <p class="text-sm text-gray-400 mt-2">{{ $busqueda ? 'Prueba con otra búsqueda.' : 'El equipo aparecerá aquí cuando esté registrado.' }}</p>
                 </div>
