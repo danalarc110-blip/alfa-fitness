@@ -42,6 +42,14 @@
                 </div>
             @else
             @php($clientTab = $errors->has('correo') || $errors->has('nombre') || old('correo') || old('nombre'))
+            {{-- El acceso de clientes con Google permanece visible en ambas pestañas. --}}
+            <div class="mt-5 mb-4">
+                <a id="google-login" href="{{ route('cliente.google') }}" aria-describedby="google-login-help" class="alpha-btn-secondary w-full py-3 px-4 text-sm font-semibold">
+                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.63h6.47a5.53 5.53 0 01-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.92l-3.88-3c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.11A12 12 0 0012 24z"/><path fill="#FBBC05" d="M5.27 14.27a7.2 7.2 0 010-4.54v-3.1H1.27a12 12 0 000 10.75l4-3.11z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 001.27 6.63l4 3.1C6.22 6.86 8.87 4.75 12 4.75z"/></svg>
+                    <span>Continuar con Google</span>
+                </a>
+                <p id="google-login-help" class="text-xs text-gray-400 mt-2 text-center">Acceso de clientes con su cuenta de Google.</p>
+            </div>
             <div class="alpha-login-tabs" role="tablist" aria-label="Tipo de cuenta">
                 <button id="tab-btn-usuarios" type="button" role="tab" aria-controls="seccion-usuarios" aria-selected="{{ $clientTab ? 'false' : 'true' }}" tabindex="{{ $clientTab ? '-1' : '0' }}">Personal</button>
                 <button id="tab-btn-clientes" type="button" role="tab" aria-controls="seccion-clientes" aria-selected="{{ $clientTab ? 'true' : 'false' }}" tabindex="{{ $clientTab ? '0' : '-1' }}">Clientes</button>
@@ -59,16 +67,6 @@
             <div id="seccion-clientes" role="tabpanel" aria-labelledby="tab-btn-clientes" @class(['hidden' => !$clientTab])>
                 <form id="form-cliente-login" method="POST" action="{{ route('cliente.login.submit') }}" @class(['alpha-login-form', 'hidden' => old('nombre')])>
                     @csrf
-                    {{-- NO QUITAR: Inicio de sesión con Google --}}
-                    <a href="{{ route('cliente.google') }}" class="alpha-btn-secondary w-full py-3 px-4 rounded-xl text-sm font-semibold flex items-center justify-center gap-3 transition-all duration-150 active:scale-95 shadow-sm group">
-                        <svg class="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.63h6.47a5.53 5.53 0 01-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.92l-3.88-3c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.11A12 12 0 0012 24z"/><path fill="#FBBC05" d="M5.27 14.27a7.2 7.2 0 010-4.54v-3.1H1.27a12 12 0 000 10.75l4-3.11z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 001.27 6.63l4 3.1C6.22 6.86 8.87 4.75 12 4.75z"/></svg>
-                        <span>Continuar con Google</span>
-                    </a>
-                    <div class="flex items-center gap-3 my-2">
-                        <div class="flex-1 h-px bg-white/10 border-t border-white/10"></div>
-                        <span class="text-[11px] uppercase tracking-wider text-gray-400 font-medium">o ingresa con tu correo</span>
-                        <div class="flex-1 h-px bg-white/10 border-t border-white/10"></div>
-                    </div>
                     <label>Correo del cliente<input type="email" name="correo" value="{{ old('correo') }}" placeholder="tu@correo.com" required autocomplete="username"></label>
                     <label>Contraseña<span class="alpha-password block"><input id="passwordCliente" type="password" name="password" required autocomplete="current-password" placeholder="Ingresa tu contraseña"><button type="button" data-password="passwordCliente" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button></span></label>
                     <div class="flex justify-end -mt-1 mb-2"><a href="{{ route('password.request') }}" class="text-xs text-yellow-400/90 hover:text-yellow-300 transition-colors">¿Olvidaste tu contraseña?</a></div>
