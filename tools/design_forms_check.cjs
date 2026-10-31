@@ -41,6 +41,7 @@ const out='storage/app/private/design-check';
   await visit('/membresias');await page.getByRole('heading',{name:'Solicitud activada'}).waitFor();
   await Promise.all([page.waitForResponse(r=>r.request().method()==='POST'&&r.url().includes('/membresias/')),request.click()]);
   await page.waitForLoadState('networkidle');
+  page.once('dialog',dialog=>dialog.accept());
   await Promise.all([page.waitForResponse(r=>r.request().method()==='POST'&&r.url().includes('/cancelar')),page.getByRole('button',{name:'Cancelar solicitud'}).click()]);
   await page.waitForLoadState('networkidle');await page.getByRole('heading',{name:'Solicitud cancelada'}).waitFor();
   await visit('/configuracion');
