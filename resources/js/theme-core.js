@@ -9,13 +9,15 @@
         return rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722;
     };
     const contrast = (a, b) => (Math.max(luminance(a), luminance(b)) + .05) / (Math.min(luminance(a), luminance(b)) + .05);
-    const valid = c => c && keys.every(k => /^#[\da-f]{6}$/i.test(c[k])) && contrast(c.text, c.background) >= 4.5 && contrast(c.text, c.surface) >= 4.5;
+    const valid = c => c && keys.every(k => typeof c[k] === 'string' && /^#[\da-f]{6}$/i.test(c[k])) && contrast(c.text, c.background) >= 4.5 && contrast(c.text, c.surface) >= 4.5;
     const foreground = c => contrast(c, '#000000') > contrast(c, '#ffffff') ? '#000000' : '#ffffff';
     const normalize = preference => {
         if (!preference || !['light', 'dark', 'custom'].includes(preference.mode) || !valid(preference.colors)) return null;
         const design = preference.design ?? 'elegant';
         if (!['elegant', 'green'].includes(design)) return null;
-        return {design, mode: preference.mode, colors: Object.fromEntries(keys.map(k => [k, preference.colors[k]]))};
+        const motion = preference.motion ?? 'system';
+        if (!['system', 'reduced'].includes(motion)) return null;
+        return {design, mode: preference.mode, motion, colors: Object.fromEntries(keys.map(k => [k, preference.colors[k]]))};
     };
     const paint = (element, c) => {
         const readable = color => contrast(color, c.background) >= 4.5 && contrast(color, c.surface) >= 4.5 ? color : c.text;
@@ -53,19 +55,29 @@
             paint(document.documentElement, c);
             document.documentElement.dataset.theme = preference.mode;
             document.documentElement.dataset.design = preference.design;
+            document.documentElement.dataset.motion = preference.motion;
             document.documentElement.classList.toggle('light', luminance(c.background) > .179);
         },
         remember(preference) {
             try { localStorage.setItem('alphaAppearance', JSON.stringify(preference)); localStorage.removeItem('alphaTema'); } catch (_) {}
         },
         async save(preference) {
+            if (['light', 'dark'].includes(preference?.mode) && !valid(preference.colors)) {
+                preference = {...preference, colors: this.current.colors};
+            }
             preference = normalize(preference);
             if (!preference) throw new Error('Selecciona una apariencia válida.');
             if (this.config.authenticated) {
-                const response = await fetch(this.config.url, {method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': this.config.csrf}, body: JSON.stringify(preference)});
-                const data = await response.json().catch(() => ({}));
-                if (!response.ok) throw new Error(response.status === 419 || response.status === 401 ? 'Tu sesión expiró. Inicia sesión de nuevo.' : Object.values(data.errors || {}).flat()[0] || 'No se pudo guardar la apariencia. Intenta de nuevo.');
-                preference = data.appearance;
+                let response;
+                try {
+                    response = await fetch(this.config.url, {method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': this.config.csrf}, body: JSON.stringify(preference)});
+                } catch (_) {
+                    throw new Error('No se pudo guardar la apariencia. Revisa tu conexión e intenta de nuevo.');
+                }
+                const data = await response.json().catch(() => null);
+                if (!response.ok) throw new Error(response.status === 419 || response.status === 401 ? 'Tu sesión expiró. Inicia sesión de nuevo.' : Object.values(data?.errors || {}).flat().find(error => typeof error === 'string') || 'No se pudo guardar la apariencia. Intenta de nuevo.');
+                preference = normalize(data?.appearance);
+                if (!preference) throw new Error('No se pudo confirmar la apariencia guardada. Recarga la página e intenta de nuevo.');
             }
             this.apply(preference);
             this.remember(preference);

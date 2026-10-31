@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'Alpha Fitness') }} - Información General</title>
+    <title>{{ $gimnasio['nombre'] }} - Información General</title>
 
     @include('partials.appearance')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -34,9 +34,9 @@
                     <path d="M4 9v6M2 10v4M20 9v6M22 10v4M7 12h10M6 8v8M18 8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </div>
-            <div>
-                <h1 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Alpha Fitness</h1>
-                <p class="text-sm text-yellow-400 font-medium mt-0.5">Centro Integral de Acondicionamiento Físico y Rendimiento</p>
+            <div class="min-w-0 break-words">
+                <h1 class="text-3xl sm:text-4xl font-black text-white tracking-tight">{{ $gimnasio['nombre'] }}</h1>
+                <p class="text-sm text-yellow-400 font-medium mt-0.5 whitespace-pre-line">{{ $gimnasio['descripcion'] }}</p>
             </div>
         </div>
 
@@ -79,53 +79,51 @@
 
         {{-- INFORMACIÓN DE OPERACIÓN --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-            <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden">
+            <div class="alpha-card min-w-0 rounded-2xl p-5 border border-white/10 relative overflow-hidden">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-8 h-8 rounded-lg bg-yellow-400/10 flex items-center justify-center text-yellow-400 shrink-0">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     </div>
                     <h2 class="text-white font-bold text-sm">Horarios de Atención</h2>
                 </div>
-                <div class="text-xs text-gray-400 space-y-1.5 leading-relaxed">
-                    <p><strong class="text-gray-300">Lunes a Viernes:</strong><br>5:00 a.m. – 10:00 p.m.</p>
-                    <p><strong class="text-gray-300">Sábados:</strong><br>6:00 a.m. – 6:00 p.m.</p>
-                    <p><strong class="text-gray-300">Domingos y Feriados:</strong><br>8:00 a.m. – 2:00 p.m.</p>
-                </div>
+                <p class="text-sm text-gray-400 leading-relaxed break-words whitespace-pre-line">{{ $gimnasio['horarios'] }}</p>
             </div>
 
-            <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden">
+            <div class="alpha-card min-w-0 rounded-2xl p-5 border border-white/10 relative overflow-hidden">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-8 h-8 rounded-lg bg-yellow-400/10 flex items-center justify-center text-yellow-400 shrink-0">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                     </div>
                     <h2 class="text-white font-bold text-sm">Instalaciones</h2>
                 </div>
-                <div class="text-xs text-gray-400 space-y-1.5 leading-relaxed">
-                    <p>Zona de musculación y peso libre de alto impacto.</p>
-                    <p>Área de cardio y acondicionamiento aeróbico.</p>
-                    <p>Espacio de entrenamiento funcional y calistenia.</p>
-                    <p>Casilleros y vestidores climatizados.</p>
-                </div>
+                <p class="text-sm text-gray-400 leading-relaxed break-words whitespace-pre-line">{{ $gimnasio['instalaciones'] }}</p>
             </div>
 
-            <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden">
+            <div class="alpha-card min-w-0 rounded-2xl p-5 border border-white/10 relative overflow-hidden">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-8 h-8 rounded-lg bg-yellow-400/10 flex items-center justify-center text-yellow-400 shrink-0">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                     </div>
                     <h2 class="text-white font-bold text-sm">Contacto y Recepción</h2>
                 </div>
-                <div class="text-xs text-gray-400 space-y-1.5 leading-relaxed">
-                    <p><strong class="text-gray-300">Atención en recepción:</strong> Mostrador principal del gimnasio.</p>
-                    <p><strong class="text-gray-300">Gestión de membresías:</strong> Pagos y renovaciones presenciales.</p>
-                    <p><strong class="text-gray-300">Contacto de referencia:</strong> {{ config('privacy.contact_email') }}{{ config('privacy.demo') ? ' (ficticio, sin recepción de mensajes)' : '' }}</p>
+                <div class="text-sm text-gray-400 space-y-3 leading-relaxed break-words">
+                    <p class="whitespace-pre-line">{{ $gimnasio['atencion'] }}</p>
+                    @if($gimnasio['direccion'])
+                        <p><strong class="text-gray-300">Dirección:</strong> {{ $gimnasio['direccion'] }}</p>
+                    @endif
+                    @if($gimnasio['telefono'])
+                        <p><strong class="text-gray-300">Teléfono:</strong> {{ $gimnasio['telefono'] }}</p>
+                    @endif
+                    @if($gimnasio['correo'])
+                        <p><strong class="text-gray-300">Contacto de referencia:</strong> {{ $gimnasio['correo'] }}{{ config('privacy.demo') ? ' (ejemplo de demostración)' : '' }}</p>
+                    @endif
                 </div>
             </div>
         </div>
 
         {{-- FOOTER / CTA --}}
         <footer class="text-center pt-8 border-t border-white/10">
-            <p class="text-xs text-gray-500 mb-3">&copy; {{ date('Y') }} Alpha Fitness. Todos los derechos reservados.</p>
+            <p class="text-xs text-gray-500 mb-3 break-words">&copy; {{ date('Y') }} {{ $gimnasio['nombre'] }}. Todos los derechos reservados.</p>
             <a href="{{ route('login') }}" class="alpha-btn-primary px-6 py-2.5 rounded-xl text-xs font-semibold inline-flex items-center gap-2">
                 Ingresar a la plataforma &rarr;
             </a>

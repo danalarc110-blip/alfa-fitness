@@ -96,4 +96,21 @@ class PausasProgramadasVistaTest extends TestCase
         $this->actingAs($cliente, 'cliente')->get(route('membresias.index'))->assertOk()
             ->assertDontSee('Anular pausa programada')->assertDontSee('onclick="abrirModalPausa(', false);
     }
+
+    public function test_membership_with_less_than_minimum_pause_days_does_not_offer_an_impossible_pause(): void
+    {
+        [$cliente, $membresia, $pausa] = $this->contexto();
+        $pausa->update([
+            'estado' => 'finalizada', 'dias' => 28,
+            'inicio_pausa' => today()->subDays(29), 'fin_pausa_estimada' => today()->subDays(2),
+        ]);
+
+        $this->actingAs($cliente, 'cliente')->get(route('membresias.index'))->assertOk()
+            ->assertDontSee('onclick="abrirModalPausa(', false)
+            ->assertSee('Menos de 3 días de pausa disponibles');
+
+        $pausa->update(['dias' => 27]);
+        $this->get(route('membresias.index'))->assertOk()
+            ->assertSee('onclick="abrirModalPausa(', false);
+    }
 }

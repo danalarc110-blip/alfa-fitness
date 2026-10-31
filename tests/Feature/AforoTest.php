@@ -5,12 +5,28 @@ namespace Tests\Feature;
 use App\Models\Asistencia;
 use App\Models\Cliente;
 use App\Models\User;
+use App\Support\InformacionGimnasio;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class AforoTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_dashboard_uses_saved_capacity_and_caps_the_occupancy_bar(): void
+    {
+        InformacionGimnasio::guardar(['capacidad' => 2]);
+        $secretaria = User::factory()->create(['rol' => 'Secretaria']);
+        foreach (['uno', 'dos', 'tres'] as $nombre) {
+            $cliente = Cliente::create(['nombre' => $nombre, 'correo' => $nombre.'@aforo.test', 'activo' => true]);
+            Asistencia::create(['cliente_id' => $cliente->id, 'fecha_hora' => now()->subMinutes(10), 'tipo_acceso' => 'entrada']);
+        }
+
+        $this->actingAs($secretaria)->get(route('dashboard'))->assertOk()
+            ->assertViewHas('aforo', fn ($aforo) => $aforo['actual'] === 3 && $aforo['capacidad'] === 2 && $aforo['porcentaje'] === 100)
+            ->assertSee('/ 2 personas en sala')
+            ->assertSee('Aforo al cargar la página: 3 de 2 personas');
+    }
 
     public function test_dashboard_renders_aforo_and_peak_hours_correctly(): void
     {

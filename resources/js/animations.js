@@ -1,11 +1,12 @@
 const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const reducedMotion = () => motion.matches || window.AlphaAppearance?.current?.motion === 'reduced';
 const running = new Set();
 const modalSessions = new WeakMap();
 const easing = 'cubic-bezier(.16,1,.3,1)';
 let modalState;
 
 function animate(element, frames, duration, owner, delay = 0) {
-    if (motion.matches || !element?.animate) return;
+    if (reducedMotion() || !element?.animate) return;
     const animation = element.animate(frames, {duration, delay, easing, fill: 'none'});
     running.add(animation);
     owner?.animations.add(animation);
@@ -17,10 +18,12 @@ function animate(element, frames, duration, owner, delay = 0) {
     return animation;
 }
 
-motion.addEventListener('change', () => {
-    if (!motion.matches) return;
+const stopReducedMotion = () => {
+    if (!reducedMotion()) return;
     running.forEach(animation => animation.cancel());
-});
+};
+motion.addEventListener('change', stopReducedMotion);
+window.addEventListener('alpha:appearance', stopReducedMotion);
 
 function stopModalMotion(state) {
     state.animations.forEach(animation => animation.cancel());
@@ -86,7 +89,7 @@ window.alphaAnimateModalClose = (selector, callback) => {
     if (typeof callback === 'function') state.callbacks.add(callback);
     if (state.closing) return state.closed;
     state.closing = true;
-    if (motion.matches || !modal.animate) {
+    if (reducedMotion() || !modal.animate) {
         finishModalClose(state);
         return;
     }

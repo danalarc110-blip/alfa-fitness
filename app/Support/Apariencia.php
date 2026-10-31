@@ -13,6 +13,8 @@ final class Apariencia
 
     public const DISENOS = ['elegant', 'green'];
 
+    public const MOVIMIENTOS = ['system', 'reduced'];
+
     public const PALETAS_VERDE = [
         'light' => ['primary' => '#e9ed6b', 'accent' => '#516637', 'background' => '#f5f5f0', 'surface' => '#ffffff', 'text' => '#20221f'],
         'dark' => ['primary' => '#e9ed6b', 'accent' => '#b7c98a', 'background' => '#121710', 'surface' => '#1d251c', 'text' => '#f3f5ee'],
@@ -59,11 +61,12 @@ final class Apariencia
         $guardada = is_array($usuario?->apariencia) ? $usuario->apariencia : [];
         $design = in_array($guardada['design'] ?? null, self::DISENOS, true) ? $guardada['design'] : 'elegant';
         $mode = in_array($guardada['mode'] ?? null, ['light', 'dark', 'custom'], true) ? $guardada['mode'] : 'light';
+        $motion = in_array($guardada['motion'] ?? null, self::MOVIMIENTOS, true) ? $guardada['motion'] : 'system';
         $colors = $guardada['colors'] ?? self::PALETAS['light'];
         if (! is_array($colors) || ! self::legible($colors)) {
             $colors = self::PALETAS['light'];
         }
 
-        return compact('design', 'mode', 'colors');
+        return compact('design', 'mode', 'motion', 'colors');
     }
 }

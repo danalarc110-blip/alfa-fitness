@@ -1,4 +1,9 @@
 /* Interaction feedback only: no loading gates, layout animation or extra assets. */
+html[data-motion="reduced"], html[data-motion="reduced"] *, html[data-motion="reduced"] *::before, html[data-motion="reduced"] *::after {
+    animation:none !important;
+    transition:none !important;
+    scroll-behavior:auto !important;
+}
 .alpha-app ::selection {background:var(--alpha-primary);color:var(--alpha-on-primary);}
 .alpha-app :is(input, textarea) {caret-color:var(--alpha-primary-text);}
 .alpha-app :is(table, #timer-display) {font-variant-numeric:tabular-nums;}

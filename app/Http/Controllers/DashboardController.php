@@ -12,6 +12,7 @@ use App\Models\Rutina;
 use App\Models\SolicitudMembresia;
 use App\Models\User;
 use App\Models\Venta;
+use App\Support\InformacionGimnasio;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -75,7 +76,7 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        $capacidadMaxima = 80;
+        $capacidadMaxima = InformacionGimnasio::obtener()['capacidad'];
         $porcentajeAforo = min(100, (int) round(($dentroAhora / $capacidadMaxima) * 100));
         $estadoAforo = match (true) {
             $porcentajeAforo >= 85 => ['etiqueta' => 'Afluencia Alta', 'color' => 'text-red-400', 'bg' => 'bg-red-500', 'badge' => 'bg-red-500/10 text-red-400 border-red-500/20', 'bar' => 'bg-red-500'],

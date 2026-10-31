@@ -48,6 +48,8 @@ Para crear el administrador inicial, ejecuta `php artisan admin:create` y propor
 - Productos e inventario: cinco productos iniciales editables y catálogo paginado de cinco en cinco, sin límite artificial de productos.
 - Administrar cuentas: solo el administrador puede buscar clientes, ver su fecha de registro y banear o restaurar su acceso; la acción pide confirmación y conserva el historial.
 - Perfil, avatar, diseños Elegante y Verde, modos claro/oscuro/personalizado y navegación móvil accesible por teclado.
+- Configuración con «Acerca de», identificación de Apex Logic, foto que se puede quitar y preferencia de movimiento reducido por cuenta.
+- Información pública y aforo máximo editables por el administrador: nombre del gimnasio, descripción, horarios, servicios y contactos, guardados en la base de datos.
 - Personal: creación e invitación de secretarias y entrenadores por el administrador.
 - Ventas y comprobantes; analítica financiera agregada de hasta 90 días, exportable a PDF y Excel por el administrador.
 - Entrenar Ahora e historial de sesiones persistidas; un reintento con el mismo identificador no crea otra sesión o venta.
@@ -58,6 +60,10 @@ Para crear el administrador inicial, ejecuta `php artisan admin:create` y propor
 El diseño Elegante es el predeterminado y conserva la paleta original y el logotipo plateado. En **Configuración → Apariencia → Diseño de la interfaz** puedes elegir **Verde** y guardar. Cada cuenta conserva su elección al volver a iniciar sesión. El diseño se aplica también al constructor de rutinas y a las pantallas de acceso.
 
 El modo de color se elige por separado: Claro, Oscuro o Personalizado. La vista previa permite revisar los cambios antes de guardarlos; el modo personalizado valida el contraste del texto. **Restaurar predeterminados** prepara la combinación Elegante/Claro; pulsa **Guardar apariencia** para confirmarla.
+
+En **Configuración → Acerca de** se explica el sistema y se enlazan la información del gimnasio y la privacidad. **Movimiento de la interfaz** permite seguir la preferencia del dispositivo o reducir las animaciones. La selección se guarda en cada cuenta; la preferencia de accesibilidad del dispositivo siempre se respeta.
+
+El administrador dispone de **Configuración → Información del gimnasio**. Estos datos son compartidos y públicos; las demás cuentas conservan únicamente sus opciones personales. El aforo configurado se utiliza tanto en Inicio como en la cabecera. La migración `2026_10_30_100000_create_configuracion_gimnasio_table` crea una tabla independiente sin modificar los registros existentes. Render la aplica al iniciar la nueva versión y conserva la configuración en PostgreSQL.
 
 ## Imágenes
 

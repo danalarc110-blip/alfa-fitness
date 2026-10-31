@@ -175,7 +175,7 @@ function trainingEnvironment(fetchImpl) {
             querySelectorAll:()=>[first,last],contains:node=>[first,last].includes(node),
             focus(){document.activeElement=this;}};
         document.querySelector=()=>modal;document.activeElement=trigger;
-        const window={matchMedia:()=>({matches:true,addEventListener(){}})};
+        const window={matchMedia:()=>({matches:true,addEventListener(){}}),addEventListener(){}};
         const context=vm.createContext({window,document,Set});
         vm.runInContext(read('resources/js/animations.js'),context);
         window.alphaAnimateModalOpen('#qa-modal');

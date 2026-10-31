@@ -25,7 +25,7 @@ class AsistenciaController extends Controller
         $busqueda = $filtros['q'] ?? '';
         $clientes = Cliente::where('activo', true)
             ->when($busqueda, fn ($q) => $q->where(fn ($s) => $s->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
-            ->with(['asistencias' => fn ($q) => $q->whereNull('fecha_salida')->latest('fecha_hora'),
+            ->with(['asistencias' => fn ($q) => $q->whereNull('fecha_salida')->where('fecha_hora', '>=', now()->subHours(12))->latest('fecha_hora'),
                 'ultimaMembresia'])
             ->orderBy('nombre')->paginate(12, ['*'], 'clientes_page')->withQueryString();
 
@@ -38,9 +38,10 @@ class AsistenciaController extends Controller
             ->when(($filtros['estado'] ?? '') === 'cerrada', fn ($q) => $q->whereNotNull('fecha_salida'))
             ->latest('fecha_hora')->paginate(20, ['*'], 'historial_page')->withQueryString();
 
-        $dentroAhora = Asistencia::with('cliente:id,nombre,correo')->whereNull('fecha_salida')->oldest('fecha_hora')->limit(100)->get();
+        $visitasActuales = Asistencia::whereNull('fecha_salida')->where('fecha_hora', '>=', now()->subHours(12));
+        $dentroAhora = (clone $visitasActuales)->with('cliente:id,nombre,correo')->oldest('fecha_hora')->limit(100)->get();
         $hoy = Asistencia::whereBetween('fecha_hora', [today(), today()->endOfDay()])->count();
-        $dentro = Asistencia::whereNull('fecha_salida')->count();
+        $dentro = $visitasActuales->count();
         $huerfanasCount = Asistencia::whereNull('fecha_salida')->where('fecha_hora', '<', now()->subHours(12))->count();
 
         return view('asistencia.index', compact('clientes', 'busqueda', 'asistencias', 'hoy', 'dentro', 'dentroAhora', 'filtros', 'huerfanasCount'));
@@ -165,6 +166,7 @@ class AsistenciaController extends Controller
         $totalVisitas = Asistencia::where('cliente_id', $cliente->id)->count();
         $visitaActual = Asistencia::where('cliente_id', $cliente->id)
             ->whereNull('fecha_salida')
+            ->where('fecha_hora', '>=', now()->subHours(12))
             ->latest('fecha_hora')
             ->first();
 

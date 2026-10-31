@@ -10,6 +10,7 @@ use App\Http\Controllers\CuentasController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EjercicioController;
 use App\Http\Controllers\EntrenadorController;
+use App\Http\Controllers\InformacionGimnasioController;
 use App\Http\Controllers\MembresiaController;
 use App\Http\Controllers\PlanMembresiaController;
 use App\Http\Controllers\ProductoController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\RutinaController;
 use App\Http\Controllers\VentaController;
 use App\Http\Middleware\ExigirAvisoPrivacidad;
 use App\Models\PlanMembresia;
+use App\Support\InformacionGimnasio;
 use Illuminate\Support\Facades\Route;
 
 // Página raíz: redirige al login
@@ -53,7 +55,7 @@ Route::get('/cliente/google/callback', [ClienteLoginController::class, 'handleGo
 Route::get('/informacion', function () {
     $planes = PlanMembresia::where('activo', true)->orderBy('precio')->get();
 
-    return view('informacion', ['planes' => $planes]);
+    return view('informacion', ['planes' => $planes, 'gimnasio' => InformacionGimnasio::obtener()]);
 })->name('informacion');
 
 // Área protegida de empleados
@@ -72,6 +74,8 @@ Route::middleware(['auth:cliente,web', 'auth.session'])->group(function () {
     Route::post('/configuracion/password', [ConfiguracionController::class, 'actualizarPassword'])->middleware('throttle:5,1')->name('configuracion.password');
     Route::post('/configuracion/personalizacion', [ConfiguracionController::class, 'actualizarPersonalizacion'])->name('configuracion.personalizacion');
     Route::post('/configuracion/avatar', [ConfiguracionController::class, 'actualizarAvatar'])->name('configuracion.avatar');
+    Route::delete('/configuracion/avatar', [ConfiguracionController::class, 'eliminarAvatar'])->name('configuracion.avatar.eliminar');
+    Route::post('/configuracion/gimnasio', [InformacionGimnasioController::class, 'actualizar'])->middleware('can:administrar')->name('configuracion.gimnasio');
     Route::post('/configuracion/google', [ConfiguracionController::class, 'vincularGoogle'])->middleware('throttle:5,1')->name('configuracion.google');
 
     Route::get('/membresias', [MembresiaController::class, 'index'])->middleware('can:membresias')->name('membresias.index');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\ImagenSegura;
 use App\Support\Apariencia;
+use App\Support\InformacionGimnasio;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +33,7 @@ class ConfiguracionController extends Controller
             'rolEtiqueta' => $guard === 'web' ? $user->rol : 'Miembro',
             'miembroDesde' => $this->miembroDesde($user),
             'avatarUrl' => $user->avatar_url,
+            'gimnasio' => InformacionGimnasio::obtener(),
         ]);
     }
 
@@ -93,13 +95,20 @@ class ConfiguracionController extends Controller
     public function actualizarApariencia(Request $request)
     {
         ['user' => $user] = $this->actual();
-        $rules = ['design' => ['sometimes', 'required', Rule::in(Apariencia::DISENOS)], 'mode' => ['required', Rule::in(['light', 'dark', 'custom'])], 'colors' => ['required', 'array:primary,accent,background,surface,text']];
+        $rules = ['design' => ['sometimes', 'required', Rule::in(Apariencia::DISENOS)], 'mode' => ['required', Rule::in(['light', 'dark', 'custom'])], 'motion' => ['sometimes', 'required', Rule::in(Apariencia::MOVIMIENTOS)], 'colors' => ['required', 'array:primary,accent,background,surface,text']];
         foreach (array_keys(Apariencia::PALETAS['light']) as $key) {
             $rules['colors.'.$key] = ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/D'];
         }
         $data = $request->validate($rules);
-        $data['design'] ??= Apariencia::preferencia($user)['design'];
-        Apariencia::validar($data['colors']);
+        $anterior = Apariencia::preferencia($user);
+        $data['design'] ??= $anterior['design'];
+        $data['motion'] ??= $anterior['motion'];
+        if ($data['mode'] === 'custom') {
+            Apariencia::validar($data['colors']);
+        } elseif (! Apariencia::legible($data['colors'])) {
+            // A discarded custom draft must not prevent returning to a preset.
+            $data['colors'] = $anterior['colors'];
+        }
         $user->update(['apariencia' => $data]);
 
         return $request->expectsJson()
@@ -136,6 +145,21 @@ class ConfiguracionController extends Controller
         $user->update($data);
 
         return back()->with('status', 'Personalización guardada.');
+    }
+
+    public function eliminarAvatar(): RedirectResponse
+    {
+        ['guard' => $guard, 'user' => $user] = $this->actual();
+        $anterior = DB::transaction(function () use ($user) {
+            $cuenta = $user->newQuery()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+            $avatar = $cuenta->avatar;
+            $cuenta->update(['avatar' => null]);
+
+            return $avatar;
+        });
+        app(ImagenSegura::class)->eliminar($anterior, 'avatars', $guard.'_'.$user->id);
+
+        return back()->with('status', 'Foto eliminada. Ahora se mostrará la inicial de tu nombre.');
     }
 
     public function actualizarAvatar(Request $request): RedirectResponse

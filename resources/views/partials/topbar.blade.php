@@ -5,7 +5,7 @@
     $topbarAforoActual = \Illuminate\Support\Facades\Cache::remember('aforo_en_vivo', 15, function () {
         return \App\Models\Asistencia::whereNull('fecha_salida')->where('fecha_hora', '>=', now()->subHours(12))->count();
     });
-    $topbarCapacidad = 80;
+    $topbarCapacidad = \App\Support\InformacionGimnasio::obtener()['capacidad'];
     $topbarPct = min(100, (int) round(($topbarAforoActual / $topbarCapacidad) * 100));
 @endphp
 <header class="alpha-topbar">

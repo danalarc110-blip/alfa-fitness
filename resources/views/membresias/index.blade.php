@@ -171,12 +171,14 @@
                                     @method('PATCH')
                                     <button type="submit" class="alpha-btn-secondary px-3 py-1.5 rounded-lg text-xs font-semibold">Anular pausa programada</button>
                                 </form>
-                            @elseif($membresia->estado === 'Vigente' && ! $pausaPorResolver && $diasUsados < 30)
+                            @elseif($membresia->estado === 'Vigente' && ! $pausaPorResolver && $diasUsados <= 27)
                                 <button type="button"
                                     onclick="abrirModalPausa({{ $membresia->id }}, '{{ addslashes($membresia->cliente->nombre) }}', {{ 30 - $diasUsados }})"
                                     class="alpha-btn-secondary px-3 py-1.5 rounded-lg text-xs font-semibold hover:border-amber-400/50 hover:text-amber-400 transition-colors">
                                     Pausar
                                 </button>
+                            @elseif($membresia->estado === 'Vigente' && ! $pausaPorResolver && $diasUsados < 30)
+                                <span class="text-xs text-gray-400 whitespace-normal">Menos de 3 días de pausa disponibles</span>
                             @endif
                         @endif
                         @can('operaciones')

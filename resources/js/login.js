@@ -1,10 +1,11 @@
 const tabs = ['usuarios', 'clientes'].map(id => document.getElementById('tab-btn-' + id));
 if (tabs.every(Boolean)) {
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const reducedMotion = () => motion.matches || window.AlphaAppearance?.current?.motion === 'reduced';
     const transitions = new Map();
     const reveal = (panel, direction = 1) => {
         transitions.get(panel)?.cancel();
-        if (motion.matches || !panel?.animate) return;
+        if (reducedMotion() || !panel?.animate) return;
         const animation = panel.animate(
             [{opacity: .75, transform: `translateX(${direction * 6}px)`}, {opacity: 1, transform: 'translateX(0)'}],
             {duration: 160, easing: 'cubic-bezier(.16, 1, .3, 1)'}
@@ -19,7 +20,8 @@ if (tabs.every(Boolean)) {
         transitions.forEach(animation => animation.cancel());
         transitions.clear();
     };
-    motion.addEventListener('change', () => { if (motion.matches) stopTransitions(); });
+    motion.addEventListener('change', () => { if (reducedMotion()) stopTransitions(); });
+    window.addEventListener('alpha:appearance', () => { if (reducedMotion()) stopTransitions(); });
     window.addEventListener('pagehide', stopTransitions);
     const activate = index => {
         if (tabs[index].getAttribute('aria-selected') === 'true') return;

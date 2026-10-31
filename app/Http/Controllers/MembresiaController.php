@@ -34,10 +34,12 @@ class MembresiaController extends Controller
             ->latest()->paginate(15, ['*'], 'solicitudes_page')->withQueryString();
         $membresias = Membresia::with(['cliente:id,nombre', 'pago.registrador:id,name', 'pausas'])
             ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
+            ->when($busqueda && ! $clienteId, fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
             ->latest('inicio')->paginate(15, ['*'], 'membresias_page')->withQueryString();
         $pausasPendientes = PausaMembresia::with(['cliente:id,nombre', 'membresia'])
             ->where('estado', 'pendiente')
             ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
+            ->when($busqueda && ! $clienteId, fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
             ->latest()
             ->get();
         $planes = PlanMembresia::where('activo', true)->orderBy('precio')->get();

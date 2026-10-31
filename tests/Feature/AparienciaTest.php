@@ -12,6 +12,40 @@ class AparienciaTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_preset_mode_can_recover_from_unreadable_custom_draft(): void
+    {
+        $colors = Apariencia::PALETAS['dark'];
+        $user = User::factory()->create(['apariencia' => ['design' => 'green', 'mode' => 'custom', 'colors' => $colors]]);
+        $this->actingAs($user)->postJson(route('configuracion.apariencia'), [
+            'mode' => 'light',
+            'colors' => array_merge($colors, ['text' => $colors['background']]),
+        ])->assertOk()->assertJsonPath('appearance.colors', $colors);
+        $this->assertSame('light', $user->fresh()->apariencia['mode']);
+    }
+
+    public function test_motion_preference_is_persisted_and_preserved_by_theme_toggle(): void
+    {
+        foreach (['web', 'cliente'] as $guard) {
+            $user = $guard === 'web' ? User::factory()->create() : Cliente::create(['nombre' => 'Movimiento', 'correo' => 'motion@example.test', 'activo' => true]);
+            $this->actingAs($user, $guard);
+            $this->postJson(route('configuracion.apariencia'), ['mode' => 'light', 'motion' => 'reduced', 'colors' => Apariencia::PALETAS['light']])
+                ->assertOk()->assertJsonPath('appearance.motion', 'reduced');
+            $this->postJson(route('configuracion.apariencia'), ['mode' => 'dark', 'colors' => Apariencia::PALETAS['light']])
+                ->assertOk()->assertJsonPath('appearance.motion', 'reduced');
+            $this->assertSame('reduced', Apariencia::preferencia($user->fresh())['motion']);
+            $this->get('/configuracion')->assertOk()->assertSee('Reducir movimiento');
+            $this->post(route($guard === 'web' ? 'logout' : 'cliente.logout'));
+        }
+    }
+
+    public function test_invalid_motion_preference_is_rejected_without_mutation(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->postJson(route('configuracion.apariencia'), ['mode' => 'light', 'motion' => 'unsafe', 'colors' => Apariencia::PALETAS['light']])
+            ->assertUnprocessable()->assertJsonValidationErrors('motion');
+        $this->assertNull($user->fresh()->apariencia);
+    }
+
     public function test_guests_cannot_write_preferences(): void
     {
         $this->postJson(route('configuracion.apariencia'), [])->assertUnauthorized();
@@ -29,7 +63,7 @@ class AparienciaTest extends TestCase
                 $colors = Apariencia::PALETAS['dark'];
                 $colors['accent'] = '#aabbcc';
                 $this->postJson(route('configuracion.apariencia'), compact('mode', 'colors'))->assertOk();
-                $this->assertEquals(compact('mode', 'colors') + ['design' => 'elegant'], $user->fresh()->apariencia);
+                $this->assertEquals(compact('mode', 'colors') + ['design' => 'elegant', 'motion' => 'system'], $user->fresh()->apariencia);
                 $this->get('/configuracion')->assertOk()->assertSee('Vista previa de la apariencia');
             }
             $this->post(route('logout'));
@@ -72,7 +106,7 @@ class AparienciaTest extends TestCase
                 foreach (['light', 'dark', 'custom'] as $mode) {
                     $colors = Apariencia::PALETAS['light'];
                     $this->postJson(route('configuracion.apariencia'), compact('design', 'mode', 'colors'))->assertOk()->assertJsonPath('appearance.design', $design);
-                    $this->assertEquals(compact('design', 'mode', 'colors'), Apariencia::preferencia($user->fresh()));
+                    $this->assertEquals(compact('design', 'mode', 'colors') + ['motion' => 'system'], Apariencia::preferencia($user->fresh()));
                     $this->get('/configuracion')->assertOk()->assertSee('Elegante')->assertSee('Verde');
                 }
             }
@@ -84,7 +118,7 @@ class AparienciaTest extends TestCase
     {
         $colors = Apariencia::PALETAS['dark'];
         $user = User::factory()->create(['apariencia' => ['mode' => 'custom', 'colors' => $colors]]);
-        $this->assertEquals(['design' => 'elegant', 'mode' => 'custom', 'colors' => $colors], Apariencia::preferencia($user));
+        $this->assertEquals(['design' => 'elegant', 'mode' => 'custom', 'motion' => 'system', 'colors' => $colors], Apariencia::preferencia($user));
         $this->actingAs($user)->postJson(route('configuracion.apariencia'), ['design' => 'green', 'mode' => 'custom', 'colors' => $colors])->assertOk();
         $this->postJson(route('configuracion.apariencia'), ['mode' => 'dark', 'colors' => $colors])->assertOk()->assertJsonPath('appearance.design', 'green');
         $this->postJson(route('configuracion.apariencia'), ['design' => 'url(unsafe)', 'mode' => 'dark', 'colors' => $colors])->assertUnprocessable();
