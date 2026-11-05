@@ -62,6 +62,7 @@ class ComprobanteVentaTest extends TestCase
 
     public function test_staff_can_send_receipt_by_email(): void
     {
+        config(['mail.default' => 'smtp']);
         Mail::fake();
 
         $secretary = User::create([
@@ -95,6 +96,26 @@ class ComprobanteVentaTest extends TestCase
         Mail::assertSent(ComprobanteVentaMail::class, function ($mail) {
             return $mail->hasTo('cliente_recibo@test.com');
         });
+    }
+
+    public function test_test_mail_transports_do_not_claim_receipts_were_delivered(): void
+    {
+        Mail::fake();
+        $secretary = User::factory()->create(['rol' => 'Secretaria']);
+        $venta = Venta::create(['user_id' => $secretary->id, 'total' => '30.00']);
+
+        foreach (['log', 'array'] as $transport) {
+            config(['mail.default' => $transport]);
+            $this->actingAs($secretary)->from(route('ventas.comprobante', $venta))
+                ->post(route('ventas.enviar-correo', $venta), ['correo' => 'recibo@example.test'])
+                ->assertRedirect(route('ventas.comprobante', $venta))
+                ->assertSessionHas('error', 'El envío de correo no está configurado. Puedes imprimir o guardar este comprobante en PDF.')
+                ->assertSessionMissing('status');
+            $this->get(route('ventas.comprobante', $venta))->assertOk()
+                ->assertSee('El envío de correo no está configurado. Puedes imprimir o guardar este comprobante en PDF.');
+        }
+
+        Mail::assertNothingSent();
     }
 
     public function test_unauthenticated_or_client_cannot_access_receipt_routes(): void

@@ -40,7 +40,9 @@ class EstablecerPasswordController extends Controller
 
     public function show(Request $request, string $token)
     {
-        return view('auth.establecer-password', ['token' => $token, 'email' => $request->string('email')]);
+        $data = $request->validate(['email' => ['nullable', 'string', 'email', 'max:255']]);
+
+        return view('auth.establecer-password', ['token' => $token, 'email' => $data['email'] ?? '']);
     }
 
     public function update(Request $request)

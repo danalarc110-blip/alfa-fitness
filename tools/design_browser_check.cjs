@@ -24,7 +24,7 @@ const out='storage/app/private/design-check';fs.mkdirSync(out,{recursive:true});
   const form=tab.locator(client?'#form-cliente-login':'#form-usuario');
   await form.locator(client?'[name=correo]':'[name=email]').fill(email);
   await form.locator('[name=password]').fill(cfg.password);
-  await Promise.all([tab.waitForURL('**/'+(client?'cliente/dashboard':'dashboard')),form.locator('[type=submit]').click()]);
+  await Promise.all([tab.waitForURL('**/'+(client?'cliente/dashboard':'dashboard'),{waitUntil:'domcontentloaded',timeout:60000}),form.locator('[type=submit]').click()]);
  };
  const save=async(design,mode)=>{
   await page.locator(`[name=design][value=${design}]`).check();
@@ -34,6 +34,7 @@ const out='storage/app/private/design-check';fs.mkdirSync(out,{recursive:true});
   assert.equal(await page.locator('html').getAttribute('data-design'),design);
   assert.equal(await page.locator('html').getAttribute('data-theme'),mode);
  };
+ if(!process.argv.includes('--staff-only')) {
  await visit('/login');
  await acceptPrivacyPlaywright(page);
  await page.screenshot({path:out+'/elegant-login.png',fullPage:true});
@@ -110,6 +111,7 @@ const out='storage/app/private/design-check';fs.mkdirSync(out,{recursive:true});
  await save('elegant','light');
  const csrf=await page.evaluate(async()=> (await fetch('/configuracion/apariencia',{method:'POST',headers:{Accept:'application/json','Content-Type':'application/json'},body:'{}'})).status);
  assert.equal(csrf,419);
+ }
  await ctx.close();
  for(const [role,routes] of Object.entries({administrador:['/dashboard','/cuentas','/productos','/entrenadores'],secretaria:['/dashboard','/asistencia','/membresias','/productos'],entrenador:['/dashboard','/entrenamientos','/ejercicios','/entrenadores']})){
   const staff=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});

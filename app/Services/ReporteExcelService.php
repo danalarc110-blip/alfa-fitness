@@ -56,10 +56,11 @@ class ReporteExcelService
             ['Indicador', 'Valor', 'Detalle'],
             ['Período analizado', "{$periodo['desde']} al {$periodo['hasta']}", "{$periodo['dias']} días"],
             ['Período de comparación', "{$periodo['prev_desde']} al {$periodo['prev_hasta']}", 'Igual número de días y hora de corte'],
-            ['Ingresos totales', $kpis['ingresos_totales'], 'Membresías + Ventas'],
+            ['Ingresos totales', $kpis['ingresos_totales'], 'Membresías + Ventas + Entradas'],
             ['Ingresos por membresías', $kpis['ingresos_membresias'], "{$kpis['porcentaje_membresias']}% del total"],
             ['Ingresos por ventas', $kpis['ingresos_ventas'], "{$kpis['porcentaje_ventas']}% del total"],
-            ['Transacciones totales', $kpis['transacciones_totales'], "{$kpis['transacciones_membresias']} mem. + {$kpis['transacciones_ventas']} ventas"],
+            ['Ingresos por entradas', $kpis['ingresos_entradas'], "{$kpis['porcentaje_entradas']}% del total"],
+            ['Transacciones totales', $kpis['transacciones_totales'], "{$kpis['transacciones_membresias']} mem. + {$kpis['transacciones_ventas']} ventas + {$kpis['transacciones_entradas']} entradas"],
             ['Ticket promedio', $kpis['ticket_promedio'], 'Ingresos / transacciones'],
             ['Ingresos período anterior', $kpis['prev_ingresos_totales'], 'Período previo inmediato'],
             ['Diferencia monetaria', $kpis['diferencia_monetaria'], 'Variación neta'],
@@ -83,7 +84,7 @@ class ReporteExcelService
                 $hojaResumen->getStyle("A{$fila}:C{$fila}")->applyFromArray($estiloCabecera);
             } else {
                 // Formato numérico para importes
-                if (in_array($index, [3, 4, 5, 7, 8, 9, 12, 13, 14, 15, 16], true) && is_numeric($datosFila[1])) {
+                if (in_array($index, [3, 4, 5, 6, 8, 9, 10, 13, 14, 15, 16, 17], true) && is_numeric($datosFila[1])) {
                     $hojaResumen->getStyle('B'.$fila)->getNumberFormat()->setFormatCode(self::FORMATO_MONEDA);
                 }
             }
@@ -152,20 +153,22 @@ class ReporteExcelService
         $hojaDias->setCellValue('A1', 'Fecha');
         $hojaDias->setCellValue('B1', 'Membresías ($)');
         $hojaDias->setCellValue('C1', 'Ventas ($)');
-        $hojaDias->setCellValue('D1', 'Total ($)');
-        $hojaDias->setCellValue('E1', 'Transacciones');
-        $hojaDias->getStyle('A1:E1')->applyFromArray($estiloCabecera);
+        $hojaDias->setCellValue('D1', 'Entradas ($)');
+        $hojaDias->setCellValue('E1', 'Total ($)');
+        $hojaDias->setCellValue('F1', 'Transacciones');
+        $hojaDias->getStyle('A1:F1')->applyFromArray($estiloCabecera);
 
         $f = 2;
         foreach ($datos['serie_diaria'] as $dia) {
             $hojaDias->setCellValueExplicit('A'.$f, $dia['fecha'], DataType::TYPE_STRING);
             $hojaDias->setCellValue('B'.$f, $dia['membresias']);
             $hojaDias->setCellValue('C'.$f, $dia['ventas']);
-            $hojaDias->setCellValue('D'.$f, $dia['total']);
-            $hojaDias->setCellValue('E'.$f, $dia['transacciones']);
+            $hojaDias->setCellValue('D'.$f, $dia['entradas']);
+            $hojaDias->setCellValue('E'.$f, $dia['total']);
+            $hojaDias->setCellValue('F'.$f, $dia['transacciones']);
 
-            $hojaDias->getStyle("B{$f}:D{$f}")->getNumberFormat()->setFormatCode(self::FORMATO_MONEDA);
-            $hojaDias->getStyle('E'.$f)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER);
+            $hojaDias->getStyle("B{$f}:E{$f}")->getNumberFormat()->setFormatCode(self::FORMATO_MONEDA);
+            $hojaDias->getStyle('F'.$f)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER);
             $f++;
         }
 
@@ -251,7 +254,7 @@ class ReporteExcelService
 
         // Totales de conciliación calculados a partir de las filas exportadas.
         foreach ([
-            [$hojaDias, $datos['serie_diaria'], ['B' => 'membresias', 'C' => 'ventas', 'D' => 'total', 'E' => 'transacciones'], ['B', 'C', 'D']],
+            [$hojaDias, $datos['serie_diaria'], ['B' => 'membresias', 'C' => 'ventas', 'D' => 'entradas', 'E' => 'total', 'F' => 'transacciones'], ['B', 'C', 'D', 'E']],
             [$hojaPlanes, $datos['planes'], ['B' => 'pagos', 'C' => 'ingresos'], ['C']],
             [$hojaProductos, $datos['productos'], ['B' => 'unidades', 'D' => 'ingresos'], ['D']],
             [$hojaMetodos, $datos['metodos'], ['B' => 'operaciones', 'C' => 'ingresos'], ['C']],

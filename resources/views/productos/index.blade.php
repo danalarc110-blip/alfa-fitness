@@ -58,7 +58,7 @@
                     <div class="space-y-4">
                         <label>
                             Nombre
-                            <input type="text" name="nombre" value="{{ old('nombre') }}" maxlength="255" required>
+                            <input type="text" name="nombre" value="{{ \App\Support\Formulario::anterior('nombre') }}" maxlength="255" required>
                         </label>
 
                         <label>
@@ -71,12 +71,12 @@
                         <div class="grid grid-cols-2 gap-3">
                             <label>
                                 Precio
-                                <input type="number" name="precio" min="0" max="999999" step="0.01" value="{{ old('precio') }}" required>
+                                <input type="number" name="precio" min="0" max="999999" step="0.01" value="{{ \App\Support\Formulario::anterior('precio') }}" required>
                             </label>
                             @if ($puedeEditarStock)
                                 <label>
                                     Existencias
-                                    <input type="number" name="stock" min="0" max="999999" value="{{ old('stock', 0) }}" required>
+                                    <input type="number" name="stock" min="0" max="999999" value="{{ \App\Support\Formulario::anterior('stock', 0) }}" required>
                                 </label>
                             @endif
                         </div>
@@ -86,7 +86,7 @@
 
                         <label>
                             Categoría
-                            <input type="text" name="categoria" value="{{ old('categoria') }}" maxlength="100" placeholder="Opcional">
+                            <input type="text" name="categoria" value="{{ \App\Support\Formulario::anterior('categoria') }}" maxlength="100" placeholder="Opcional">
                         </label>
 
                         <button type="submit" class="alpha-btn-primary w-full rounded-xl px-4 py-2.5 text-sm font-semibold">Guardar producto</button>

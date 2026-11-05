@@ -215,6 +215,11 @@ class AuditoriaLogicaInvariantesTest extends TestCase
 
     public function test_orphan_visit_older_than_12h_is_auto_closed_on_new_entry_and_aforo_is_not_inflated(): void
     {
+        Membresia::create([
+            'cliente_id' => $this->cliente->id, 'plan' => 'Mensual', 'importe' => '25.00',
+            'inicio' => today()->subDays(2), 'fin' => today()->addDays(27), 'cancelada' => false,
+        ]);
+
         // Visit from 2 days ago without exit
         $orphan = Asistencia::create([
             'cliente_id' => $this->cliente->id,

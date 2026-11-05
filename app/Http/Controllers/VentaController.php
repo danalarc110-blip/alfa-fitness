@@ -55,9 +55,10 @@ class VentaController extends Controller
             });
         }
         $ventas = $query->paginate(15)->withQueryString();
-        $hoyTotal = Venta::whereDate('created_at', today())->sum('total');
+        $puedeVerResumen = Gate::allows('analitica_financiera');
+        $hoyTotal = $puedeVerResumen ? Venta::whereDate('created_at', today())->sum('total') : null;
         $hoyConteo = Venta::whereDate('created_at', today())->count();
-        $mesTotal = Venta::whereYear('created_at', now()->year)->whereMonth('created_at', now()->month)->sum('total');
+        $mesTotal = $puedeVerResumen ? Venta::whereYear('created_at', now()->year)->whereMonth('created_at', now()->month)->sum('total') : null;
         $productos = Producto::where('activo', true)->orderBy('nombre')->get();
         $clientes = Cliente::where('activo', true)->orderBy('nombre')->get(['id', 'nombre', 'correo']);
         $itemsAnteriores = $request->session()->getOldInput('items', []);
@@ -227,6 +228,9 @@ class VentaController extends Controller
     {
         Gate::authorize('inventario');
         $data = $request->validate(['correo' => ['required', 'email', 'max:255']]);
+        if (in_array(config('mail.mailers.'.config('mail.default').'.transport'), ['log', 'array'], true)) {
+            return back()->with('error', 'El envío de correo no está configurado. Puedes imprimir o guardar este comprobante en PDF.');
+        }
         $venta->load(['user', 'cliente', 'detalles.producto']);
         try {
             Mail::to($data['correo'])->send(new ComprobanteVentaMail($venta));

@@ -23,15 +23,15 @@ class EjercicioController extends Controller
             'grupo' => ['nullable', 'string', 'max:100'],
             'q' => ['nullable', 'string', 'max:100'],
         ]);
-        $grupo = $filtros['grupo'] ?? '';
-        $q = $filtros['q'] ?? '';
+        $grupo = trim($filtros['grupo'] ?? '');
+        $q = trim($filtros['q'] ?? '');
 
         $ejerciciosQuery = Ejercicio::query()
             ->when(! Gate::allows('administrar'), fn ($query) => $query->where('activo', true))
             ->withAvg('calificaciones as promedio_estrellas', 'estrellas')
             ->withCount('calificaciones as conteo_votos')
-            ->when($q, fn ($query) => $query->where('nombre', 'like', "%{$q}%"))
-            ->when($grupo && $grupo !== 'Todos', fn ($query) => $query->where('grupo_muscular', $grupo));
+            ->when($q !== '', fn ($query) => $query->where('nombre', 'like', "%{$q}%"))
+            ->when($grupo !== '' && $grupo !== 'Todos', fn ($query) => $query->where('grupo_muscular', $grupo));
 
         $ejercicios = $ejerciciosQuery->orderByDesc('promedio_estrellas')->orderByDesc('conteo_votos')->orderBy('nombre')->paginate(18)->withQueryString();
         $misVotos = EjercicioCalificacion::where('user_type', $guard)
@@ -59,7 +59,7 @@ class EjercicioController extends Controller
             'avatarUrl' => $user->avatar_url,
             'ejercicios' => $ejercicios,
             'gruposMusculares' => $gruposMusculares,
-            'grupoSeleccionado' => $grupo ?: 'Todos',
+            'grupoSeleccionado' => $grupo !== '' ? $grupo : 'Todos',
             'busqueda' => $q,
         ]);
     }
@@ -124,7 +124,7 @@ class EjercicioController extends Controller
                 $ejercicio = Ejercicio::create([
                     'nombre' => trim($data['nombre']),
                     'grupo_muscular' => trim($data['grupo_muscular']),
-                    'subgrupo' => ! empty($data['subgrupo']) ? trim($data['subgrupo']) : null,
+                    'subgrupo' => isset($data['subgrupo']) && $data['subgrupo'] !== '' ? trim($data['subgrupo']) : null,
                     'activo' => true,
                 ]);
 
@@ -182,7 +182,7 @@ class EjercicioController extends Controller
                 $actualizar = [
                     'nombre' => trim($data['nombre']),
                     'grupo_muscular' => trim($data['grupo_muscular']),
-                    'subgrupo' => ! empty($data['subgrupo']) ? trim($data['subgrupo']) : null,
+                    'subgrupo' => isset($data['subgrupo']) && $data['subgrupo'] !== '' ? trim($data['subgrupo']) : null,
                 ];
 
                 if ($request->hasFile('imagen')) {

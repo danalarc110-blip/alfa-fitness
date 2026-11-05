@@ -18,7 +18,7 @@ class CuentasController extends Controller
         $q = $filtros['q'] ?? '';
         $cuentas = Cliente::query()
             ->select(['id', 'nombre', 'correo', 'activo', 'created_at'])
-            ->when($q, fn ($query) => $query->where(fn ($search) => $search
+            ->when($q !== '', fn ($query) => $query->where(fn ($search) => $search
                 ->where('nombre', 'like', "%{$q}%")
                 ->orWhere('correo', 'like', "%{$q}%")))
             ->latest('created_at')

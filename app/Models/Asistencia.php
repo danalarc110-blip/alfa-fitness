@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Asistencia extends Model
 {
@@ -14,6 +15,7 @@ class Asistencia extends Model
         'fecha_hora',
         'fecha_salida',
         'tipo_acceso',
+        'entrada_uuid',
     ];
 
     protected function casts(): array
@@ -37,6 +39,16 @@ class Asistencia extends Model
     public function registradorSalida(): BelongsTo
     {
         return $this->belongsTo(User::class, 'salida_registrada_por');
+    }
+
+    public function pagoEntrada(): HasOne
+    {
+        return $this->hasOne(PagoEntrada::class);
+    }
+
+    public function getEsHuerfanaAttribute(): bool
+    {
+        return ! $this->fecha_salida && $this->fecha_hora->lt(now()->subHours(12));
     }
 
     public function getDuracionAttribute(): ?string

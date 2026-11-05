@@ -30,11 +30,9 @@ class DashboardMetricasIntegridadTest extends TestCase
         Venta::create(['user_id' => $admin->id, 'total' => '0.10', 'metodo_pago' => 'Efectivo']);
 
         $this->actingAs($admin)->get(route('dashboard'))->assertOk()
-            ->assertViewHas('metricas', function ($metricas) {
-                $valores = collect($metricas)->pluck(1, 0);
-
-                return $valores['Membresías cobradas'] === '$0.00'
-                    && $valores['Ingresos este mes'] === '$0.10';
+            ->assertViewHas('finanzas', function ($finanzas) {
+                return $finanzas['datos']['kpis']['ingresos_membresias'] === 0.0
+                    && $finanzas['datos']['kpis']['ingresos_totales'] === 0.10;
             });
 
         $analitica = app(AnaliticaFinancieraService::class)->obtenerAnalitica(

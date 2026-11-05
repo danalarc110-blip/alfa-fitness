@@ -38,7 +38,9 @@
 
 <section id="venta-historial" aria-label="Historial y comprobantes" @class(['hidden' => !$mostrarHistorial])>
 {{-- MÉTRICAS DE VENTAS --}}
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 sm:mb-8">
+<div @class(['grid grid-cols-1 gap-4 mb-6 sm:mb-8', 'sm:grid-cols-3' => \Illuminate\Support\Facades\Gate::allows('analitica_financiera')])>
+    @can('analitica_financiera')
+    <div class="contents" data-sales-financial-summary>
     <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden">
         <div class="flex items-center justify-between mb-2">
             <span class="text-xs font-semibold text-gray-400">Ventas Hoy</span>
@@ -60,6 +62,8 @@
         <p class="text-2xl font-black text-white">${{ number_format($mesTotal, 2) }}</p>
         <p class="text-[11px] text-gray-500 mt-1">{{ now()->translatedFormat('F Y') }}</p>
     </div>
+    </div>
+    @endcan
 
     <div class="alpha-card rounded-2xl p-5 border border-white/10 relative overflow-hidden">
         <div class="flex items-center justify-between mb-2">
@@ -104,7 +108,7 @@
                 <input type="date" name="hasta" aria-label="Ventas hasta" value="{{ $hasta }}" class="bg-transparent text-xs text-white focus:outline-none">
             </div>
             <button type="submit" class="alpha-btn-primary px-3.5 py-1.5 rounded-xl text-xs font-semibold">Filtrar</button>
-            @if($desde || $hasta || !empty($busqueda) || !empty($metodoSeleccionado))
+            @if($desde || $hasta || $busqueda !== '' || !empty($metodoSeleccionado))
                 <a href="{{ route('ventas.index', ['vista' => 'historial']) }}" class="alpha-btn-secondary px-3 py-1.5 rounded-xl text-xs">Limpiar</a>
             @endif
         </form>

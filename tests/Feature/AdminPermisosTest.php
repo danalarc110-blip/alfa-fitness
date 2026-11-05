@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Asistencia;
 use App\Models\Cliente;
+use App\Models\Membresia;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -35,7 +36,12 @@ class AdminPermisosTest extends TestCase
             'activo' => true,
         ]);
 
-        // Admin registers entry
+        Membresia::create([
+            'cliente_id' => $cliente->id, 'plan' => 'Mensual', 'importe' => '25.00',
+            'inicio' => today(), 'fin' => today()->addDays(29), 'cancelada' => false,
+        ]);
+
+        // Admin registers entry for a member whose access is already covered.
         $this->actingAs($admin)
             ->post(route('asistencia.store'), ['cliente_id' => $cliente->id])
             ->assertRedirect()

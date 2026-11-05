@@ -24,14 +24,14 @@ class AsistenciaController extends Controller
         ]);
         $busqueda = $filtros['q'] ?? '';
         $clientes = Cliente::where('activo', true)
-            ->when($busqueda, fn ($q) => $q->where(fn ($s) => $s->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
-            ->with(['asistencias' => fn ($q) => $q->whereNull('fecha_salida')->where('fecha_hora', '>=', now()->subHours(12))->latest('fecha_hora'),
-                'ultimaMembresia'])
+            ->when($busqueda !== '', fn ($q) => $q->where(fn ($s) => $s->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
+            ->with(['asistencias' => fn ($q) => $q->whereNull('fecha_salida')->where('fecha_hora', '>=', now()->subHours(12))->latest('fecha_hora')->with('pagoEntrada'),
+                'ultimaMembresia', 'membresiasParaAcceso.pausas', 'ultimaMembresiaRegistrada'])
             ->orderBy('nombre')->paginate(12, ['*'], 'clientes_page')->withQueryString();
 
-        $asistencias = Asistencia::with(['cliente:id,nombre,correo', 'registrador:id,name', 'registradorSalida:id,name'])
+        $asistencias = Asistencia::with(['cliente:id,nombre,correo', 'registrador:id,name', 'registradorSalida:id,name', 'pagoEntrada'])
             ->when($filtros['cliente_id'] ?? null, fn ($q, $id) => $q->where('cliente_id', $id))
-            ->when($busqueda, fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
+            ->when($busqueda !== '', fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
             ->when($filtros['desde'] ?? null, fn ($q, $fecha) => $q->where('fecha_hora', '>=', $fecha.' 00:00:00'))
             ->when($filtros['hasta'] ?? null, fn ($q, $fecha) => $q->where('fecha_hora', '<=', $fecha.' 23:59:59'))
             ->when(($filtros['estado'] ?? '') === 'abierta', fn ($q) => $q->whereNull('fecha_salida'))
@@ -39,7 +39,7 @@ class AsistenciaController extends Controller
             ->latest('fecha_hora')->paginate(20, ['*'], 'historial_page')->withQueryString();
 
         $visitasActuales = Asistencia::whereNull('fecha_salida')->where('fecha_hora', '>=', now()->subHours(12));
-        $dentroAhora = (clone $visitasActuales)->with('cliente:id,nombre,correo')->oldest('fecha_hora')->limit(100)->get();
+        $dentroAhora = (clone $visitasActuales)->with(['cliente:id,nombre,correo', 'pagoEntrada'])->oldest('fecha_hora')->limit(100)->get();
         $hoy = Asistencia::whereBetween('fecha_hora', [today(), today()->endOfDay()])->count();
         $dentro = $visitasActuales->count();
         $huerfanasCount = Asistencia::whereNull('fecha_salida')->where('fecha_hora', '<', now()->subHours(12))->count();
@@ -50,16 +50,24 @@ class AsistenciaController extends Controller
     public function store(Request $request)
     {
         abort_unless(auth('web')->user()?->can('asistencia'), 403);
-        $data = $request->validate(['cliente_id' => ['required', 'exists:clientes,id']]);
-        app(RegistroAsistencia::class)->registrar((int) $data['cliente_id'], auth('web')->id(), false);
+        $data = $request->validate([
+            'cliente_id' => ['required', 'integer', 'exists:clientes,id'],
+            'pago_entrada_confirmado' => ['nullable', 'boolean'],
+            'entrada_uuid' => ['nullable', 'uuid'],
+        ]);
+        $asistencia = app(RegistroAsistencia::class)->registrar((int) $data['cliente_id'], auth('web')->id(), false,
+            $request->boolean('pago_entrada_confirmado'), $data['entrada_uuid'] ?? null);
+        $mensaje = ! $asistencia->wasRecentlyCreated
+            ? 'Esta entrada ya estaba registrada. No se registró otro cobro.'
+            : ($asistencia->pagoEntrada ? 'Entrada registrada. Cobro de $2.00 registrado.' : 'Entrada registrada. Membresía vigente.');
 
-        return back()->with('status', 'Entrada registrada.');
+        return back()->with('status', $mensaje);
     }
 
     public function salida(Request $request)
     {
         abort_unless(auth('web')->user()?->can('asistencia'), 403);
-        $data = $request->validate(['cliente_id' => ['required', 'exists:clientes,id']]);
+        $data = $request->validate(['cliente_id' => ['required', 'integer', 'exists:clientes,id']]);
         app(RegistroAsistencia::class)->registrar((int) $data['cliente_id'], auth('web')->id(), true);
 
         return back()->with('status', 'Salida registrada.');
@@ -77,9 +85,9 @@ class AsistenciaController extends Controller
         ]);
         $busqueda = $filtros['q'] ?? '';
 
-        $asistencias = Asistencia::with(['cliente:id,nombre', 'registrador:id,name', 'registradorSalida:id,name'])
+        $asistencias = Asistencia::with(['cliente:id,nombre', 'registrador:id,name', 'registradorSalida:id,name', 'pagoEntrada'])
             ->when($filtros['cliente_id'] ?? null, fn ($q, $id) => $q->where('cliente_id', $id))
-            ->when($busqueda, fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
+            ->when($busqueda !== '', fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
             ->when($filtros['desde'] ?? null, fn ($q, $fecha) => $q->where('fecha_hora', '>=', $fecha.' 00:00:00'))
             ->when($filtros['hasta'] ?? null, fn ($q, $fecha) => $q->where('fecha_hora', '<=', $fecha.' 23:59:59'))
             ->when(($filtros['estado'] ?? '') === 'abierta', fn ($q) => $q->whereNull('fecha_salida'))
@@ -92,7 +100,7 @@ class AsistenciaController extends Controller
         $callback = function () use ($asistencias) {
             $handle = fopen('php://output', 'w');
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
-            fputcsv($handle, ['ID', 'Cliente', 'Fecha Entrada', 'Fecha Salida', 'Duración', 'Registrado Por', 'Salida Por'], ',', '"', '');
+            fputcsv($handle, ['ID', 'Cliente', 'Fecha Entrada', 'Fecha Salida', 'Duración', 'Registrado Por', 'Salida Por', 'Cobro por entrada (USD)'], ',', '"', '');
 
             // Eager-load relations per bounded batch without materializing the full history.
             foreach ($asistencias->lazy(500) as $a) {
@@ -100,10 +108,11 @@ class AsistenciaController extends Controller
                     $a->id,
                     $a->cliente->nombre ?? 'N/A',
                     $a->fecha_hora->format('Y-m-d H:i:s'),
-                    $a->fecha_salida ? $a->fecha_salida->format('Y-m-d H:i:s') : 'En curso',
-                    $a->duracion ?? 'En gimnasio',
+                    $a->fecha_salida ? $a->fecha_salida->format('Y-m-d H:i:s') : ($a->es_huerfana ? 'Salida sin registrar' : 'En curso'),
+                    $a->duracion ?? ($a->es_huerfana ? 'Sin salida registrada' : 'En gimnasio'),
                     $a->registrador->name ?? 'Sistema',
                     $a->registradorSalida->name ?? ($a->fecha_salida ? 'Sistema' : ''),
+                    $a->pagoEntrada?->importe ?? '',
                 ];
                 // CSV quoting alone does not prevent spreadsheet formula execution.
                 $fila = array_map(static function ($valor) {
@@ -160,6 +169,7 @@ class AsistenciaController extends Controller
         $cliente = auth('cliente')->user();
 
         $asistencias = Asistencia::where('cliente_id', $cliente->id)
+            ->with('pagoEntrada')
             ->latest('fecha_hora')
             ->paginate(15);
 

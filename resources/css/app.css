@@ -4,6 +4,7 @@
 @import './ventas.css';
 @import './motion.css';
 @import './privacy.css';
+@import './dashboard.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../**/*.blade.php';

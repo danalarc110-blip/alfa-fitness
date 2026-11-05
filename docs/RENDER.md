@@ -6,6 +6,7 @@ La configuración de `render.yaml` utiliza un servicio web gratuito y una base P
 
 - Código, catálogos y frontend compilado durante la construcción de la imagen.
 - Registros de negocio de la base local, con sus identificadores, contraseñas protegidas y relaciones existentes; no se migran sesiones, cachés ni enlaces temporales de recuperación.
+- Cobros de entradas individuales y sus claves de reintento: `pagos_entrada` se transfiere después de sus asistencias y operadores. Las visitas históricas sin cobro registrado se conservan sin generar pagos nuevos.
 - Imágenes subidas que no están versionadas, transferidas por un canal privado.
 - Cuentas y datos ficticios para Secretaría, Entrenador y Cliente, preparados mediante `demo:prepare`. El administrador conserva sus credenciales.
 
@@ -26,6 +27,8 @@ El Blueprint debe aplicarse desde el repositorio remoto con `render.yaml` ya pub
 Después de que exista el servicio, se cargan `APP_KEY` y las variables privadas del paquete mediante actualización de variables de entorno, conservando las demás variables. En PostgreSQL, las migraciones preparan el esquema y después se importan los registros en una transacción únicamente cuando no existen datos de negocio. Los arranques posteriores conservan los registros existentes. El paquete también recupera los archivos iniciales de demostración en el almacenamiento local temporal.
 
 El arranque ejecuta únicamente migraciones pendientes y prepara las cachés. No ejecuta `migrate:fresh`, no reinicia catálogos y no vuelve a crear las cuentas demo.
+
+La migración de cobros por entrada añade una tabla de pagos y `entrada_uuid` a `asistencias` sin cobrar visitas anteriores. Antes de exportar una base local nueva, aplica sus migraciones pendientes. En un Render que ya contiene datos, basta publicar el código y aplicar las migraciones del arranque; no vuelvas a importar la base para activar esta función.
 
 ## Persistencia y disponibilidad
 

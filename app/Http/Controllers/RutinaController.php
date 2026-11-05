@@ -326,9 +326,9 @@ class RutinaController extends Controller
         $this->autorizarPropietario($dia->rutina);
 
         $data = $request->validate([
-            'orden' => ['required', 'array'],
+            'orden' => ['required', 'array', 'list'],
             'orden.*' => ['integer', 'distinct', Rule::exists('rutina_ejercicios', 'id')->where('rutina_dia_id', $dia->id)],
-        ]);
+        ], ['orden.list' => 'No se pudo leer el orden de los ejercicios. Recarga la rutina e inténtalo de nuevo.']);
 
         DB::transaction(function () use ($data, $dia) {
             $dia = RutinaDia::whereKey($dia->id)->lockForUpdate()->firstOrFail();
@@ -418,11 +418,8 @@ class RutinaController extends Controller
 
         $rutina->load(['dias.ejercicios.ejercicio']);
 
-        if (! $dia || $dia->rutina_id !== $rutina->id) {
-            $diaSeleccionado = $rutina->dias->first();
-        } else {
-            $diaSeleccionado = $dia;
-        }
+        abort_if($dia && $dia->rutina_id !== $rutina->id, 404);
+        $diaSeleccionado = $dia ? $rutina->dias->firstWhere('id', $dia->id) : $rutina->dias->first();
 
         return view('entrenamientos.entrenar', [
             'guard' => $guard,
@@ -459,6 +456,16 @@ class RutinaController extends Controller
     {
         $this->autorizarPropietario($rutina);
         ['guard' => $guard, 'user' => $user] = $this->actual();
+
+        $identidad = $request->validate(['sesion_uuid' => ['nullable', 'uuid']]);
+        if (! empty($identidad['sesion_uuid'])) {
+            $existente = SesionEntrenamiento::where('sesion_uuid', strtolower($identidad['sesion_uuid']))->first();
+            if ($existente) {
+                abort_unless($existente->user_type === $guard && $existente->user_id === $user->id && $existente->rutina_id === $rutina->id, 403);
+
+                return $this->respuestaSesion($request, $existente);
+            }
+        }
 
         $data = $request->validate([
             'dia_id' => ['nullable', 'integer', Rule::exists('rutina_dias', 'id')->where('rutina_id', $rutina->id)],
@@ -509,6 +516,11 @@ class RutinaController extends Controller
             $sesion = SesionEntrenamiento::create($atributos);
         }
 
+        return $this->respuestaSesion($request, $sesion);
+    }
+
+    private function respuestaSesion(Request $request, SesionEntrenamiento $sesion): JsonResponse|RedirectResponse
+    {
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'ok' => true,

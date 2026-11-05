@@ -29,17 +29,17 @@ class MembresiaController extends Controller
         $estado = $filtros['estado'] ?? '';
         $solicitudes = SolicitudMembresia::with(['cliente:id,nombre,correo', 'membresia.pago.registrador:id,name'])
             ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
-            ->when($busqueda && ! $clienteId, fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
+            ->when($busqueda !== '' && ! $clienteId, fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
             ->when($estado, fn ($q) => $q->where('estado', $estado))
             ->latest()->paginate(15, ['*'], 'solicitudes_page')->withQueryString();
         $membresias = Membresia::with(['cliente:id,nombre', 'pago.registrador:id,name', 'pausas'])
             ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
-            ->when($busqueda && ! $clienteId, fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
+            ->when($busqueda !== '' && ! $clienteId, fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
             ->latest('inicio')->paginate(15, ['*'], 'membresias_page')->withQueryString();
         $pausasPendientes = PausaMembresia::with(['cliente:id,nombre', 'membresia'])
             ->where('estado', 'pendiente')
             ->when($clienteId, fn ($q) => $q->where('cliente_id', $clienteId))
-            ->when($busqueda && ! $clienteId, fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
+            ->when($busqueda !== '' && ! $clienteId, fn ($q) => $q->whereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%{$busqueda}%")->orWhere('correo', 'like', "%{$busqueda}%")))
             ->latest()
             ->get();
         $planes = PlanMembresia::where('activo', true)->orderBy('precio')->get();
@@ -236,6 +236,10 @@ class MembresiaController extends Controller
 
             if ($pausaBloqueada->fin_pausa_estimada->isBefore(today())) {
                 throw ValidationException::withMessages(['pausa' => 'El período solicitado para la pausa ya transcurrió en el pasado.']);
+            }
+
+            if ($pausaBloqueada->inicio_pausa->isBefore(today())) {
+                throw ValidationException::withMessages(['pausa' => 'La fecha de inicio de la pausa ya pasó. Rechaza esta solicitud y pide una nueva con fecha vigente; no se añadieron días.']);
             }
 
             if ($membresia->diasPausadosAcumulados() + $pausaBloqueada->dias > 30) {

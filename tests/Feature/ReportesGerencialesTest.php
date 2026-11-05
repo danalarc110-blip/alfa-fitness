@@ -53,7 +53,7 @@ class ReportesGerencialesTest extends TestCase
         }
         $datos = $this->analitica('2026-10-01', '2026-10-01');
         $this->assertSame($variacion, $datos['kpis']['variacion_porcentual']);
-        $this->assertSame($variacion, $datos['comparativo'][2]['variacion']);
+        $this->assertSame($variacion, collect($datos['comparativo'])->firstWhere('indicador', 'Ingresos totales')['variacion']);
         $this->assertSame($diferencia, $datos['kpis']['diferencia_monetaria']);
         if ($variacion === null) {
             $this->assertStringContainsString('No calculable', $datos['kpis']['variacion_texto']);
@@ -158,9 +158,9 @@ class ReportesGerencialesTest extends TestCase
             file_put_contents($path, $bytes);
             $book = IOFactory::load($path);
             $this->assertSame($datos['reporte']['codigo'], $book->getSheetByName('Resumen')->getCell('B25')->getValue());
-            $this->assertEquals($datos['kpis']['ingresos_totales'], $book->getSheetByName('Ingresos por día')->getCell('D3')->getValue());
-            $this->assertEquals($datos['comparativo'][2]['actual'], $book->getSheetByName('Comparativo')->getCell('B4')->getValue());
-            $this->assertSame('No calculable', $book->getSheetByName('Comparativo')->getCell('E4')->getValue());
+            $this->assertEquals($datos['kpis']['ingresos_totales'], $book->getSheetByName('Ingresos por día')->getCell('E3')->getValue());
+            $this->assertEquals($datos['kpis']['ingresos_totales'], $book->getSheetByName('Comparativo')->getCell('B5')->getValue());
+            $this->assertSame('No calculable', $book->getSheetByName('Comparativo')->getCell('E5')->getValue());
             $this->assertStringContainsString('no representan utilidad', implode(' ', array_filter(array_column($book->getSheetByName('Resumen')->toArray(), 0))));
             $book->disconnectWorksheets();
         } finally {

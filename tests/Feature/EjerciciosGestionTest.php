@@ -56,4 +56,20 @@ class EjerciciosGestionTest extends TestCase
         $this->actingAs($admin)->patch(route('ejercicios.toggle', $ejercicio))->assertRedirect();
         $this->assertTrue($ejercicio->fresh()->activo);
     }
+
+    public function test_zero_subgroup_text_is_preserved_when_creating_and_updating_an_exercise(): void
+    {
+        $admin = User::factory()->create(['rol' => 'Administrador']);
+        $this->actingAs($admin)->post(route('ejercicios.store'), [
+            'nombre' => 'Ejercicio con subgrupo cero', 'grupo_muscular' => 'Hombros', 'subgrupo' => '0',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+        $ejercicio = Ejercicio::where('nombre', 'Ejercicio con subgrupo cero')->firstOrFail();
+        $this->assertSame('0', $ejercicio->subgrupo);
+
+        $ejercicio->update(['subgrupo' => 'Otro subgrupo']);
+        $this->put(route('ejercicios.update', $ejercicio), [
+            'nombre' => $ejercicio->nombre, 'grupo_muscular' => 'Hombros', 'subgrupo' => '0',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame('0', $ejercicio->fresh()->subgrupo);
+    }
 }

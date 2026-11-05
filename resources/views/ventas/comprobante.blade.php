@@ -121,7 +121,7 @@
             <div>
                 <label for="correo_destino" class="block text-xs font-semibold text-gray-300 mb-1.5">Correo Electrónico de Destino:</label>
                 <input type="email" id="correo_destino" name="correo" required
-                    value="{{ old('correo', $venta->cliente?->correo) }}"
+                    value="{{ \App\Support\Formulario::anterior('correo', $venta->cliente?->correo) }}"
                     placeholder="cliente@ejemplo.com"
                     class="alpha-input w-full px-4 py-3 rounded-xl bg-black/50 border border-white/10 text-white text-sm focus:border-yellow-400 focus:outline-none">
             </div>

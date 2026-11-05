@@ -4,7 +4,7 @@
 <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-white/5">
                 <div>
                     <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Asistencia</h1>
-                    <p class="text-gray-400 text-xs mt-1">Control de entrada y salida de clientes.</p>
+                    <p class="text-gray-400 text-xs mt-1">Con membresía vigente, el acceso está incluido. Sin membresía vigente, cada entrada cuesta ${{ \App\Services\RegistroAsistencia::TARIFA_ENTRADA_DIARIA }}.</p>
                 </div>
 
                 <button type="button" onclick="alphaToggleTema()" title="Cambiar tema"
@@ -89,8 +89,11 @@
                             @foreach ($clientes as $cliente)
                                 @php
                                     $entradaAbierta = $cliente->asistencias->first();
-                                    $membresia = $cliente->ultimaMembresia;
-                                    $estadoMembresia = $membresia?->estado ?? 'Sin membresia';
+                                    $acceso = $cliente->acceso_entrada;
+                                    $estadoMembresia = $acceso['membresia_estado'];
+                                    $reintentoEntrada = \App\Support\Formulario::anterior('cliente_id') === (string) $cliente->id;
+                                    $uuidEntrada = $reintentoEntrada && is_string(old('entrada_uuid')) && \Illuminate\Support\Str::isUuid(old('entrada_uuid'))
+                                        ? old('entrada_uuid') : (string) \Illuminate\Support\Str::uuid();
                                 @endphp
                                 <div class="bg-black/40 border border-white/10 rounded-xl p-4 flex flex-col gap-4">
                                     <div class="flex items-start justify-between gap-3">
@@ -117,12 +120,25 @@
                                                 Registrar salida
                                             </button>
                                         </form>
+                                    @elseif (!$acceso['puede_entrar'])
+                                        <p class="text-xs text-gray-400">{{ $acceso['motivo'] }}</p>
+                                        <button type="button" class="alpha-btn-secondary w-full px-4 py-2.5" disabled>Acceso no disponible</button>
                                     @else
-                                        <form method="POST" action="{{ route('asistencia.store') }}">
+                                        <form method="POST" action="{{ route('asistencia.store') }}" data-entrada-cliente="{{ $cliente->id }}" class="space-y-3">
                                             @csrf
                                             <input type="hidden" name="cliente_id" value="{{ $cliente->id }}">
+                                            <input type="hidden" name="entrada_uuid" value="{{ $uuidEntrada }}">
+                                            @if($acceso['requiere_pago'])
+                                                <p class="text-sm font-semibold">Pago por entrada: ${{ $acceso['importe'] }}</p>
+                                                <label class="flex items-start gap-2 text-xs leading-relaxed">
+                                                    <input type="checkbox" name="pago_entrada_confirmado" value="1" required class="mt-0.5 shrink-0" @checked($reintentoEntrada && old('pago_entrada_confirmado') === '1')>
+                                                    <span>He recibido ${{ $acceso['importe'] }} por esta entrada.</span>
+                                                </label>
+                                            @else
+                                                <p class="text-xs text-gray-400">Acceso incluido en su membresía vigente.</p>
+                                            @endif
                                             <button type="submit" class="alpha-btn-primary w-full rounded-xl px-4 py-2.5 text-sm font-semibold">
-                                                Registrar entrada
+                                                {{ $acceso['requiere_pago'] ? 'Confirmar cobro y registrar entrada' : 'Registrar entrada' }}
                                             </button>
                                         </form>
                                     @endif
@@ -139,8 +155,7 @@
 
                 <aside class="alpha-card rounded-2xl p-5 sm:p-6 h-fit min-w-0">
                     <div class="flex items-center justify-between gap-3 mb-4">
-                        <h2 class="text-base font-bold text-white">Historial mensual</h2>
-                        <span class="text-xs font-semibold text-gray-500">{{ now()->format('m/Y') }}</span>
+                        <h2 class="text-base font-bold text-white">Historial de visitas</h2>
                     </div>
 
                     @if ($asistencias->isNotEmpty())
@@ -152,8 +167,8 @@
                                             <p class="text-sm font-semibold text-white truncate">{{ $asistencia->cliente->nombre }}</p>
                                             <p class="text-[11px] text-gray-500">{{ $asistencia->fecha_hora->format('d/m/Y') }}</p>
                                         </div>
-                                        <span class="shrink-0 inline-flex px-2 py-1 rounded-lg text-[11px] font-bold {{ $asistencia->fecha_salida ? 'bg-white/5 text-gray-300 border border-white/10' : 'bg-green-400/10 text-green-300 border border-green-400/20' }}">
-                                            {{ $asistencia->fecha_salida ? 'Cerrada' : 'Abierta' }}
+                                        <span class="shrink-0 inline-flex px-2 py-1 rounded-lg text-[11px] font-bold {{ $asistencia->fecha_salida || $asistencia->es_huerfana ? 'bg-white/5 text-gray-300 border border-white/10' : 'bg-green-400/10 text-green-300 border border-green-400/20' }}">
+                                            {{ $asistencia->fecha_salida ? 'Cerrada' : ($asistencia->es_huerfana ? 'Salida sin registrar' : 'Abierta') }}
                                         </span>
                                     </div>
 
@@ -164,18 +179,21 @@
                                         </div>
                                         <div class="rounded-lg bg-white/[0.03] px-3 py-2">
                                             <span class="block text-gray-500">Salida</span>
-                                            <strong class="text-gray-200">{{ $asistencia->fecha_salida?->format('H:i') ?? 'Pendiente' }}</strong>
+                                            <strong class="text-gray-200">{{ $asistencia->fecha_salida?->format('H:i') ?? ($asistencia->es_huerfana ? 'Sin registrar' : 'Pendiente') }}</strong>
                                         </div>
                                     </div>
 
-                                    <p class="text-[11px] text-gray-500 mt-2">Duracion: {{ $asistencia->duracion ?? 'En curso' }}</p>
+                                    <p class="text-[11px] text-gray-500 mt-2">Duración: {{ $asistencia->duracion ?? ($asistencia->es_huerfana ? 'Sin salida registrada' : 'En curso') }}</p>
+                                    @if($asistencia->pagoEntrada)
+                                        <p class="text-xs font-semibold mt-2">Entrada diaria cobrada: ${{ $asistencia->pagoEntrada->importe }}</p>
+                                    @endif
                                     <p class="text-[11px] text-gray-500 mt-1">Entrada por: {{ $asistencia->registrador?->name ?? 'Registro anterior' }} · Salida por: {{ $asistencia->registradorSalida?->name ?? ($asistencia->fecha_salida ? 'Registro anterior' : 'Pendiente') }}</p>
                                 </div>
                             @endforeach
                         </div>
                     @else
                         <div class="py-10 text-center">
-                            <p class="text-sm text-gray-400">No hay asistencias registradas este mes.</p>
+                            <p class="text-sm text-gray-400">No hay visitas para los filtros seleccionados.</p>
                         </div>
                     @endif
                 </aside>

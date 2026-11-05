@@ -8,6 +8,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="alpha-app alpha-public min-h-screen bg-black text-white flex items-center justify-center p-5">
+    @php($correoNoDisponible = in_array(config('mail.mailers.'.config('mail.default').'.transport'), ['log', 'array'], true))
     <main class="alpha-card rounded-2xl p-7 w-full max-w-md shadow-2xl border border-white/10">
         <div class="flex items-center gap-3 mb-6">
             <div class="w-10 h-10 rounded-xl bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 flex items-center justify-center shrink-0">
@@ -22,9 +23,11 @@
             </div>
         </div>
 
-        <p class="text-sm text-gray-400 mb-6">
-            Ingresa tu correo electrónico registrado. Si coincide con una cuenta activa, te enviaremos un enlace seguro para restablecer tu contraseña.
-        </p>
+        @if($correoNoDisponible)
+            <p role="status" class="text-sm text-gray-400 mb-6">El envío de correo todavía no está habilitado. No recibirás un enlace de recuperación desde esta página. Contacta con el administrador del gimnasio para recuperar tu acceso.</p>
+        @else
+            <p class="text-sm text-gray-400 mb-6">Ingresa tu correo electrónico registrado. Si coincide con una cuenta activa, te enviaremos un enlace seguro para restablecer tu contraseña.</p>
+        @endif
 
         @if (session('status'))
             <div class="mb-5 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-medium">
@@ -40,14 +43,16 @@
 
         <form method="POST" action="{{ route('password.email') }}" class="alpha-form space-y-4">
             @csrf
+            <fieldset class="space-y-4" @disabled($correoNoDisponible)>
             <label>
                 Correo electrónico
-                <input type="email" name="email" value="{{ old('email') }}" maxlength="255" autocomplete="email" required placeholder="tu-correo@ejemplo.com">
+                <input type="email" name="email" value="{{ \App\Support\Formulario::anterior('email') }}" maxlength="255" autocomplete="email" required placeholder="tu-correo@ejemplo.com">
             </label>
 
             <button type="submit" class="alpha-btn-primary w-full rounded-xl px-4 py-3 text-sm font-semibold">
-                Enviar enlace de recuperación
+                {{ $correoNoDisponible ? 'Envío no disponible' : 'Enviar enlace de recuperación' }}
             </button>
+            </fieldset>
         </form>
 
         <div class="mt-6 pt-5 border-t border-white/10 text-center">

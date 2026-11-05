@@ -22,12 +22,12 @@ class ReporteExcelSeguridadTest extends TestCase
             file_put_contents($path, $bytes);
             $book = IOFactory::load($path);
             $this->assertSame(['Resumen', 'Ingresos por día', 'Membresías', 'Productos', 'Métodos de pago', 'Comparativo'], $book->getSheetNames());
-            foreach ([['Resumen', 'C19', '=1+1'], ['Resumen', 'C20', '+1+1'], ['Resumen', 'C21', '@SUM(1)'], ['Membresías', 'A2', '=1+1'], ['Productos', 'A2', '+1+1'], ['Métodos de pago', 'A2', '-1+1']] as [$sheet, $coord, $value]) {
+            foreach ([['Resumen', 'C20', '=1+1'], ['Resumen', 'C21', '+1+1'], ['Resumen', 'C22', '@SUM(1)'], ['Membresías', 'A2', '=1+1'], ['Productos', 'A2', '+1+1'], ['Métodos de pago', 'A2', '-1+1']] as [$sheet, $coord, $value]) {
                 $cell = $book->getSheetByName($sheet)->getCell($coord);
                 $this->assertSame($value, $cell->getValue());
                 $this->assertSame(DataType::TYPE_STRING, $cell->getDataType());
             }
-            foreach ([['Resumen', 'B7', 125.5], ['Ingresos por día', 'D2', 125.5], ['Membresías', 'C2', 100.0], ['Productos', 'D2', 25.5], ['Métodos de pago', 'C2', 125.5]] as [$sheet, $coord, $value]) {
+            foreach ([['Resumen', 'B7', 125.5], ['Ingresos por día', 'E2', 125.5], ['Membresías', 'C2', 100.0], ['Productos', 'D2', 25.5], ['Métodos de pago', 'C2', 125.5]] as [$sheet, $coord, $value]) {
                 $cell = $book->getSheetByName($sheet)->getCell($coord);
                 $this->assertSame(DataType::TYPE_NUMERIC, $cell->getDataType());
                 $this->assertEquals($value, $cell->getValue());
@@ -40,8 +40,8 @@ class ReporteExcelSeguridadTest extends TestCase
                     $this->assertNotSame(DataType::TYPE_FORMULA, $sheet->getCell($coordinate)->getDataType());
                 }
             }
-            $this->assertEquals(125.5, $book->getSheetByName('Ingresos por día')->getCell('D3')->getValue());
-            $this->assertSame('A1:E2', $book->getSheetByName('Ingresos por día')->getAutoFilter()->getRange());
+            $this->assertEquals(125.5, $book->getSheetByName('Ingresos por día')->getCell('E3')->getValue());
+            $this->assertSame('A1:F2', $book->getSheetByName('Ingresos por día')->getAutoFilter()->getRange());
             $this->assertSame('0.0%', $book->getSheetByName('Membresías')->getStyle('D2')->getNumberFormat()->getFormatCode());
             $this->assertSame('No calculable', $book->getSheetByName('Comparativo')->getCell('E2')->getValue());
             $this->assertSame(DataType::TYPE_NUMERIC, $book->getSheetByName('Comparativo')->getCell('B2')->getDataType());
@@ -64,9 +64,9 @@ class ReporteExcelSeguridadTest extends TestCase
             'metodologia' => ['+METODOLOGIA_NO_EJECUTAR'],
             'comparativo' => [['indicador' => '@INDICADOR_NO_EJECUTAR', 'actual' => 125.5, 'anterior' => 0.0, 'diferencia' => 125.5, 'variacion' => null, 'formato' => 'moneda']],
             'kpis' => [
-                'ingresos_totales' => 125.5, 'ingresos_membresias' => 100.0, 'ingresos_ventas' => 25.5,
-                'porcentaje_membresias' => 79.7, 'porcentaje_ventas' => 20.3,
-                'transacciones_totales' => 2, 'transacciones_membresias' => 1, 'transacciones_ventas' => 1,
+                'ingresos_totales' => 125.5, 'ingresos_membresias' => 100.0, 'ingresos_ventas' => 25.5, 'ingresos_entradas' => 0.0,
+                'porcentaje_membresias' => 79.7, 'porcentaje_ventas' => 20.3, 'porcentaje_entradas' => 0.0,
+                'transacciones_totales' => 2, 'transacciones_membresias' => 1, 'transacciones_ventas' => 1, 'transacciones_entradas' => 0,
                 'ticket_promedio' => 62.75, 'prev_ingresos_totales' => 120.0, 'diferencia_monetaria' => 5.5,
                 'variacion_texto' => '+4.58%', 'dias_activos' => 1,
                 'dia_mayor_ingreso' => ['monto' => 125.5, 'fecha' => '2026-10-01'],
@@ -76,7 +76,7 @@ class ReporteExcelSeguridadTest extends TestCase
                 'producto_mayor_facturacion' => '+1+1', 'producto_mas_vendido_unidades' => 1,
                 'producto_mas_vendido' => '@SUM(1)',
             ],
-            'serie_diaria' => [['fecha' => '2026-10-01', 'membresias' => 100.0, 'ventas' => 25.5, 'total' => 125.5, 'transacciones' => 2]],
+            'serie_diaria' => [['fecha' => '2026-10-01', 'membresias' => 100.0, 'ventas' => 25.5, 'entradas' => 0.0, 'total' => 125.5, 'transacciones' => 2]],
             'planes' => [['plan' => '=1+1', 'pagos' => 1, 'ingresos' => 100.0, 'porcentaje' => 100, 'promedio_operacion' => 100.0]],
             'productos' => [['producto' => '+1+1', 'unidades' => 1, 'operaciones' => 1, 'ingresos' => 25.5, 'porcentaje' => 100]],
             'metodos' => [['metodo' => '-1+1', 'operaciones' => 2, 'ingresos' => 125.5, 'porcentaje' => 100]],

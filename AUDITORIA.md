@@ -1,8 +1,10 @@
 # Auditoría y mejoras de Alpha Fitness
 
-## Revisión vigente: 28 de octubre de 2026
+## Revisión vigente: 5 de noviembre de 2026
 
-Consulta [REVISION_FINAL.md](REVISION_FINAL.md) para los cambios actuales, la matriz de roles, las pruebas y los pendientes. El acceso ahora exige confirmar la lectura del aviso de privacidad vigente. También se corrigieron los permisos de pausas, la navegación móvil y la carga de JavaScript por pantalla.
+Consulta [REVISION_2026_11_04.md](REVISION_2026_11_04.md) para los cambios actuales, las pruebas y los pendientes de publicación. Incluye el resumen financiero exclusivo del administrador, filtros y comparación, mejoras por rol, formularios inválidos, estados de asistencia, pausas y el chequeo de base de datos. [REVISION_FINAL.md](REVISION_FINAL.md) conserva el detalle histórico de la revisión del 28 de octubre.
+
+La ampliación del 5 de noviembre incorpora la política de **USD 2.00 por cada entrada sin membresía vigente**, con confirmación presencial del cobro. La salida no genera otro pago y el reintento de la misma entrada no duplica registros. Los cobros quedan separados de las ventas de productos y se integran como una tercera fuente de ingresos en la analítica exclusiva del administrador. La regla, sus límites y la comprobación de esta ampliación se documentan en la revisión vigente; las cifras históricas siguientes no corresponden a esta nueva política.
 
 El contenido siguiente es histórico. Sus referencias al límite de cinco productos, a dependencias sin avisos y a las animaciones de entrada describen revisiones anteriores; no deben usarse como estado actual del proyecto. El catálogo actual pagina de cinco en cinco sin limitar las altas.
 

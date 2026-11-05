@@ -27,13 +27,33 @@ class AsistenciaExportSeguridadTest extends TestCase
         $csv = $response->streamedContent();
         $this->assertStringNotContainsString('@example.test', $csv);
         $rows = $this->parseCsv($csv);
-        $this->assertSame(['ID', 'Cliente', 'Fecha Entrada', 'Fecha Salida', 'Duración', 'Registrado Por', 'Salida Por'], array_shift($rows));
+        $this->assertSame(['ID', 'Cliente', 'Fecha Entrada', 'Fecha Salida', 'Duración', 'Registrado Por', 'Salida Por', 'Cobro por entrada (USD)'], array_shift($rows));
         $this->assertCount(count($payloads), $rows);
         foreach (array_reverse($payloads) as $i => $payload) {
             $this->assertSame(str_starts_with($payload, 'Texto') ? $payload : "'".$payload, $rows[$i][1]);
             $this->assertSame("'=1+1", $rows[$i][5]);
             $this->assertSame("'=1+1", $rows[$i][6]);
+            $this->assertSame('', $rows[$i][7]);
         }
+    }
+
+    public function test_csv_includes_only_recorded_entry_charges_and_keeps_unbilled_history_blank(): void
+    {
+        $secretaria = User::factory()->create(['rol' => 'Secretaria']);
+        $cliente = Cliente::create(['nombre' => 'Socio de CSV', 'correo' => 'privado.csv@example.test', 'activo' => true]);
+        $anterior = Asistencia::create(['cliente_id' => $cliente->id, 'registrado_por' => $secretaria->id,
+            'fecha_hora' => '2026-10-01 10:00:00', 'fecha_salida' => '2026-10-01 11:00:00']);
+        $pagada = Asistencia::create(['cliente_id' => $cliente->id, 'registrado_por' => $secretaria->id,
+            'fecha_hora' => '2026-11-05 10:00:00', 'entrada_uuid' => 'ed5506b4-7952-4d64-a2c5-a01d9320ee20']);
+        $pagada->pagoEntrada()->create(['registrado_por' => $secretaria->id, 'importe' => '2.00', 'pagado_en' => '2026-11-05 10:00:00']);
+
+        $response = $this->actingAs($secretaria)->get(route('asistencia.exportar'))->assertOk();
+        $csv = $response->streamedContent();
+        $rows = array_column(array_slice($this->parseCsv($csv), 1), null, 0);
+        $this->assertSame('', $rows[$anterior->id][7]);
+        $this->assertSame('2.00', $rows[$pagada->id][7]);
+        $this->assertStringNotContainsString($cliente->correo, $csv);
+        $this->assertDatabaseCount('pagos_entrada', 1);
     }
 
     public function test_csv_applies_client_search_dates_and_state_without_mutating_history(): void

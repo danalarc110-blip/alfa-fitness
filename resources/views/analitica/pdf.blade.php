@@ -108,6 +108,7 @@
         }
         .data-table thead { display: table-header-group; }
         .data-table tr { page-break-inside: avoid; }
+        .report-section { page-break-inside: avoid; }
         .data-table tbody th {
             background-color: #ffffff;
             color: #1e293b;
@@ -233,14 +234,15 @@
                 <div class="kpi-sub">{{ $datos['kpis']['porcentaje_ventas'] }}% del total</div>
             </td>
             <td class="kpi-card">
-                <div class="kpi-label">Ticket Promedio</div>
-                <div class="kpi-value">${{ number_format($datos['kpis']['ticket_promedio'], 2) }}</div>
-                <div class="kpi-sub">{{ $datos['kpis']['transacciones_totales'] }} transacciones</div>
+                <div class="kpi-label">Entradas diarias</div>
+                <div class="kpi-value">${{ number_format($datos['kpis']['ingresos_entradas'], 2) }}</div>
+                <div class="kpi-sub">{{ $datos['kpis']['transacciones_entradas'] }} entradas · {{ $datos['kpis']['porcentaje_entradas'] }}% del total</div>
             </td>
         </tr>
     </table>
 
     <h2 class="section-title">Comparativo de períodos</h2>
+    <p class="muted">Ticket promedio: ${{ number_format($datos['kpis']['ticket_promedio'], 2) }} · {{ $datos['kpis']['transacciones_totales'] }} operaciones entre membresías, productos y entradas diarias.</p>
     <p class="muted">Diferencia = actual - anterior. La variación porcentual requiere una base anterior mayor a cero.</p>
     <table class="data-table">
         <thead>
@@ -295,6 +297,7 @@
     </table>
 
     <!-- RENDIMIENTO DE MEMBRESÍAS -->
+    <div class="report-section">
     <div class="section-title">Rendimiento por Plan de Membresía</div>
     <table class="data-table">
         <thead>
@@ -323,7 +326,10 @@
         </tbody>
     </table>
 
+    </div>
+
     <!-- RENDIMIENTO DE PRODUCTOS -->
+    <div class="report-section">
     <div class="section-title">Rendimiento de Ventas por Producto</div>
     <table class="data-table">
         <thead>
@@ -353,6 +359,9 @@
     </table>
 
     <!-- MÉTODOS DE PAGO -->
+    </div>
+
+    <div class="report-section">
     <div class="section-title">Distribución por Método de Pago / Origen</div>
     <table class="data-table">
         <thead>
@@ -381,6 +390,8 @@
         </tbody>
     </table>
 
+    </div>
+
     <h2 class="section-title">Detalle diario de ingresos</h2>
     <p class="muted">Incluye todos los días del período efectivo, incluso aquellos sin operaciones.</p>
     <table class="data-table">
@@ -389,6 +400,7 @@
                 <th scope="col">Fecha</th>
                 <th scope="col" class="text-right">Membresías</th>
                 <th scope="col" class="text-right">Ventas</th>
+                <th scope="col" class="text-right">Entradas</th>
                 <th scope="col" class="text-right">Total</th>
                 <th scope="col" class="text-right">Operaciones</th>
             </tr>
@@ -399,6 +411,7 @@
                     <th scope="row">{{ \Carbon\Carbon::parse($dia['fecha'])->format('d/m/Y') }}</th>
                     <td class="text-right">${{ number_format($dia['membresias'], 2) }}</td>
                     <td class="text-right">${{ number_format($dia['ventas'], 2) }}</td>
+                    <td class="text-right">${{ number_format($dia['entradas'], 2) }}</td>
                     <td class="text-right font-bold">${{ number_format($dia['total'], 2) }}</td>
                     <td class="text-right">{{ number_format($dia['transacciones'], 0) }}</td>
                 </tr>
@@ -407,6 +420,7 @@
                 <th scope="row">Total del período</th>
                 <td class="text-right">${{ number_format($datos['kpis']['ingresos_membresias'], 2) }}</td>
                 <td class="text-right">${{ number_format($datos['kpis']['ingresos_ventas'], 2) }}</td>
+                <td class="text-right">${{ number_format($datos['kpis']['ingresos_entradas'], 2) }}</td>
                 <td class="text-right">${{ number_format($datos['kpis']['ingresos_totales'], 2) }}</td>
                 <td class="text-right">{{ number_format($datos['kpis']['transacciones_totales'], 0) }}</td>
             </tr>

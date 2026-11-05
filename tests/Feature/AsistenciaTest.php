@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Asistencia;
 use App\Models\Cliente;
+use App\Models\Membresia;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -17,6 +18,10 @@ class AsistenciaTest extends TestCase
         $secretaria = User::factory()->create(['rol' => 'Secretaria']);
         $otra = User::factory()->create(['rol' => 'Secretaria']);
         $cliente = Cliente::create(['nombre' => 'Cliente Demo', 'correo' => 'cliente@example.com', 'password' => 'Password!123', 'activo' => true]);
+        Membresia::create([
+            'cliente_id' => $cliente->id, 'plan' => 'Mensual', 'importe' => '25.00',
+            'inicio' => today(), 'fin' => today()->addDays(29), 'cancelada' => false,
+        ]);
 
         $this->actingAs($secretaria)->get(route('asistencia.index'))->assertOk()->assertSee('Cliente Demo');
         $this->actingAs($secretaria)->post(route('asistencia.store'), ['cliente_id' => $cliente->id])->assertSessionHasNoErrors();
