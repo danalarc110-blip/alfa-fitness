@@ -33,7 +33,7 @@
             </select>
             <p id="appearance-motion-help" class="text-xs text-gray-400 mt-2">Reduce animaciones y transiciones. Se conserva en tu cuenta y siempre se respeta la preferencia de movimiento reducido del dispositivo.</p>
         </div>
-        <div class="grid md:grid-cols-2 gap-6 mt-6">
+        <div class="grid xl:grid-cols-2 gap-6 mt-6">
             <fieldset id="appearance-colors" class="space-y-3">
                 <legend class="font-medium text-sm mb-3">Paleta personalizada</legend>
                 @foreach(['primary' => 'Color principal', 'accent' => 'Color secundario / acento', 'background' => 'Fondo principal', 'surface' => 'Tarjetas y paneles', 'text' => 'Texto principal'] as $key => $label)

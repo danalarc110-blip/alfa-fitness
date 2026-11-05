@@ -52,7 +52,9 @@ test('El descanso configurado y el predeterminado siguen iniciando el cronómetr
 
 test('La alerta de descanso se dispara al llegar a cero, sin añadir otro segundo', () => {
     const state = {textContent: '', className: ''};
-    const context = vm.createContext({segundosRestantes: 2, timerInterval: null, alerts: 0,
+    let now = 0;
+    const context = vm.createContext({segundosRestantes: 2, timerInterval: null, timerFinTimestamp: null, alerts: 0,
+        Date: {now: () => now},
         document: {getElementById() { return state; }}, actualizarDisplay() {},
         setInterval(callback) { context.tick = callback; return 1; },
         pausarTimer() { context.timerInterval = null; },
@@ -60,9 +62,11 @@ test('La alerta de descanso se dispara al llegar a cero, sin añadir otro segund
     });
     vm.runInContext(timerSource, context);
     vm.runInContext('iniciarTimer()', context);
+    now += 1000;
     context.tick();
     assert.equal(context.segundosRestantes, 1);
     assert.equal(context.alerts, 0);
+    now += 1000;
     context.tick();
     assert.equal(context.segundosRestantes, 0);
     assert.equal(context.alerts, 1);

@@ -33,7 +33,7 @@ class ProgresoController extends Controller
         $query = PersonalRecord::with(['cliente', 'ejercicio'])
             ->where('cliente_id', $clienteId)
             ->when($ejercicioIdFiltro, fn ($q) => $q->where('ejercicio_id', $ejercicioIdFiltro))
-            ->latest();
+            ->latest()->latest('id');
         $records = (clone $query)->paginate(20)->withQueryString();
 
         $mejoresMarcas = PersonalRecord::with(['cliente', 'ejercicio'])
@@ -139,7 +139,7 @@ class ProgresoController extends Controller
         $query = PersonalRecord::with(['ejercicio'])
             ->where('cliente_id', $cliente->id)
             ->when($ejercicioIdFiltro, fn ($q) => $q->where('ejercicio_id', $ejercicioIdFiltro))
-            ->latest();
+            ->latest()->latest('id');
         $records = (clone $query)->paginate(15)->withQueryString();
 
         $mejoresMarcas = PersonalRecord::with(['ejercicio'])

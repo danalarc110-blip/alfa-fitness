@@ -6,6 +6,7 @@ use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class CuentasController extends Controller
 {
@@ -55,6 +56,10 @@ class CuentasController extends Controller
             $cuenta->activo = $activo;
             $cuenta->baneado_en = $activo ? null : now();
             $cuenta->baneado_por = $activo ? null : auth('web')->id();
+            if (! $activo) {
+                $cuenta->access_version++;
+                $cuenta->setRememberToken(Str::random(60));
+            }
             $cuenta->save();
         });
     }

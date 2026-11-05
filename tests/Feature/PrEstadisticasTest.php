@@ -17,7 +17,7 @@ class PrEstadisticasTest extends TestCase
         $this->actingAs($cliente, 'cliente')->get(route('estadisticas.index'))->assertRedirect(route('progreso.index'));
         $this->post(route('cliente.logout'));
         foreach (['Administrador', 'Secretaria', 'Entrenador'] as $rol) {
-            $this->actingAs(User::factory()->create(['rol' => $rol]))->get(route('estadisticas.index'))->assertForbidden();
+            $this->actingAs(User::factory()->create(['rol' => $rol]), 'web')->get(route('estadisticas.index'))->assertForbidden();
         }
     }
 }

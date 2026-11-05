@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Rules\PasswordBcrypt;
 use App\Services\ImagenSegura;
 use App\Support\Apariencia;
 use App\Support\InformacionGimnasio;
@@ -74,8 +75,8 @@ class ConfiguracionController extends Controller
         }
 
         $data = $request->validate([
-            'password_actual' => ['required', 'string'],
-            'password' => ['required', 'confirmed', Password::min(12)->mixedCase()->numbers()->symbols()],
+            'password_actual' => ['required', 'string', new PasswordBcrypt],
+            'password' => ['required', 'string', new PasswordBcrypt, 'confirmed', Password::min(12)->mixedCase()->numbers()->symbols()],
         ], [
             'password_actual.required' => 'Ingresa tu contraseña actual.',
             'password.min' => 'La nueva contraseña debe tener al menos 12 caracteres.',
@@ -120,7 +121,7 @@ class ConfiguracionController extends Controller
     {
         ['guard' => $guard, 'user' => $user] = $this->actual();
         abort_unless($guard === 'cliente' && $user->password && ! $user->google_id, 403);
-        $request->validate(['password_actual' => ['required', 'string', 'current_password:cliente']]);
+        $request->validate(['password_actual' => ['required', 'string', new PasswordBcrypt, 'current_password:cliente']]);
         if (! config('services.google.client_id') || ! config('services.google.client_secret')) {
             return back()->withErrors(['google' => 'Google no está disponible en este momento.']);
         }

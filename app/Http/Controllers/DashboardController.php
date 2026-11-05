@@ -42,14 +42,14 @@ class DashboardController extends Controller
 
         if ($perfil === 'cliente') {
             $visitas = Asistencia::where('cliente_id', $user->id);
-            $membresias = Membresia::with('cliente:id,nombre')->where('cliente_id', $user->id)->where('cancelada', false)->where('inicio', '<=', today())->where('fin', '>=', today());
+            $membresias = Membresia::with('cliente:id,nombre')->where('cliente_id', $user->id)->where('cancelada', false)->whereDate('inicio', '<=', today())->whereDate('fin', '>=', today());
             $metricas = [['Mis rutinas', Rutina::deUsuario($guard, $user->id)->count()], ['Mis visitas este mes', (clone $visitas)->whereBetween('fecha_hora', [now()->startOfMonth(), now()->endOfMonth()])->count()], ['Membresias vigentes', $membresias->count()], ['Mis marcas', PersonalRecord::where('cliente_id', $user->id)->count()]];
             $actividad = $visitas->latest('fecha_hora')->limit(5)->get();
-            $porVencer = $membresias->where('fin', '<=', today()->addDays(7))->orderBy('fin')->orderBy('id')->limit(5)->get();
+            $porVencer = $membresias->whereDate('fin', '<=', today()->addDays(7))->orderBy('fin')->orderBy('id')->limit(5)->get();
         } elseif ($perfil === 'recepcion') {
             $metricas = [['Entradas hoy', Asistencia::whereBetween('fecha_hora', [today(), today()->endOfDay()])->count()], ['Dentro ahora', $dentroAhora], ['Solicitudes pendientes', SolicitudMembresia::where('estado', 'pendiente')->count()]];
             $actividad = Asistencia::with('cliente:id,nombre')->latest('fecha_hora')->limit(5)->get();
-            $porVencer = Membresia::with('cliente:id,nombre')->where('cancelada', false)->whereBetween('fin', [today(), today()->addDays(7)])->orderBy('fin')->orderBy('id')->limit(5)->get();
+            $porVencer = Membresia::with('cliente:id,nombre')->where('cancelada', false)->whereDate('fin', '>=', today())->whereDate('fin', '<=', today()->addDays(7))->orderBy('fin')->orderBy('id')->limit(5)->get();
         } elseif ($perfil === 'administrador') {
             Gate::forUser($user)->authorize('analitica_financiera');
             $request->validate([
@@ -75,7 +75,7 @@ class DashboardController extends Controller
                 ['Personal activo', User::where('activo', true)->count()],
             ];
             $actividad = Venta::with(['cliente:id,nombre', 'user:id,name'])->latest()->limit(5)->get();
-            $porVencer = Membresia::with('cliente:id,nombre')->where('cancelada', false)->whereBetween('fin', [today(), today()->addDays(7)])->orderBy('fin')->orderBy('id')->limit(5)->get();
+            $porVencer = Membresia::with('cliente:id,nombre')->where('cancelada', false)->whereDate('fin', '>=', today())->whereDate('fin', '<=', today()->addDays(7))->orderBy('fin')->orderBy('id')->limit(5)->get();
         } else {
             $metricas = [
                 ['Mis rutinas', Rutina::deUsuario($guard, $user->id)->count()],

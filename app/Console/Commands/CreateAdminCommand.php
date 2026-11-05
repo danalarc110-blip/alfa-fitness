@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use App\Rules\PasswordBcrypt;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -53,7 +54,7 @@ class CreateAdminCommand extends Command
         ], [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', PasswordRule::min(12)->mixedCase()->numbers()->symbols()],
+            'password' => ['required', 'string', new PasswordBcrypt, PasswordRule::min(12)->mixedCase()->numbers()->symbols()],
         ], [
             'name.required' => 'El nombre es obligatorio.',
             'email.required' => 'El correo electrónico es obligatorio.',

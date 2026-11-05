@@ -12,6 +12,10 @@ class Cliente extends Authenticatable
 {
     use Notifiable;
 
+    protected $attributes = [
+        'access_version' => 0,
+    ];
+
     protected $table = 'clientes';
 
     protected $fillable = [
@@ -41,6 +45,7 @@ class Cliente extends Authenticatable
         return [
             'password' => 'hashed',
             'activo' => 'boolean',
+            'access_version' => 'integer',
             'baneado_en' => 'datetime',
             'apariencia' => 'array',
         ];

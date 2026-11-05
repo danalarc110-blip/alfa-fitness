@@ -59,13 +59,16 @@
 </div>
 
 {{-- GRÁFICO DE EVOLUCIÓN EN SVG (SI HAY REGISTROS) --}}
-@if($ultimosLevantamientos->count() >= 2)
+@php
+    $ejercicioGrafico = $ultimosLevantamientos->pluck('ejercicio_id')->unique()->count() === 1 ? $ultimosLevantamientos->first()?->ejercicio : null;
+@endphp
+@if($ultimosLevantamientos->count() >= 2 && $ejercicioGrafico)
     <div class="alpha-card rounded-2xl p-5 sm:p-6 border border-white/10 mb-6">
         <div class="flex items-center justify-between gap-3 mb-4">
             <div>
                 <h2 class="text-base font-bold text-white flex items-center gap-2">
                     <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg>
-                    Evolución de Fuerza {{ $ejercicioSeleccionadoObj ? 'en ' . $ejercicioSeleccionadoObj->nombre : 'en Sesiones Recientes' }}
+                    Evolución de Fuerza en {{ $ejercicioGrafico->nombre }}
                 </h2>
                 <p class="text-xs text-gray-400 mt-0.5">Tendencia de peso levantado (kg) a lo largo del tiempo</p>
             </div>
@@ -91,7 +94,13 @@
         @endphp
 
         <div class="w-full overflow-x-auto">
-            <svg viewBox="0 0 {{ $chartWidth }} {{ $chartHeight }}" class="w-full h-44 text-yellow-400 select-none">
+            <svg viewBox="0 0 {{ $chartWidth }} {{ $chartHeight }}" class="w-full h-44 text-yellow-400 select-none" role="img" aria-labelledby="evolucion-titulo evolucion-descripcion">
+                <title id="evolucion-titulo">Pesos registrados para {{ $ejercicioGrafico->nombre }}</title>
+                <desc id="evolucion-descripcion">
+                    @foreach($ultimosLevantamientos as $levantamiento)
+                        {{ $levantamiento->created_at->format('d/m/Y') }}: {{ $levantamiento->peso_formateado }}, {{ $levantamiento->repeticiones }} repeticiones.
+                    @endforeach
+                </desc>
                 <defs>
                     <linearGradient id="gradiente-linea" x1="0" y1="0" x2="1" y2="0">
                         <stop offset="0%" stop-color="#eab308" />
@@ -123,6 +132,8 @@
             </svg>
         </div>
     </div>
+@elseif($ultimosLevantamientos->count() >= 2)
+    <p class="alpha-card rounded-2xl p-5 mb-6 text-sm text-gray-400">Selecciona un ejercicio en el filtro del historial para comparar tus levantamientos.</p>
 @endif
 
 <section class="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-5">

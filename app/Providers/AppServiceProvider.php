@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Cliente;
 use App\Support\Acceso;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -46,6 +47,9 @@ class AppServiceProvider extends ServiceProvider
         }
         // Seed at login, before another device could change the password.
         Event::listen(Login::class, function ($event) {
+            if (request()->hasSession() && $event->guard === 'cliente' && $event->user instanceof Cliente) {
+                request()->session()->put('access_version_cliente', $event->user->access_version);
+            }
             if (request()->hasSession() && $event->user->getAuthPassword()) {
                 request()->session()->put('password_hash_'.$event->guard,
                     auth($event->guard)->hashPasswordForCookie($event->user->getAuthPassword()));

@@ -183,7 +183,7 @@ class PuntoVentaTest extends TestCase
         $this->post(route('ventas.store'), $this->payload($producto))->assertForbidden();
         $this->post(route('cliente.logout'));
         $trainer = User::factory()->create(['rol' => 'Entrenador']);
-        $this->actingAs($trainer)->get(route('ventas.index'))->assertForbidden();
+        $this->actingAs($trainer, 'web')->get(route('ventas.index'))->assertForbidden();
         $this->post(route('ventas.store'), $this->payload($producto))->assertForbidden();
         $this->assertDatabaseCount('ventas', 0);
         $this->assertSame(10, $producto->fresh()->stock);

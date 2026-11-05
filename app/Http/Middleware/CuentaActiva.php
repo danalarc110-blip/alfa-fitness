@@ -12,14 +12,27 @@ class CuentaActiva
     {
         foreach (['web', 'cliente'] as $guard) {
             $usuario = Auth::guard($guard)->user();
-            if ($usuario && (! $usuario->activo || ($guard === 'web' && ! $usuario->password_establecida))) {
-                Auth::guard('web')->logout();
-                Auth::guard('cliente')->logout();
+            // Unstamped sessions predate this mechanism and belong to version zero.
+            $sesionRevocada = $usuario && $guard === 'cliente'
+                && (int) $request->session()->get('access_version_cliente', 0) !== $usuario->access_version;
+            if ($usuario && (! $usuario->activo || ($guard === 'web' && ! $usuario->password_establecida) || $sesionRevocada)) {
+                foreach (['web', 'cliente'] as $cerrarGuard) {
+                    if ($sesionRevocada) {
+                        // A rejected old session must not revoke newer remembered sessions.
+                        Auth::guard($cerrarGuard)->logoutCurrentDevice();
+                    } else {
+                        Auth::guard($cerrarGuard)->logout();
+                    }
+                }
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
-                $mensaje = ! $usuario->activo ? 'Tu cuenta esta desactivada.' : 'Debes establecer tu contrasena desde el enlace de invitacion.';
+                $mensaje = match (true) {
+                    ! $usuario->activo => 'Tu cuenta esta desactivada.',
+                    $sesionRevocada => 'Tu sesión ha expirado. Inicia sesión nuevamente.',
+                    default => 'Debes establecer tu contrasena desde el enlace de invitacion.',
+                };
                 if ($request->expectsJson()) {
-                    return response()->json(['message' => $mensaje], 403);
+                    return response()->json(['message' => $mensaje], $usuario->activo && $sesionRevocada ? 401 : 403);
                 }
 
                 return redirect()->route('login')->withErrors(['cuenta' => $mensaje]);

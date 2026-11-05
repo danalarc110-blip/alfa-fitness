@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class CreateAdminCommandTest extends TestCase
@@ -53,5 +54,26 @@ class CreateAdminCommandTest extends TestCase
             ->assertFailed();
 
         $this->assertDatabaseMissing('users', ['email' => 'debil@alfafitness.test']);
+    }
+
+    public static function passwordsIncompatiblesConBcrypt(): array
+    {
+        return [
+            [str_repeat('A', 73).'a1!'],
+            [str_repeat('ñ', 36).'Aa1!'],
+            ["Admin!2026Fuerte\0sufijo"],
+        ];
+    }
+
+    #[DataProvider('passwordsIncompatiblesConBcrypt')]
+    public function test_admin_create_command_rejects_passwords_that_bcrypt_would_truncate(string $password): void
+    {
+        $this->artisan('admin:create', [
+            '--name' => 'Admin Inicial',
+            '--email' => 'inicial@alfafitness.test',
+            '--password' => $password,
+        ])->assertFailed();
+
+        $this->assertDatabaseMissing('users', ['email' => 'inicial@alfafitness.test']);
     }
 }

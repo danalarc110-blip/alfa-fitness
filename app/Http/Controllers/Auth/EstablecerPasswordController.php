@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\User;
+use App\Rules\PasswordBcrypt;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -50,7 +51,7 @@ class EstablecerPasswordController extends Controller
         $data = $request->validate([
             'token' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255'],
-            'password' => ['required', 'string', 'confirmed', PasswordRule::min(12)->mixedCase()->numbers()->symbols()],
+            'password' => ['required', 'string', new PasswordBcrypt, 'confirmed', PasswordRule::min(12)->mixedCase()->numbers()->symbols()],
             'password_confirmation' => ['required', 'string'],
         ], [
             'password.required' => 'La contraseña es obligatoria.',

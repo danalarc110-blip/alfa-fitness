@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Rules\PasswordBcrypt;
 use App\Support\AvisoPrivacidad;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class ClienteLoginController extends Controller
         $data = $request->validate([
             'nombre' => ['required', 'string', 'max:255'],
             'correo' => ['required', 'string', 'email', 'max:255', 'unique:clientes,correo'],
-            'password' => ['required', 'confirmed', Password::min(12)->mixedCase()->numbers()->symbols()],
+            'password' => ['required', 'string', new PasswordBcrypt, 'confirmed', Password::min(12)->mixedCase()->numbers()->symbols()],
         ], [
             'nombre.required' => 'El nombre es obligatorio.',
             'correo.required' => 'El correo electrónico es obligatorio.',
@@ -58,7 +59,7 @@ class ClienteLoginController extends Controller
     {
         $credentials = $request->validate([
             'correo' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            'password' => ['required', 'string', new PasswordBcrypt],
         ], [
             'correo.required' => 'El correo electrónico es obligatorio.',
             'correo.email' => 'Ingresa un correo electrónico válido.',

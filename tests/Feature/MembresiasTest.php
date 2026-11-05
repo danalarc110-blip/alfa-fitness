@@ -33,13 +33,13 @@ class MembresiasTest extends TestCase
         $this->assertDatabaseCount('pagos_membresia', 0);
         $this->post(route('cliente.logout'));
         foreach (['Administrador', 'Entrenador'] as $rol) {
-            $this->actingAs(User::factory()->create(['rol' => $rol]))->patch(route('membresias.activar', $solicitud), ['importe' => 25])->assertForbidden();
+            $this->actingAs(User::factory()->create(['rol' => $rol]), 'web')->patch(route('membresias.activar', $solicitud), ['importe' => 25])->assertForbidden();
             $this->post(route('logout'));
         }
         $secretaria = User::factory()->create(['rol' => 'Secretaria']);
         $this->assertTrue(Gate::forUser($secretaria)->allows('operaciones'));
-        $this->actingAs($secretaria)->patch(route('membresias.activar', $solicitud), ['importe' => 25, 'referencia' => 'EFECTIVO'])->assertRedirect()->assertSessionHasNoErrors();
-        $this->actingAs($secretaria)->patch(route('membresias.activar', $solicitud), ['importe' => 25])->assertRedirect();
+        $this->actingAs($secretaria, 'web')->patch(route('membresias.activar', $solicitud), ['importe' => 25, 'referencia' => 'EFECTIVO'])->assertRedirect()->assertSessionHasNoErrors();
+        $this->actingAs($secretaria, 'web')->patch(route('membresias.activar', $solicitud), ['importe' => 25])->assertRedirect();
         $this->assertDatabaseCount('membresias', 1);
         $this->assertDatabaseCount('pagos_membresia', 1);
         $this->assertDatabaseHas('pagos_membresia', ['registrado_por' => $secretaria->id, 'importe' => 25]);

@@ -30,10 +30,10 @@ class VentasTest extends TestCase
         $this->post(route('cliente.logout'));
 
         // Staff can view sales index
-        $this->actingAs($secretaria)->get(route('ventas.index'))->assertOk();
+        $this->actingAs($secretaria, 'web')->get(route('ventas.index'))->assertOk();
 
         // Staff registers a sale of 2 units
-        $response = $this->actingAs($secretaria)->post(route('ventas.store'), [
+        $response = $this->actingAs($secretaria, 'web')->post(route('ventas.store'), [
             'venta_uuid' => (string) Str::uuid(),
             'cliente_id' => $cliente->id,
             'metodo_pago' => 'Efectivo',

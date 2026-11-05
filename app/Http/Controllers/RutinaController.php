@@ -239,7 +239,10 @@ class RutinaController extends Controller
         $grupo = $filters['grupo'] ?? '';
 
         $ejercicios = Ejercicio::where('activo', true)
-            ->when($q, fn ($query) => $query->where('nombre', 'like', "%{$q}%"))
+            ->when($q !== '', fn ($query) => $query->where(fn ($texto) => $texto
+                ->where('nombre', 'like', "%{$q}%")
+                ->orWhere('grupo_muscular', 'like', "%{$q}%")
+                ->orWhere('subgrupo', 'like', "%{$q}%")))
             ->when($grupo && $grupo !== 'Todos', fn ($query) => $query->where('grupo_muscular', $grupo))
             ->orderBy('nombre')
             ->get()

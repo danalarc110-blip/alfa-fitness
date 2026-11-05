@@ -219,6 +219,7 @@
     let segundosRestantes = 60;
     let tiempoBase = 60;
     let timerInterval = null;
+    let timerFinTimestamp = null;
     let sonidoHabilitado = true;
     try { sonidoHabilitado = localStorage.getItem('alfa_timer_sonido') !== 'false'; }
     catch (error) { /* El cronómetro funciona aunque el navegador no permita guardar preferencias. */ }
@@ -310,15 +311,15 @@
     }
 
     function iniciarTimer() {
-        if (timerInterval) return;
+        if (timerInterval || segundosRestantes <= 0) return;
+        timerFinTimestamp = Date.now() + segundosRestantes * 1000;
         document.getElementById('timer-estado').textContent = 'Descansando';
         document.getElementById('timer-estado').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-400 border border-emerald-400/30';
 
         timerInterval = setInterval(() => {
-            if (segundosRestantes > 0) {
-                segundosRestantes--;
-                actualizarDisplay();
-            }
+            // Los callbacks pueden suspenderse en segundo plano: el reloj fija lo pendiente.
+            segundosRestantes = Math.max(0, Math.ceil((timerFinTimestamp - Date.now()) / 1000));
+            actualizarDisplay();
             if (segundosRestantes === 0) {
                 pausarTimer();
                 document.getElementById('timer-estado').textContent = '¡A entrenar!';
@@ -332,6 +333,11 @@
     }
 
     function pausarTimer() {
+        if (timerFinTimestamp !== null) {
+            segundosRestantes = Math.max(0, Math.ceil((timerFinTimestamp - Date.now()) / 1000));
+            actualizarDisplay();
+        }
+        timerFinTimestamp = null;
         clearInterval(timerInterval);
         timerInterval = null;
         document.getElementById('timer-estado').textContent = 'Pausado';

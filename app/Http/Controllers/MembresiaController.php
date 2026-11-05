@@ -171,7 +171,7 @@ class MembresiaController extends Controller
                 ]);
             }
 
-            if ($membresiaBloqueada->pausas()->whereIn('estado', ['pendiente', 'aprobada'])->where('fin_pausa_estimada', '>=', today())->exists()) {
+            if ($membresiaBloqueada->pausas()->whereIn('estado', ['pendiente', 'aprobada'])->whereDate('fin_pausa_estimada', '>=', today()->toDateString())->exists()) {
                 throw ValidationException::withMessages(['dias' => 'Esta membresía ya tiene una pausa activa o pendiente de revisión.']);
             }
 
@@ -182,6 +182,7 @@ class MembresiaController extends Controller
             }
 
             $finEstimada = $inicio->copy()->addDays($data['dias'] - 1);
+            $this->validarDiasPausaSinSolapamiento($membresiaBloqueada, $inicio, $finEstimada, 'inicio_pausa');
             $nuevoFin = $esStaff ? $this->finExtendidoSinSolapamiento($membresiaBloqueada, $data['dias'], 'dias') : null;
 
             $pausa = PausaMembresia::create([
@@ -245,6 +246,7 @@ class MembresiaController extends Controller
             if ($membresia->diasPausadosAcumulados() + $pausaBloqueada->dias > 30) {
                 throw ValidationException::withMessages(['pausa' => 'La aprobación excede el tope de 30 días de congelamiento permitido.']);
             }
+            $this->validarDiasPausaSinSolapamiento($membresia, $pausaBloqueada->inicio_pausa, $pausaBloqueada->fin_pausa_estimada, 'pausa', $pausaBloqueada->id);
             $nuevoFin = $this->finExtendidoSinSolapamiento($membresia, $pausaBloqueada->dias, 'pausa');
 
             $pausaBloqueada->update([
@@ -257,6 +259,21 @@ class MembresiaController extends Controller
         });
 
         return back()->with('status', 'Pausa aprobada. Fecha de vencimiento postergada exitosamente.');
+    }
+
+    private function validarDiasPausaSinSolapamiento(Membresia $membresia, Carbon $inicio, Carbon $fin, string $campo, ?int $ignorarPausa = null): void
+    {
+        // Los días inclusivos ya concedidos no pueden volver a extender la vigencia.
+        $hayConflicto = $membresia->pausas()
+            ->whereIn('estado', ['aprobada', 'finalizada', 'reanudada_anticipada'])
+            ->where('dias', '>', 0)
+            ->when($ignorarPausa !== null, fn ($query) => $query->whereKeyNot($ignorarPausa))
+            ->whereDate('inicio_pausa', '<=', $fin->toDateString())
+            ->whereDate('fin_pausa_estimada', '>=', $inicio->toDateString())
+            ->exists();
+        if ($hayConflicto) {
+            throw ValidationException::withMessages([$campo => 'La pausa incluye días ya contabilizados en otra pausa de esta membresía. Elige una fecha posterior.']);
+        }
     }
 
     private function finExtendidoSinSolapamiento(Membresia $membresia, int $dias, string $campo): Carbon
@@ -308,7 +325,7 @@ class MembresiaController extends Controller
 
             $pausa = $membresiaBloqueada->pausas()
                 ->where('estado', 'aprobada')
-                ->where('fin_pausa_estimada', '>=', today())
+                ->whereDate('fin_pausa_estimada', '>=', today()->toDateString())
                 ->lockForUpdate()
                 ->first();
 

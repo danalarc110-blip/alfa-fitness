@@ -225,6 +225,8 @@
         </div>`;
     }
 
+    const camposGuardando = new Set();
+
     function renderFila(re) {
         const ej = re.ejercicio;
         return `
@@ -242,22 +244,22 @@
             </td>
             <td class="py-3 px-2">
                 <input type="number" min="1" max="20" value="${re.series}"
-                    data-id="${re.id}" data-campo="series" aria-label="Series"
+                    data-id="${re.id}" data-campo="series" aria-label="Series" ${camposGuardando.has(`${re.id}:series`) ? 'disabled aria-busy="true"' : ''}
                     class="campo-ej w-full bg-black/60 border border-white/10 rounded-xl px-2 py-1.5 text-center text-white outline-none focus:border-yellow-400/60 font-semibold text-sm transition-colors">
             </td>
             <td class="py-3 px-2">
                 <input type="text" maxlength="20" value="${h(re.repeticiones)}" aria-label="Repeticiones"
-                    data-id="${re.id}" data-campo="repeticiones"
+                    data-id="${re.id}" data-campo="repeticiones" ${camposGuardando.has(`${re.id}:repeticiones`) ? 'disabled aria-busy="true"' : ''}
                     class="campo-ej w-full bg-black/60 border border-white/10 rounded-xl px-2 py-1.5 text-center text-white outline-none focus:border-yellow-400/60 font-semibold text-sm transition-colors">
             </td>
             <td class="py-3 px-2">
                 <input type="number" min="0" step="0.5" value="${re.peso ?? ''}" placeholder="—"
-                    data-id="${re.id}" data-campo="peso" aria-label="Peso en kilogramos"
+                    data-id="${re.id}" data-campo="peso" aria-label="Peso en kilogramos" ${camposGuardando.has(`${re.id}:peso`) ? 'disabled aria-busy="true"' : ''}
                     class="campo-ej w-full bg-black/60 border border-white/10 rounded-xl px-2 py-1.5 text-center text-white outline-none focus:border-yellow-400/60 font-semibold text-sm transition-colors">
             </td>
             <td class="py-3 px-2">
                 <input type="number" min="0" step="5" value="${re.descanso_segundos}"
-                    data-id="${re.id}" data-campo="descanso_segundos" aria-label="Descanso en segundos"
+                    data-id="${re.id}" data-campo="descanso_segundos" aria-label="Descanso en segundos" ${camposGuardando.has(`${re.id}:descanso_segundos`) ? 'disabled aria-busy="true"' : ''}
                     class="campo-ej w-full bg-black/60 border border-white/10 rounded-xl px-2 py-1.5 text-center text-white outline-none focus:border-yellow-400/60 font-semibold text-sm transition-colors">
             </td>
             <td class="py-3 pl-2 text-right">
@@ -334,13 +336,17 @@
     function guardarCampo(input) {
         const id    = +input.dataset.id;
         const campo = input.dataset.campo;
+        const key = `${id}:${campo}`;
+        if (camposGuardando.has(key)) return;
         let valor   = input.value;
         if (campo === 'peso' && valor === '') valor = null;
 
         const record = DIAS.flatMap(d => d.ejercicios).find(re => re.id === id);
         const previous = record[campo];
         record[campo] = valor;
+        camposGuardando.add(key);
         input.disabled = true;
+        input.setAttribute('aria-busy', 'true');
         api(URLS.actualizarEjercicio(id), 'PUT', { [campo]: valor }).then(() => {
             for (const d of DIAS) { const ej = d.ejercicios.find(re => re.id === id); if (ej) ej[campo] = valor; }
             marcarGuardado();
@@ -349,7 +355,17 @@
             const visibleInput = document.querySelector(`[data-id="${id}"][data-campo="${campo}"]`);
             if (visibleInput) visibleInput.value = previous ?? '';
             mostrarError(error);
-        }).finally(() => { input.disabled = false; });
+        }).finally(() => {
+            camposGuardando.delete(key);
+            input.disabled = false;
+            input.removeAttribute('aria-busy');
+            // El panel puede haberse reconstruido al cambiar de día o añadir un ejercicio.
+            const visibleInput = document.querySelector(`[data-id="${id}"][data-campo="${campo}"]`);
+            if (visibleInput) {
+                visibleInput.disabled = false;
+                visibleInput.removeAttribute('aria-busy');
+            }
+        });
     }
 
     function eliminarEjercicio(id) {
