@@ -174,9 +174,9 @@
             <label for="filtrar-ejercicio" class="sr-only">Filtrar por ejercicio</label>
             <select id="filtrar-ejercicio" name="ejercicio_id" class="min-w-0 max-w-full bg-black/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-yellow-400/60">
                 <option value="">Todos los ejercicios</option>
-                @foreach ($ejercicios as $ej)
+                @foreach ($ejerciciosHistorial as $ej)
                     <option value="{{ $ej->id }}" @selected(($ejercicioFiltro ?? '') == $ej->id)>
-                        {{ $ej->nombre }}
+                        {{ $ej->nombre }}{{ $ej->activo ? '' : ' (inactivo)' }}
                     </option>
                 @endforeach
             </select>

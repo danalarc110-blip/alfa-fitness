@@ -1,6 +1,7 @@
 @extends('layouts.app', ['active' => 'membresias'])
 @section('title', 'Membresías')
 @section('content')
+<p class="text-sm text-gray-400 mb-5">Con membresía vigente, el acceso al gimnasio está incluido. Sin membresía vigente, cada entrada cuesta ${{ \App\Services\RegistroAsistencia::TARIFA_ENTRADA_DIARIA }} y se cobra en recepción.</p>
 <p class="text-gray-400 text-sm mb-6">{{ $guard === 'cliente' ? 'Elige un plan y presenta el pago en recepción. Solicitar no activa la membresía.' : 'Consulta solicitudes y membresías. Solo la secretaria puede confirmar cobros y activaciones.' }}</p>
 @if($guard === 'cliente')
 <section class="grid sm:grid-cols-2 xl:grid-cols-3 gap-5 mb-8">
@@ -17,7 +18,7 @@
         <div class="alpha-request-detail">
         @if($solicitud->estado === 'pendiente' && auth('web')->user()?->rol === 'Secretaria')
             <h3 class="font-semibold">Confirmar pago y activar</h3><p class="text-xs text-gray-400 mt-2">Registra el cobro recibido en recepción para activar la membresía.</p>
-            <form method="POST" action="{{ route('membresias.activar', $solicitud) }}" class="alpha-form">@csrf @method('PATCH')<div class="alpha-payment-fields"><label>Importe cobrado<input type="number" name="importe" min="0.01" step="0.01" value="{{ old('importe', $solicitud->precio_acordado) }}" required></label><label>Referencia opcional<input name="referencia" maxlength="100" value="{{ old('referencia') }}"></label></div><button class="alpha-btn-primary px-5 py-3">Confirmar pago y activar</button></form>
+            <form method="POST" action="{{ route('membresias.activar', $solicitud) }}" class="alpha-form">@csrf @method('PATCH')<div class="alpha-payment-fields"><label>Importe cobrado<input type="number" name="importe" min="0.01" step="0.01" value="{{ \App\Support\Formulario::anterior('importe', $solicitud->precio_acordado) }}" required></label><label>Referencia opcional<input name="referencia" maxlength="100" value="{{ \App\Support\Formulario::anterior('referencia') }}"></label></div><button class="alpha-btn-primary px-5 py-3">Confirmar pago y activar</button></form>
         @elseif($solicitud->estado === 'pendiente')
             <h3 class="font-semibold">Pendiente de confirmación</h3><p class="text-sm text-gray-400 mt-3">Presenta el pago en recepción. Secretaría confirmará el cobro y activará el plan.</p>
         @else

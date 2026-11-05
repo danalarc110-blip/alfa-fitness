@@ -6,6 +6,7 @@ use App\Models\Cliente;
 use App\Models\Ejercicio;
 use App\Models\PersonalRecord;
 use App\Services\ClientesEntrenador;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -26,7 +27,8 @@ class ProgresoController extends Controller
         ]);
         $ejercicioIdFiltro = $filtros['ejercicio_id'] ?? null;
 
-        $ejercicios = Ejercicio::where('activo', true)->orderBy('nombre')->get();
+        $ejerciciosHistorial = $this->ejerciciosParaHistorial($clienteId);
+        $ejercicios = $ejerciciosHistorial->where('activo', true)->values();
 
         $query = PersonalRecord::with(['cliente', 'ejercicio'])
             ->where('cliente_id', $clienteId)
@@ -55,7 +57,7 @@ class ProgresoController extends Controller
             ->first();
         $ultimosLevantamientos = (clone $query)->limit(8)->get()->reverse()->values();
 
-        $ejercicioSeleccionadoObj = $ejercicioIdFiltro ? $ejercicios->firstWhere('id', (int) $ejercicioIdFiltro) : null;
+        $ejercicioSeleccionadoObj = $ejercicioIdFiltro ? $ejerciciosHistorial->firstWhere('id', (int) $ejercicioIdFiltro) : null;
 
         return view('progreso.index', [
             'guard' => $guard,
@@ -65,6 +67,7 @@ class ProgresoController extends Controller
             'clientes' => $clientes,
             'clienteSeleccionado' => $clienteId,
             'ejercicios' => $ejercicios,
+            'ejerciciosHistorial' => $ejerciciosHistorial,
             'ejercicioFiltro' => $ejercicioIdFiltro,
             'ejercicioSeleccionadoObj' => $ejercicioSeleccionadoObj,
             'records' => $records,
@@ -130,7 +133,8 @@ class ProgresoController extends Controller
         ]);
         $ejercicioIdFiltro = $filtros['ejercicio_id'] ?? null;
 
-        $ejercicios = Ejercicio::where('activo', true)->orderBy('nombre')->get();
+        $ejerciciosHistorial = $this->ejerciciosParaHistorial($cliente->id);
+        $ejercicios = $ejerciciosHistorial->where('activo', true)->values();
 
         $query = PersonalRecord::with(['ejercicio'])
             ->where('cliente_id', $cliente->id)
@@ -160,7 +164,7 @@ class ProgresoController extends Controller
             ->first();
 
         $ultimosLevantamientos = (clone $query)->limit(8)->get()->reverse()->values();
-        $ejercicioSeleccionadoObj = $ejercicioIdFiltro ? $ejercicios->firstWhere('id', (int) $ejercicioIdFiltro) : null;
+        $ejercicioSeleccionadoObj = $ejercicioIdFiltro ? $ejerciciosHistorial->firstWhere('id', (int) $ejercicioIdFiltro) : null;
 
         return view('progreso.entrenador', [
             'guard' => $guard,
@@ -169,6 +173,7 @@ class ProgresoController extends Controller
             'avatarUrl' => $user->avatar_url,
             'cliente' => $cliente,
             'ejercicios' => $ejercicios,
+            'ejerciciosHistorial' => $ejerciciosHistorial,
             'ejercicioFiltro' => $ejercicioIdFiltro,
             'ejercicioSeleccionadoObj' => $ejercicioSeleccionadoObj,
             'records' => $records,
@@ -177,5 +182,13 @@ class ProgresoController extends Controller
             'maximoRecord' => $maximoRecord,
             'ultimosLevantamientos' => $ultimosLevantamientos,
         ]);
+    }
+
+    private function ejerciciosParaHistorial(int $clienteId): Collection
+    {
+        return Ejercicio::query()->where(function ($query) use ($clienteId) {
+            $query->where('activo', true)
+                ->orWhereHas('personalRecords', fn ($records) => $records->where('cliente_id', $clienteId));
+        })->orderBy('nombre')->get();
     }
 }

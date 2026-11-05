@@ -184,27 +184,28 @@
             </div>
         </div>
 
-        {{-- Tarjeta 4: Ticket Promedio --}}
+        {{-- Entradas diarias --}}
         <div class="alpha-card rounded-2xl p-5 relative overflow-hidden group transition-all">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold tracking-wider uppercase" style="color: var(--alpha-muted);">Ticket Promedio</span>
+                <span class="text-xs font-semibold tracking-wider uppercase" style="color: var(--alpha-muted);">Entradas diarias</span>
                 <span class="p-2 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                 </span>
             </div>
             <div class="mt-3">
                 <div class="text-3xl font-black tracking-tight" style="color: var(--alpha-text);">
-                    ${{ number_format($datos['kpis']['ticket_promedio'], 2) }}
+                    ${{ number_format($datos['kpis']['ingresos_entradas'], 2) }}
                 </div>
                 <div class="mt-2 text-xs flex items-center justify-between" style="color: var(--alpha-muted);">
-                    <span>{{ $datos['kpis']['transacciones_totales'] }} operaciones</span>
-                    <span class="font-medium">Por transacción</span>
+                    <span>{{ $datos['kpis']['transacciones_entradas'] }} entradas cobradas</span>
+                    <span class="font-medium">{{ $datos['kpis']['porcentaje_entradas'] }}% del total</span>
                 </div>
             </div>
         </div>
     </div>
 
     <section class="alpha-card rounded-2xl p-5 sm:p-6" aria-labelledby="comparativo-periodos">
+        <p class="text-sm mb-4" style="color: var(--alpha-muted);">Ticket promedio: <strong style="color: var(--alpha-text);">${{ number_format($datos['kpis']['ticket_promedio'], 2) }}</strong> · {{ $datos['kpis']['transacciones_totales'] }} operaciones entre membresías, productos y entradas diarias.</p>
         <h2 id="comparativo-periodos" class="text-lg font-bold" style="color: var(--alpha-text);">Comparativo de períodos</h2>
         <p class="mt-1 mb-4 text-xs" style="color: var(--alpha-muted);">Diferencia = actual − anterior. La variación porcentual requiere una base anterior mayor a cero.</p>
         <div class="overflow-x-auto">
@@ -243,9 +244,9 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             <div>
                 <h2 class="text-lg font-bold tracking-tight" style="color: var(--alpha-text);">Evolución de Ingresos</h2>
-                <p class="text-xs" style="color: var(--alpha-muted);">Desglose cronológico diario de recaudación por membresías y ventas</p>
+                <p class="text-xs" style="color: var(--alpha-muted);">Recaudación diaria por membresías, productos y entradas diarias.</p>
             </div>
-            <div class="flex items-center gap-4 text-xs font-medium">
+            <div class="flex flex-wrap items-center gap-4 text-xs font-medium">
                 <div class="flex items-center gap-1.5" style="color: var(--alpha-text);">
                     <span class="w-3 h-3 rounded-full bg-rose-500"></span>
                     <span>Total</span>
@@ -257,6 +258,9 @@
                 <div class="flex items-center gap-1.5" style="color: var(--alpha-text);">
                     <span class="w-3 h-3 rounded-full bg-amber-500"></span>
                     <span>Ventas</span>
+                </div>
+                <div class="flex items-center gap-1.5" style="color: var(--alpha-text);">
+                    <span class="w-3 h-3" style="background: var(--alpha-text);"></span><span>Entradas</span>
                 </div>
             </div>
         </div>
@@ -273,9 +277,10 @@
                         $porcentajeBarra = min(100, round(($dia['total'] / $maxMontoSerie) * 100));
                         $alturaMem = $dia['total'] > 0 ? round(($dia['membresias'] / $dia['total']) * 100) : 0;
                         $alturaVen = $dia['total'] > 0 ? round(($dia['ventas'] / $dia['total']) * 100) : 0;
+                        $alturaEntradas = $dia['total'] > 0 ? round(($dia['entradas'] / $dia['total']) * 100) : 0;
                     @endphp
                     <div class="flex-1 flex flex-col items-center h-full justify-end group relative" tabindex="0"
-                         aria-label="{{ $dia['fecha'] }}: total {{ number_format($dia['total'], 2) }} USD; membresías {{ number_format($dia['membresias'], 2) }} USD; ventas {{ number_format($dia['ventas'], 2) }} USD; {{ $dia['transacciones'] }} operaciones">
+                         aria-label="{{ $dia['fecha'] }}: total {{ number_format($dia['total'], 2) }} USD; membresías {{ number_format($dia['membresias'], 2) }} USD; ventas {{ number_format($dia['ventas'], 2) }} USD; entradas {{ number_format($dia['entradas'], 2) }} USD; {{ $dia['transacciones'] }} operaciones">
                         {{-- Tooltip flotante --}}
                         <div class="absolute top-2 hidden group-hover:flex group-focus:flex flex-col items-center z-20 pointer-events-none"
                              style="{{ $loop->first ? 'left: 0;' : ($loop->last ? 'right: 0;' : 'left: 50%; transform: translateX(-50%);') }}">
@@ -284,13 +289,17 @@
                                 <div class="text-rose-400 font-extrabold mt-0.5">Total: ${{ number_format($dia['total'], 2) }}</div>
                                 <div class="text-purple-300">Membresías: ${{ number_format($dia['membresias'], 2) }}</div>
                                 <div class="text-amber-300">Ventas: ${{ number_format($dia['ventas'], 2) }}</div>
+                                <div>Entradas: ${{ number_format($dia['entradas'], 2) }}</div>
                                 <div class="text-gray-400">{{ $dia['transacciones'] }} operaciones</div>
                             </div>
                         </div>
 
                         {{-- Barra combinada adaptada al tema --}}
                         <div class="w-full max-w-[32px] rounded-t-md overflow-hidden flex flex-col-reverse transition-all duration-200 group-hover:brightness-110"
-                             style="height: {{ max(4, $porcentajeBarra) }}%; background-color: var(--alpha-subtle); border-top: 1px solid var(--alpha-border); border-inline: 1px solid var(--alpha-border);">
+                             style="height: {{ $porcentajeBarra }}%; background-color: var(--alpha-subtle); border-top: 1px solid var(--alpha-border); border-inline: 1px solid var(--alpha-border);">
+                            @if($dia['entradas'] > 0)
+                                <div class="w-full" style="height: {{ $alturaEntradas }}%; background: var(--alpha-text);"></div>
+                            @endif
                             @if($dia['ventas'] > 0)
                                 <div class="w-full bg-amber-500" style="height: {{ $alturaVen }}%;"></div>
                             @endif
@@ -337,6 +346,15 @@
                             <div class="bg-amber-500 h-2 rounded-full transition-all duration-500" style="width: {{ $datos['kpis']['porcentaje_ventas'] }}%;"></div>
                         </div>
                     </div>
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1">
+                            <span style="color: var(--alpha-text);">Entradas diarias</span>
+                            <span style="color: var(--alpha-text);">${{ number_format($datos['kpis']['ingresos_entradas'], 2) }} ({{ $datos['kpis']['porcentaje_entradas'] }}%)</span>
+                        </div>
+                        <div class="w-full rounded-full h-3 overflow-hidden p-0.5 border" style="background: var(--alpha-subtle); border-color: var(--alpha-border);">
+                            <div class="h-2 rounded-full" style="width: {{ $datos['kpis']['porcentaje_entradas'] }}%; background: var(--alpha-text);"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -349,6 +367,7 @@
                     <span>Recaudación Ventas:</span>
                     <strong style="color: var(--alpha-text);">{{ $datos['kpis']['transacciones_ventas'] }} ventas mostrador</strong>
                 </div>
+                <div class="flex justify-between"><span>Recaudación Entradas:</span><strong style="color: var(--alpha-text);">{{ $datos['kpis']['transacciones_entradas'] }} entradas cobradas</strong></div>
             </div>
         </div>
 

@@ -40,6 +40,11 @@
             </div>
         </div>
 
+        <section class="mb-8" aria-labelledby="condiciones-acceso">
+            <h2 id="condiciones-acceso" class="text-lg font-semibold mb-2">Acceso al gimnasio</h2>
+            <p class="text-sm text-gray-400">El acceso está incluido con una membresía vigente. Sin membresía vigente, cada entrada cuesta ${{ \App\Services\RegistroAsistencia::TARIFA_ENTRADA_DIARIA }}. El cobro y el registro se realizan en recepción.</p>
+        </section>
+
         {{-- PLANES DE MEMBRESÍA DISPONIBLES --}}
         @if(isset($planes) && $planes->isNotEmpty())
             <section class="mb-10">

@@ -5,7 +5,9 @@ namespace App\Providers;
 use App\Support\Acceso;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Foundation\Events\DiagnosingHealth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -26,6 +28,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Event::listen(DiagnosingHealth::class, function () {
+            try {
+                DB::select('SELECT 1');
+            } catch (\Throwable) {
+                // Health failures must not expose connection details in responses or logs.
+                throw new \RuntimeException('No se pudo verificar la disponibilidad del servicio.');
+            }
+        });
         foreach (['exportaciones' => 10, 'operaciones-financieras' => 60] as $nombre => $limite) {
             RateLimiter::for($nombre, function (Request $request) use ($limite) {
                 $user = $request->user();

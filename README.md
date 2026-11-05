@@ -2,9 +2,13 @@
 
 Aplicación Laravel 12 para gestionar entrenamiento y operaciones del gimnasio.
 
+Para continuar los cambios revisados del 5 de noviembre, comienza por [la nota de entrega](docs/ENTREGA_2026_11_05.md), con las reglas del negocio, pruebas, migraciones y pendientes. Las [capturas comparativas](docs/alpha-capturas.pdf) acompañan la revisión.
+
 La [documentación integral](docs/documentacion/README.md) incluye el manual técnico y de administración y el manual de usuario por rol.
 
 La [revisión del 28 de octubre de 2026](REVISION_FINAL.md) recoge las correcciones, las comprobaciones y el listado de limitaciones pendientes.
+
+La [revisión del 4 y 5 de noviembre de 2026](REVISION_2026_11_04.md) añade el resumen de ingresos en Inicio exclusivo del administrador, filtros por mes o fechas, comparación, recuperación de formularios inválidos y mejoras de los flujos por rol.
 
 ## Uso local
 
@@ -40,6 +44,7 @@ Para crear el administrador inicial, ejecuta `php artisan admin:create` y propor
 ## Funciones
 
 - Inicio con indicadores reales, rutinas propias y visitas recientes.
+- Inicio del administrador con gráfica diaria de ingresos cobrados de membresías, productos y entradas por visita, selector de mes, día o rango de hasta 90 días y comparación con el período anterior de igual duración. Los resúmenes financieros de Inicio y Ventas están reservados al administrador; Secretaría conserva los importes individuales necesarios para operar.
 - Registro e ingreso de clientes y acceso de empleados.
 - Constructor de rutinas, catálogo de ejercicios y calificaciones.
 - Membresías: registro, importe en USD, fechas, detección de superposiciones, búsqueda, historial y cancelación. La renovación se registra como un nuevo periodo; no procesa pagos en línea.
@@ -54,6 +59,14 @@ Para crear el administrador inicial, ejecuta `php artisan admin:create` y propor
 - Ventas y comprobantes; analítica financiera agregada de hasta 90 días, exportable a PDF y Excel por el administrador.
 - Entrenar Ahora e historial de sesiones persistidas; un reintento con el mismo identificador no crea otra sesión o venta.
 - Política de privacidad pública en `/privacidad`, con confirmación previa al acceso de personal, clientes, registro y Google, validada en el servidor. Se registra la versión y fecha de lectura al acceder.
+
+## Entrada sin membresía vigente
+
+Cada entrada de un cliente sin membresía vigente cuesta **USD 2.00**. Recepción debe confirmar que recibió el importe antes de registrar el ingreso. Con membresía vigente, la entrada está incluida y no genera este cobro. La tarifa no elimina los bloqueos de cuentas inactivas ni permite ingresar con una membresía en pausa sin reanudarla.
+
+El importe corresponde a **cada entrada**, no a un pase válido para todo el día: salir no tiene coste, pero un ingreso posterior sin membresía vigente vuelve a requerir USD 2.00. Reenviar la misma entrada con su identificador conserva el registro y el pago existentes, sin duplicarlos. Mientras el cliente siga dentro no se admite una segunda entrada.
+
+Los cobros de entradas se guardan vinculados a su asistencia y al empleado que los confirmó. La gráfica y los informes del administrador los suman como una tercera fuente junto con membresías y productos. Se muestran ingresos cobrados, no ganancias netas; no hay un registro de costes y gastos. La migración no genera cobros retroactivos para asistencias anteriores.
 
 ## Diseño y apariencia
 

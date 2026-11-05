@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\RegistroAsistencia;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -88,6 +89,21 @@ class Cliente extends Authenticatable
     public function ultimaMembresia(): HasOne
     {
         return $this->hasOne(Membresia::class)->ofMany(['fin' => 'max', 'id' => 'max'], fn ($q) => $q->where('cancelada', false));
+    }
+
+    public function membresiasParaAcceso(): HasMany
+    {
+        return $this->hasMany(Membresia::class)->where('cancelada', false)->whereDate('fin', '>=', today()->toDateString());
+    }
+
+    public function ultimaMembresiaRegistrada(): HasOne
+    {
+        return $this->hasOne(Membresia::class)->ofMany(['fin' => 'max', 'id' => 'max']);
+    }
+
+    public function getAccesoEntradaAttribute(): array
+    {
+        return app(RegistroAsistencia::class)->evaluarAcceso($this);
     }
 
     /** Keep profile images first-party so opening the app never contacts a tracking host. */

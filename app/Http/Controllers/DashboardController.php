@@ -6,18 +6,20 @@ use App\Models\Asistencia;
 use App\Models\Cliente;
 use App\Models\Ejercicio;
 use App\Models\Membresia;
-use App\Models\PagoMembresia;
 use App\Models\PersonalRecord;
 use App\Models\Rutina;
 use App\Models\SolicitudMembresia;
 use App\Models\User;
 use App\Models\Venta;
+use App\Services\AnaliticaFinancieraService;
 use App\Support\InformacionGimnasio;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request, AnaliticaFinancieraService $analiticaService)
     {
         $guard = request()->routeIs('cliente.dashboard') ? 'cliente' : 'web';
         $user = auth($guard)->user();
@@ -35,6 +37,7 @@ class DashboardController extends Controller
         $rutinas = Rutina::deUsuario($guard, $user->id)->withCount('dias')->latest()->limit(4)->get();
         $actividad = collect();
         $porVencer = collect();
+        $finanzas = null;
         $dentroAhora = Asistencia::whereNull('fecha_salida')->where('fecha_hora', '>=', now()->subHours(12))->count();
 
         if ($perfil === 'cliente') {
@@ -42,25 +45,37 @@ class DashboardController extends Controller
             $membresias = Membresia::with('cliente:id,nombre')->where('cliente_id', $user->id)->where('cancelada', false)->where('inicio', '<=', today())->where('fin', '>=', today());
             $metricas = [['Mis rutinas', Rutina::deUsuario($guard, $user->id)->count()], ['Mis visitas este mes', (clone $visitas)->whereBetween('fecha_hora', [now()->startOfMonth(), now()->endOfMonth()])->count()], ['Membresias vigentes', $membresias->count()], ['Mis marcas', PersonalRecord::where('cliente_id', $user->id)->count()]];
             $actividad = $visitas->latest('fecha_hora')->limit(5)->get();
-            $porVencer = $membresias->where('fin', '<=', today()->addDays(7))->limit(5)->get();
+            $porVencer = $membresias->where('fin', '<=', today()->addDays(7))->orderBy('fin')->orderBy('id')->limit(5)->get();
         } elseif ($perfil === 'recepcion') {
             $metricas = [['Entradas hoy', Asistencia::whereBetween('fecha_hora', [today(), today()->endOfDay()])->count()], ['Dentro ahora', $dentroAhora], ['Solicitudes pendientes', SolicitudMembresia::where('estado', 'pendiente')->count()]];
             $actividad = Asistencia::with('cliente:id,nombre')->latest('fecha_hora')->limit(5)->get();
-            $porVencer = Membresia::with('cliente:id,nombre')->where('cancelada', false)->whereBetween('fin', [today(), today()->addDays(7)])->limit(5)->get();
+            $porVencer = Membresia::with('cliente:id,nombre')->where('cancelada', false)->whereBetween('fin', [today(), today()->addDays(7)])->orderBy('fin')->orderBy('id')->limit(5)->get();
         } elseif ($perfil === 'administrador') {
-            $ingresosMembresiasMes = (float) PagoMembresia::whereBetween('pagado_en', [now()->startOfMonth(), now()->endOfMonth()])->sum('importe');
-            $ingresosVentasMes = (float) Venta::whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->sum('total');
-            $totalIngresosMes = $ingresosMembresiasMes + $ingresosVentasMes;
+            Gate::forUser($user)->authorize('analitica_financiera');
+            $request->validate([
+                'preset' => ['nullable', 'string', 'in:hoy,ayer,esta_semana,semana_anterior,este_mes,mes_anterior,personalizado,mes'],
+                'desde' => ['nullable', 'string', 'date_format:Y-m-d'],
+                'hasta' => ['nullable', 'string', 'date_format:Y-m-d'],
+                'mes' => ['required_if:preset,mes', 'nullable', 'string', 'date_format:Y-m'],
+            ]);
+            $periodo = $analiticaService->resolverPeriodo(
+                $request->query('preset'), $request->query('desde'), $request->query('hasta'), $request->query('mes')
+            );
+            $datos = $analiticaService->obtenerAnalitica($periodo['desde'], $periodo['hasta'], $periodo['dias']);
+            $finanzas = [
+                'datos' => $datos,
+                'preset' => $periodo['preset'],
+                'desde' => $datos['periodo']['desde_iso'],
+                'hasta' => $datos['periodo']['hasta_iso'],
+                'mes' => $periodo['desde']->format('Y-m'),
+            ];
 
             $metricas = [
                 ['Clientes activos', Cliente::where('activo', true)->count()],
-                ['Ingresos este mes', '$'.number_format($totalIngresosMes, 2)],
-                ['Membresías cobradas', '$'.number_format($ingresosMembresiasMes, 2)],
-                ['Ventas mostrador', '$'.number_format($ingresosVentasMes, 2)],
                 ['Personal activo', User::where('activo', true)->count()],
             ];
             $actividad = Venta::with(['cliente:id,nombre', 'user:id,name'])->latest()->limit(5)->get();
-            $porVencer = Membresia::with('cliente:id,nombre')->where('cancelada', false)->whereBetween('fin', [today(), today()->addDays(7)])->limit(5)->get();
+            $porVencer = Membresia::with('cliente:id,nombre')->where('cancelada', false)->whereBetween('fin', [today(), today()->addDays(7)])->orderBy('fin')->orderBy('id')->limit(5)->get();
         } else {
             $metricas = [
                 ['Mis rutinas', Rutina::deUsuario($guard, $user->id)->count()],
@@ -68,10 +83,12 @@ class DashboardController extends Controller
                 ['Total entrenadores', User::where('rol', 'Entrenador')->where('activo', true)->count()],
             ];
             $actividad = Ejercicio::where('activo', true)
+                ->whereHas('calificaciones')
                 ->withAvg('calificaciones as promedio_estrellas', 'estrellas')
                 ->withCount('calificaciones as conteo_votos')
                 ->orderByDesc('promedio_estrellas')
                 ->orderByDesc('conteo_votos')
+                ->orderBy('id')
                 ->limit(5)
                 ->get();
         }
@@ -118,6 +135,6 @@ class DashboardController extends Controller
             ];
         }
 
-        return view('home', compact('guard', 'nombre', 'rutinas', 'metricas', 'actividad', 'perfil', 'titulo', 'acciones', 'porVencer', 'aforo', 'horasPico'));
+        return view('home', compact('guard', 'nombre', 'rutinas', 'metricas', 'actividad', 'perfil', 'titulo', 'acciones', 'porVencer', 'aforo', 'horasPico', 'finanzas'));
     }
 }

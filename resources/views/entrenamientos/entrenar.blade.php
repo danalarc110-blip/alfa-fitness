@@ -87,14 +87,14 @@
                                 @if($re->peso)
                                     <span><strong>Peso objetivo:</strong> {{ $re->peso }} kg</span>
                                 @endif
-                                <span><strong>Descanso:</strong> {{ $re->descanso_segundos ?: 60 }}s</span>
+                                <span><strong>Descanso:</strong> {{ $re->descanso_segundos ?? 60 }}s</span>
                             </div>
 
                             {{-- CHECKLIST DE SERIES INTERACTIVO --}}
                             <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-white/5">
                                 @for($s = 1; $s <= ($re->series ?: 3); $s++)
                                     <button type="button"
-                                        onclick="toggleSerie(this, {{ $re->descanso_segundos ?: 60 }})"
+                                        onclick="toggleSerie(this, {{ $re->descanso_segundos ?? 60 }})"
                                         class="serie-btn px-3 py-1.5 rounded-xl text-xs font-bold border transition-all duration-150 flex items-center gap-1.5 bg-black/40 border-white/10 text-gray-300 hover:border-yellow-400/50 hover:text-white"
                                         data-completada="false" aria-pressed="false">
                                         <span class="w-3.5 h-3.5 rounded-full border border-current flex items-center justify-center text-[10px]">&check;</span>
@@ -200,9 +200,11 @@
             <a href="{{ route('entrenamientos.historial') }}" class="alpha-btn-primary px-4 py-2.5 rounded-xl text-xs font-semibold">
                 Ver mi Historial
             </a>
+            @can('progreso')
             <a href="{{ route('progreso.index') }}" class="alpha-btn-secondary px-4 py-2.5 rounded-xl text-xs font-semibold">
                 Registrar PRs
             </a>
+            @endcan
             <a href="{{ route('entrenamientos.index') }}" class="alpha-btn-secondary px-4 py-2.5 rounded-xl text-xs font-semibold">
                 Volver a rutinas
             </a>
@@ -316,7 +318,8 @@
             if (segundosRestantes > 0) {
                 segundosRestantes--;
                 actualizarDisplay();
-            } else {
+            }
+            if (segundosRestantes === 0) {
                 pausarTimer();
                 document.getElementById('timer-estado').textContent = '¡A entrenar!';
                 document.getElementById('timer-estado').className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-400 text-black animate-pulse';
@@ -359,8 +362,9 @@
             btn.classList.remove('bg-black/40', 'border-white/10', 'text-gray-300');
             btn.classList.add('bg-yellow-400', 'text-black', 'border-yellow-400', 'shadow-md', 'shadow-yellow-400/20');
             // Auto-iniciar descanso correspondiente al ejercicio
-            ajustarTimer(descanso || 60);
-            iniciarTimer();
+            const segundosDescanso = descanso ?? 60;
+            ajustarTimer(segundosDescanso);
+            if (segundosDescanso > 0) iniciarTimer();
         } else {
             btn.dataset.completada = 'false';
             btn.classList.remove('bg-yellow-400', 'text-black', 'border-yellow-400', 'shadow-md', 'shadow-yellow-400/20');
@@ -421,7 +425,9 @@
                     throw new Error(response.status === 401 || response.status === 419 ? 'Tu sesión expiró. Inicia sesión de nuevo para guardar tu entrenamiento.' : Object.values(data.errors || {}).flat()[0] || 'No se pudo registrar tu entrenamiento. Intenta nuevamente.');
                 }
                 sesionGuardada = true;
-                document.getElementById('resumen-fin-entrenamiento').textContent = `Tu sesión se guardó con ${hechas} de ${total} series completadas.`;
+                const hechasGuardadas = data.sesion?.series_completadas ?? hechas;
+                const totalGuardadas = data.sesion?.total_series ?? total;
+                document.getElementById('resumen-fin-entrenamiento').textContent = `Tu sesión se guardó con ${hechasGuardadas} de ${totalGuardadas} series completadas.`;
             } catch (error) {
                 window.showAlphaToast?.(error.message || 'Revisa tu conexión e intenta guardar nuevamente.', 'error');
                 return;

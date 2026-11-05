@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\PagoEntrada;
 use App\Models\PagoMembresia;
 use App\Models\Venta;
 use App\Support\Dinero;
@@ -19,19 +20,26 @@ class AnaliticaFinancieraService
      *
      * @return array{desde: Carbon, hasta: Carbon, preset: string, dias: int}
      */
-    public function resolverPeriodo(?string $preset, ?string $desdeInput, ?string $hastaInput): array
+    public function resolverPeriodo(?string $preset, ?string $desdeInput, ?string $hastaInput, ?string $mesInput = null): array
     {
-        Validator::make(['preset' => $preset, 'desde' => $desdeInput, 'hasta' => $hastaInput], [
-            'preset' => ['nullable', 'in:hoy,ayer,esta_semana,semana_anterior,este_mes,mes_anterior,personalizado'],
+        Validator::make(['preset' => $preset, 'desde' => $desdeInput, 'hasta' => $hastaInput, 'mes' => $mesInput], [
+            'preset' => ['nullable', 'in:hoy,ayer,esta_semana,semana_anterior,este_mes,mes_anterior,personalizado,mes'],
             'desde' => ['nullable', 'date_format:Y-m-d'],
             'hasta' => ['nullable', 'date_format:Y-m-d'],
+            'mes' => ['required_if:preset,mes', 'nullable', 'date_format:Y-m'],
         ])->validate();
         $timezone = config('app.timezone', 'America/El_Salvador');
         $hoy = Carbon::now($timezone);
 
         $preset = $preset ?: 'este_mes';
 
-        if ($preset === 'personalizado') {
+        if ($preset === 'mes') {
+            $mes = Carbon::createFromFormat('!Y-m', $mesInput, $timezone);
+            $desdeInput = $mes->copy()->startOfMonth()->format('Y-m-d');
+            $hastaInput = $mes->copy()->endOfMonth()->format('Y-m-d');
+        }
+
+        if (in_array($preset, ['personalizado', 'mes'], true)) {
             if (! $desdeInput || ! $hastaInput) {
                 throw ValidationException::withMessages([
                     'periodo' => 'Para un período personalizado debe especificar fecha inicial y final.',
@@ -69,7 +77,7 @@ class AnaliticaFinancieraService
             return [
                 'desde' => $desde,
                 'hasta' => $hasta,
-                'preset' => 'personalizado',
+                'preset' => $preset,
                 'dias' => $dias,
             ];
         }
@@ -118,9 +126,13 @@ class AnaliticaFinancieraService
         $ingresosVentas = $this->importe($centavosVentas);
         $transaccionesVentas = (int) Venta::whereBetween('created_at', [$desde, $hasta])->count();
 
-        $centavosTotales = $centavosMembresias + $centavosVentas;
+        $centavosEntradas = $this->centavosAgregados(PagoEntrada::whereBetween('pagado_en', [$desde, $hasta])->sum('importe'));
+        $ingresosEntradas = $this->importe($centavosEntradas);
+        $transaccionesEntradas = (int) PagoEntrada::whereBetween('pagado_en', [$desde, $hasta])->count();
+
+        $centavosTotales = $centavosMembresias + $centavosVentas + $centavosEntradas;
         $ingresosTotales = $this->importe($centavosTotales);
-        $transaccionesTotales = $transaccionesMembresias + $transaccionesVentas;
+        $transaccionesTotales = $transaccionesMembresias + $transaccionesVentas + $transaccionesEntradas;
         $ticketPromedio = $this->promedio($centavosTotales, $transaccionesTotales);
 
         // 2. Período anterior de la MISMA duración
@@ -131,11 +143,13 @@ class AnaliticaFinancieraService
 
         $prevCentavosMembresias = $this->centavosAgregados(PagoMembresia::whereBetween('pagado_en', [$prevDesde, $prevHasta])->sum('importe'));
         $prevCentavosVentas = $this->centavosAgregados(Venta::whereBetween('created_at', [$prevDesde, $prevHasta])->sum('total'));
-        $prevCentavosTotales = $prevCentavosMembresias + $prevCentavosVentas;
+        $prevCentavosEntradas = $this->centavosAgregados(PagoEntrada::whereBetween('pagado_en', [$prevDesde, $prevHasta])->sum('importe'));
+        $prevCentavosTotales = $prevCentavosMembresias + $prevCentavosVentas + $prevCentavosEntradas;
         $prevIngresosTotales = $this->importe($prevCentavosTotales);
         $prevTransaccionesMembresias = (int) PagoMembresia::whereBetween('pagado_en', [$prevDesde, $prevHasta])->count();
         $prevTransaccionesVentas = (int) Venta::whereBetween('created_at', [$prevDesde, $prevHasta])->count();
-        $prevTransaccionesTotales = $prevTransaccionesMembresias + $prevTransaccionesVentas;
+        $prevTransaccionesEntradas = (int) PagoEntrada::whereBetween('pagado_en', [$prevDesde, $prevHasta])->count();
+        $prevTransaccionesTotales = $prevTransaccionesMembresias + $prevTransaccionesVentas + $prevTransaccionesEntradas;
         $prevTicketPromedio = $this->promedio($prevCentavosTotales, $prevTransaccionesTotales);
 
         $diferenciaMonetaria = $this->importe($centavosTotales - $prevCentavosTotales);
@@ -165,6 +179,13 @@ class AnaliticaFinancieraService
             ->get()
             ->keyBy('fecha');
 
+        $entradasPorDia = DB::table('pagos_entrada')
+            ->whereBetween('pagado_en', [$desde, $hasta])
+            ->selectRaw('DATE(pagado_en) as fecha, SUM(importe) as total, COUNT(*) as cantidad')
+            ->groupBy(DB::raw('DATE(pagado_en)'))
+            ->get()
+            ->keyBy('fecha');
+
         $serieDiaria = [];
         $diasActivos = 0;
         $diaMayor = null;
@@ -181,13 +202,16 @@ class AnaliticaFinancieraService
 
             $centavosDiaMembresias = $this->centavosAgregados($pagosPorDia[$fStr]->total ?? 0);
             $centavosDiaVentas = $this->centavosAgregados($ventasPorDia[$fStr]->total ?? 0);
+            $centavosDiaEntradas = $this->centavosAgregados($entradasPorDia[$fStr]->total ?? 0);
             $montoMembresias = $this->importe($centavosDiaMembresias);
             $montoVentas = $this->importe($centavosDiaVentas);
-            $montoDia = $this->importe($centavosDiaMembresias + $centavosDiaVentas);
+            $montoEntradas = $this->importe($centavosDiaEntradas);
+            $montoDia = $this->importe($centavosDiaMembresias + $centavosDiaVentas + $centavosDiaEntradas);
 
             $conteoMembresias = isset($pagosPorDia[$fStr]) ? (int) $pagosPorDia[$fStr]->cantidad : 0;
             $conteoVentas = isset($ventasPorDia[$fStr]) ? (int) $ventasPorDia[$fStr]->cantidad : 0;
-            $conteoDia = $conteoMembresias + $conteoVentas;
+            $conteoEntradas = isset($entradasPorDia[$fStr]) ? (int) $entradasPorDia[$fStr]->cantidad : 0;
+            $conteoDia = $conteoMembresias + $conteoVentas + $conteoEntradas;
 
             if ($montoDia > 0) {
                 $diasActivos++;
@@ -212,6 +236,7 @@ class AnaliticaFinancieraService
                 'fecha_corta' => $fLabel,
                 'membresias' => $montoMembresias,
                 'ventas' => $montoVentas,
+                'entradas' => $montoEntradas,
                 'total' => $montoDia,
                 'transacciones' => $conteoDia,
             ];
@@ -232,6 +257,7 @@ class AnaliticaFinancieraService
 
         $porcentajeMembresias = $ingresosTotales > 0 ? round(($ingresosMembresias / $ingresosTotales) * 100, 1) : 0.0;
         $porcentajeVentas = $ingresosTotales > 0 ? round(($ingresosVentas / $ingresosTotales) * 100, 1) : 0.0;
+        $porcentajeEntradas = $ingresosTotales > 0 ? round(($ingresosEntradas / $ingresosTotales) * 100, 1) : 0.0;
 
         // 4. Rendimiento de Membresías por Plan
         $planesRendimiento = DB::table('pagos_membresia')
@@ -313,12 +339,23 @@ class AnaliticaFinancieraService
             ]);
         }
 
+        if ($transaccionesEntradas > 0) {
+            $metodosRendimiento->push([
+                'metodo' => 'Registro en Recepción (Entradas)',
+                'tipo' => 'Entradas',
+                'operaciones' => $transaccionesEntradas,
+                'ingresos' => $ingresosEntradas,
+                'porcentaje' => $porcentajeEntradas,
+            ]);
+        }
+
         $metodosRendimiento = $metodosRendimiento->sortByDesc('ingresos')->values();
 
         $comparativo = [];
         foreach ([
             ['Ingresos por membresías', $ingresosMembresias, $this->importe($prevCentavosMembresias), 'moneda'],
             ['Ingresos por ventas', $ingresosVentas, $this->importe($prevCentavosVentas), 'moneda'],
+            ['Ingresos por entradas', $ingresosEntradas, $this->importe($prevCentavosEntradas), 'moneda'],
             ['Ingresos totales', $ingresosTotales, $prevIngresosTotales, 'moneda'],
             ['Transacciones', $transaccionesTotales, $prevTransaccionesTotales, 'entero'],
             ['Ticket promedio', $ticketPromedio, $prevTicketPromedio, 'moneda'],
@@ -340,8 +377,10 @@ class AnaliticaFinancieraService
                 : ($ingresosTotales > 0 ? 'El período anterior no registra ingresos. No existe una base para calcular crecimiento porcentual.' : 'Ambos períodos carecen de ingresos registrados; no se observa variación monetaria.'),
         ];
         if ($ingresosTotales > 0) {
-            $origen = $ingresosMembresias >= $ingresosVentas ? 'Las membresías' : 'Las ventas de productos';
-            $participacion = max($porcentajeMembresias, $porcentajeVentas);
+            $origenes = ['Las membresías' => $centavosMembresias, 'Las ventas de productos' => $centavosVentas, 'Las entradas' => $centavosEntradas];
+            arsort($origenes);
+            $origen = array_key_first($origenes);
+            $participacion = max($porcentajeMembresias, $porcentajeVentas, $porcentajeEntradas);
             $resumen[] = $origen.' representan la mayor participación: '.number_format($participacion, 1).'% de los ingresos del período.';
         }
         if ($abierto) {
@@ -349,13 +388,14 @@ class AnaliticaFinancieraService
         }
 
         $metodologia = [
-            'Moneda: USD. Ingresos registrados = cobros de membresías (pagado_en) + ventas de productos (created_at). Las fechas usan la zona horaria configurada.',
+            'Moneda: USD. Ingresos registrados = cobros de membresías (pagado_en) + ventas de productos (created_at) + pagos de entrada (pagado_en). Las fechas usan la zona horaria configurada.',
+            'Los pagos de entrada registran USD 2.00 por acceso sin membresía vigente. Las asistencias históricas sin pago registrado no generan ingresos retroactivos.',
             'No se registran costos, gastos ni devoluciones en este módulo. Los ingresos no representan utilidad, rentabilidad ni un estado financiero contable.',
             'Comparación: intervalo inmediatamente anterior con igual número de días calendario; si el período está en curso, ambos terminan a la misma hora de corte. No ajusta por estacionalidad ni días de apertura.',
-            'Ticket promedio = ingresos / transacciones. Una transacción es un cobro de membresía o una venta; las operaciones por producto pueden compartir una venta y no se suman como transacciones generales.',
+            'Ticket promedio = ingresos / transacciones. Una transacción es un cobro de membresía, una venta o un pago de entrada; las operaciones por producto pueden compartir una venta y no se suman como transacciones generales.',
             'Días con ingresos: días cuyo importe total es mayor que cero. Promedio por día activo = ingresos / días con ingresos. Los días sin ingresos se conservan en el detalle diario.',
             'Variación porcentual = (actual - anterior) / anterior × 100. Con base anterior cero y valor actual positivo se indica No calculable; con ambos valores cero se muestra 0%.',
-            'Los métodos de pago corresponden a ventas. Los cobros de membresías se agrupan por origen porque no registran un método de pago.',
+            'Los métodos de pago corresponden a ventas. Los cobros de membresías y entradas se agrupan por origen porque no registran un método de pago.',
             'Las cifras son agregadas, sin datos personales de clientes. El código identifica el rango; la fecha de generación identifica el corte de la consulta, no un cierre contable auditado.',
         ];
 
@@ -384,9 +424,11 @@ class AnaliticaFinancieraService
                 'ingresos_totales' => $ingresosTotales,
                 'ingresos_membresias' => $ingresosMembresias,
                 'ingresos_ventas' => $ingresosVentas,
+                'ingresos_entradas' => $ingresosEntradas,
                 'transacciones_totales' => $transaccionesTotales,
                 'transacciones_membresias' => $transaccionesMembresias,
                 'transacciones_ventas' => $transaccionesVentas,
+                'transacciones_entradas' => $transaccionesEntradas,
                 'ticket_promedio' => $ticketPromedio,
                 'prev_ingresos_totales' => $prevIngresosTotales,
                 'diferencia_monetaria' => $diferenciaMonetaria,
@@ -394,6 +436,7 @@ class AnaliticaFinancieraService
                 'variacion_texto' => $variacionTexto,
                 'porcentaje_membresias' => $porcentajeMembresias,
                 'porcentaje_ventas' => $porcentajeVentas,
+                'porcentaje_entradas' => $porcentajeEntradas,
                 'dias_activos' => $diasActivos,
                 'dia_mayor_ingreso' => $diaMayor,
                 'dia_menor_ingreso' => $diaMenor,

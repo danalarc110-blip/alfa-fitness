@@ -1,0 +1,72 @@
+.alpha-hero-operaciones {padding:20px 24px;}
+.alpha-hero-operaciones h2 {font-family:inherit;font-size:24px;font-weight:600;letter-spacing:-.4px;}
+.alpha-hero-operaciones .alpha-hero-description {margin-bottom:16px;}
+.alpha-hero-operaciones .alpha-hero-seal {display:none;}
+.alpha-business {padding:24px;margin-bottom:24px;}
+.alpha-business-heading {display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+.alpha-business-heading h2 {font-size:22px;}
+.alpha-business-heading p,.alpha-business-help,.alpha-business-note {font-size:12px;line-height:1.6;color:var(--alpha-muted);}
+.alpha-business-heading p {margin-top:5px;}
+.alpha-business-heading a {font-size:13px;color:var(--alpha-primary-text);padding-block:8px;}
+.alpha-business a {text-underline-offset:4px;}
+.alpha-business-presets {display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;}
+.alpha-business-presets a {display:inline-flex;align-items:center;min-height:44px;padding:8px 15px;border:1px solid var(--alpha-border);border-radius:7px;font-size:13px;}
+.alpha-business-presets a[aria-current] {background:var(--alpha-primary);border-color:var(--alpha-primary);color:var(--alpha-on-primary);font-weight:600;}
+.alpha-business-filters {display:flex;flex-wrap:wrap;gap:16px 28px;align-items:end;padding-block:18px 10px;}
+.alpha-business-filters form {display:flex;flex-wrap:wrap;gap:10px;align-items:end;min-width:0;}
+.alpha-business-filters label {font-size:12px;font-weight:600;min-width:0;}
+.alpha-business-filters input {min-height:44px;min-width:0;max-width:100%;font-variant-numeric:tabular-nums;}
+.alpha-business-filters button {min-height:44px;padding:10px 16px;}
+.alpha-business-totals {display:grid;grid-template-columns:1.2fr repeat(3,1fr);gap:20px;margin-top:22px;padding-block:20px;border-block:1px solid var(--alpha-border);font-variant-numeric:tabular-nums;}
+.alpha-business-totals dt {font-size:12px;color:var(--alpha-muted);margin-bottom:8px;}
+.alpha-business-totals dd {font-size:25px;line-height:1.2;font-weight:600;overflow-wrap:anywhere;}
+.alpha-business-comparison {padding-block:16px;}
+.alpha-business-comparison p:first-child {font-size:14px;}
+.alpha-business-comparison p:last-child {font-size:12px;color:var(--alpha-muted);line-height:1.6;margin-top:5px;}
+.alpha-business-chart-heading {display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-block:8px;}
+.alpha-business-chart-heading h3 {font-size:14px;font-weight:600;}
+.alpha-business-legend {display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--alpha-muted);}
+.alpha-business-legend span {display:flex;align-items:center;gap:6px;}
+.alpha-business-legend span::before {content:'';display:inline-block;width:10px;height:10px;background:var(--alpha-primary);}
+.alpha-business-legend span:nth-child(2)::before {background:var(--alpha-accent);border-radius:50%;}
+.alpha-business-legend span:nth-child(3)::before {background:var(--alpha-text);}
+.alpha-business-chart {overflow-x:auto;overscroll-behavior-x:contain;max-width:100%;margin-top:12px;scrollbar-width:thin;scrollbar-color:var(--alpha-border) var(--alpha-surface);}
+.alpha-business-bars {display:flex;gap:6px;border-bottom:1px solid var(--alpha-border);padding:8px 4px 0;}
+.alpha-business-day {flex:1;min-width:24px;display:flex;flex-direction:column;align-items:center;border-radius:4px 4px 0 0;}
+.alpha-business-day:hover {background:var(--alpha-subtle);}
+.alpha-business-bar-track {width:min(100%,45px);height:150px;display:flex;flex-direction:column;justify-content:end;}
+.alpha-business-bar-track>span {display:block;flex-shrink:0;}
+.alpha-business-bar-memberships {background:var(--alpha-primary);}
+.alpha-business-bar-sales {background:var(--alpha-accent);}
+.alpha-business-bar-entries {background:var(--alpha-text);}
+.alpha-business-date {font-size:10px;white-space:nowrap;color:var(--alpha-muted);padding-block:10px;font-variant-numeric:tabular-nums;}
+.alpha-business-empty {font-size:14px;color:var(--alpha-muted);line-height:1.7;padding-block:24px;}
+.alpha-business-detail {margin-top:12px;}
+.alpha-business-detail summary,.alpha-peak-hours summary {cursor:pointer;font-size:13px;font-weight:600;min-height:44px;padding-block:12px;}
+.alpha-business-table-scroll {overflow-x:auto;max-height:360px;margin-top:8px;}
+.alpha-business table {width:100%;border-collapse:collapse;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.alpha-business :is(th,td) {padding:10px 12px;border-bottom:1px solid var(--alpha-border);text-align:right;font-size:12px;}
+.alpha-business tr>:first-child {text-align:left;}
+.alpha-business tbody th {font-weight:400;letter-spacing:0;}
+.alpha-business-note {margin-top:14px;padding-top:14px;border-top:1px solid var(--alpha-border);}
+.alpha-peak-hours {margin-top:14px;border-top:1px solid var(--alpha-border);}
+.alpha-peak-empty {font-size:13px;color:var(--alpha-muted);line-height:1.6;padding-block:8px;}
+@media(max-width:767px) {
+    .alpha-business {padding:20px 16px;}
+    .alpha-business-heading {flex-direction:column;gap:4px;}
+    .alpha-business-heading h2 {font-size:21px;}
+    .alpha-business-filters {gap:18px;}
+    .alpha-business-filters form {width:100%;}
+    .alpha-business-filters label {flex:1 1 120px;}
+    .alpha-business-filters input {width:100%;}
+    #negocio-rango button {width:100%;}
+    .alpha-business-totals {grid-template-columns:1fr 1fr;gap:20px 12px;}
+    .alpha-business-totals>div:first-child {grid-column:1 / -1;}
+    .alpha-business-totals dd {font-size:23px;}
+    .alpha-business-totals>div:first-child dd {font-size:29px;}
+    .alpha-business-totals>div:last-child {grid-column:1 / -1;display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
+    .alpha-business-totals>div:last-child dt {margin:0;}
+    .alpha-hero-operaciones {padding:20px;}
+    .alpha-hero-operaciones h2 {font-size:23px;}
+    .alpha-hero-operaciones .alpha-hero-copy>div>a {flex:1 1 130px;padding-inline:12px;}
+}

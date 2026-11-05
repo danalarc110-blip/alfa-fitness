@@ -8,7 +8,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold tracking-tight text-white">Mi Historial de Asistencia</h1>
-            <p class="text-sm text-gray-400 mt-1">Consulta tus ingresos y permanencia en las instalaciones de Alpha Fitness.</p>
+            <p class="text-sm text-gray-400 mt-1">Consulta tus entradas y permanencia en las instalaciones de Alpha Fitness.</p>
         </div>
 
         <div class="flex items-center gap-3">
@@ -85,6 +85,7 @@
                             <th class="py-3 px-5">Hora de Entrada</th>
                             <th class="py-3 px-5">Hora de Salida</th>
                             <th class="py-3 px-5">Permanencia</th>
+                            <th class="py-3 px-5">Cobro por entrada</th>
                             <th class="py-3 px-5">Estado</th>
                         </tr>
                     </thead>
@@ -101,13 +102,16 @@
                                     {{ $asistencia->fecha_salida ? $asistencia->fecha_salida->format('H:i') . ' hrs' : '—' }}
                                 </td>
                                 <td class="py-3.5 px-5">
-                                    {{ $asistencia->duracion ?: ($asistencia->fecha_salida ? 'Menos de 1m' : 'En curso') }}
+                                    {{ $asistencia->duracion ?: ($asistencia->es_huerfana ? 'Sin salida registrada' : 'En curso') }}
                                 </td>
+                                <td class="py-3.5 px-5">{{ $asistencia->pagoEntrada ? '$'.$asistencia->pagoEntrada->importe : '—' }}</td>
                                 <td class="py-3.5 px-5">
                                     @if ($asistencia->fecha_salida)
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/5 text-gray-400 border border-white/10">
                                             Completada
                                         </span>
+                                    @elseif ($asistencia->es_huerfana)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/5 text-gray-400 border border-white/10">Salida sin registrar</span>
                                     @else
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
                                             ● En sala
@@ -130,6 +134,8 @@
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/5 text-gray-400">
                                     Completada
                                 </span>
+                            @elseif ($asistencia->es_huerfana)
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/5 text-gray-400">Salida sin registrar</span>
                             @else
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-300">
                                     ● En sala
@@ -143,13 +149,16 @@
                             </div>
                             <div>
                                 <span class="block text-[10px] text-gray-500 uppercase">Salida</span>
-                                <span class="text-white">{{ $asistencia->fecha_salida ? $asistencia->fecha_salida->format('H:i') . ' hrs' : 'En curso' }}</span>
+                                <span class="text-white">{{ $asistencia->fecha_salida ? $asistencia->fecha_salida->format('H:i') . ' hrs' : ($asistencia->es_huerfana ? 'Sin registrar' : 'En curso') }}</span>
                             </div>
                         </div>
                         <div class="text-xs text-gray-400 pt-1">
                             <span class="text-gray-500">Duración:</span>
-                            <span class="text-yellow-400 font-medium">{{ $asistencia->duracion ?: ($asistencia->fecha_salida ? 'Menos de 1m' : 'Entrenando actualmente') }}</span>
+                            <span class="text-yellow-400 font-medium">{{ $asistencia->duracion ?: ($asistencia->es_huerfana ? 'Consulta con recepción' : 'Entrenando actualmente') }}</span>
                         </div>
+                        @if($asistencia->pagoEntrada)
+                            <p class="text-xs font-semibold">Entrada diaria cobrada: ${{ $asistencia->pagoEntrada->importe }}</p>
+                        @endif
                     </div>
                 @endforeach
             </div>

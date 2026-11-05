@@ -74,11 +74,11 @@
                     @csrf
                     <label>
                         Nombre
-                        <input name="name" value="{{ old('name') }}" maxlength="255" autocomplete="name" required>
+                        <input name="name" value="{{ \App\Support\Formulario::anterior('name') }}" maxlength="255" autocomplete="name" required>
                     </label>
                     <label>
                         Correo
-                        <input name="email" type="email" value="{{ old('email') }}" maxlength="255" autocomplete="email" required>
+                        <input name="email" type="email" value="{{ \App\Support\Formulario::anterior('email') }}" maxlength="255" autocomplete="email" required>
                     </label>
                     <label>
                         Rol en el sistema

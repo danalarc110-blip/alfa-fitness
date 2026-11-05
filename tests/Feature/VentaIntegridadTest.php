@@ -115,6 +115,7 @@ class VentaIntegridadTest extends TestCase
 
     public function test_email_failure_logs_no_recipient_or_transport_secrets(): void
     {
+        config(['mail.default' => 'smtp']);
         $staff = User::factory()->create(['rol' => 'Secretaria']);
         $venta = Venta::create(['user_id' => $staff->id, 'total' => '1.00']);
         Mail::shouldReceive('to')->with('privado@example.test')->once()->andReturnSelf();

@@ -127,7 +127,8 @@ class AuditoriaSistemaTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('Últimas ventas (TPV)')
-            ->assertSee('Planes que vencen en los próximos 7 días');
+            ->assertSee('Membresías por vencer')
+            ->assertSee($cliente->nombre);
 
         // Dashboard de Entrenador: ve ejercicios populares y no ve ventas de TPV
         $this->actingAs($entrenador)

@@ -107,4 +107,44 @@ class ExportRenderCommandTest extends TestCase
         Storage::disk('local')->assertMissing('render-transfer.json');
         $this->assertSame([], glob(Storage::disk('local')->path('render-snapshot-*.sqlite')));
     }
+
+    public function test_export_and_restore_keep_daily_entry_payments_retry_keys_and_unbilled_history(): void
+    {
+        $pdo = new PDO('sqlite:'.$this->source);
+        $pdo->exec('PRAGMA foreign_keys = ON');
+        $pdo->exec('CREATE TABLE users (id INTEGER PRIMARY KEY); INSERT INTO users VALUES (201)');
+        $pdo->exec('CREATE TABLE clientes (id INTEGER PRIMARY KEY); INSERT INTO clientes VALUES (301)');
+        $pdo->exec('CREATE TABLE asistencias (id INTEGER PRIMARY KEY, cliente_id INTEGER REFERENCES clientes(id), registrado_por INTEGER REFERENCES users(id), entrada_uuid TEXT UNIQUE, fecha_hora TEXT)');
+        $pdo->exec('CREATE TABLE pagos_entrada (id INTEGER PRIMARY KEY, asistencia_id INTEGER UNIQUE REFERENCES asistencias(id), importe NUMERIC, registrado_por INTEGER REFERENCES users(id), pagado_en TEXT)');
+        $uuid = 'ed5506b4-7952-4d64-a2c5-a01d9320ee20';
+        $insert = $pdo->prepare('INSERT INTO asistencias VALUES (?, 301, 201, ?, ?)');
+        $insert->execute([401, null, '2026-10-01 08:00:00']);
+        $insert->execute([402, $uuid, '2026-11-05 08:00:00']);
+        $pdo->exec("INSERT INTO pagos_entrada VALUES (501, 402, 2.00, 201, '2026-11-05 08:00:00')");
+        $pdo = null;
+
+        $tables = RenderBootstrap::tablesFromSqlite($this->source);
+        $map = array_column($tables, null, 'name');
+        $this->assertContains('asistencias', $map['pagos_entrada']['depends_on']);
+        $this->assertContains('users', $map['pagos_entrada']['depends_on']);
+        $this->assertSame($uuid, $map['asistencias']['rows'][1][3]);
+        $ordered = array_column(RenderBootstrap::orderedTables($tables), 'name');
+        $this->assertLessThan(array_search('pagos_entrada', $ordered, true), array_search('asistencias', $ordered, true));
+        $this->assertLessThan(array_search('pagos_entrada', $ordered, true), array_search('users', $ordered, true));
+
+        $this->assertSame(0, Artisan::call('render:export'));
+        $transfer = json_decode(Storage::disk('local')->get('render-transfer.json'), true);
+        $env = array_column($transfer['envVars'], 'value', 'key');
+        $env['ALPHA_DATA_DIR'] = $this->directory.DIRECTORY_SEPARATOR.'restored-daily-entries';
+        $env['DB_DATABASE'] = $env['ALPHA_DATA_DIR'].DIRECTORY_SEPARATOR.'database.sqlite';
+        $this->assertSame('imported', RenderBootstrap::runFromEnvironment($env));
+        $restored = new PDO('sqlite:'.$env['DB_DATABASE']);
+        $this->assertSame($uuid, $restored->query('SELECT entrada_uuid FROM asistencias WHERE id = 402')->fetchColumn());
+        $this->assertNull($restored->query('SELECT entrada_uuid FROM asistencias WHERE id = 401')->fetchColumn());
+        $this->assertSame(1, (int) $restored->query('SELECT COUNT(*) FROM pagos_entrada')->fetchColumn());
+        $this->assertSame(402, (int) $restored->query('SELECT asistencia_id FROM pagos_entrada WHERE id = 501')->fetchColumn());
+        $this->assertSame('2.00', number_format((float) $restored->query('SELECT importe FROM pagos_entrada WHERE id = 501')->fetchColumn(), 2, '.', ''));
+        $this->assertSame(0, (int) $restored->query('SELECT COUNT(*) FROM pagos_entrada WHERE asistencia_id = 401')->fetchColumn());
+        $restored = null;
+    }
 }

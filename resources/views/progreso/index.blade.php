@@ -151,13 +151,13 @@
             <div class="grid grid-cols-2 gap-3">
                 <label class="block">
                     <span class="block text-xs font-semibold text-gray-400 mb-1.5">Peso kg</span>
-                    <input type="number" name="peso_kg" min="0.5" max="999" step="0.5" value="{{ old('peso_kg') }}" required
+                    <input type="number" name="peso_kg" min="0.5" max="999" step="0.5" value="{{ \App\Support\Formulario::anterior('peso_kg') }}" required
                         class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-yellow-400/60">
                 </label>
 
                 <label class="block">
                     <span class="block text-xs font-semibold text-gray-400 mb-1.5">Reps</span>
-                    <input type="number" name="repeticiones" min="1" max="100" value="{{ old('repeticiones', 1) }}" required
+                    <input type="number" name="repeticiones" min="1" max="100" value="{{ \App\Support\Formulario::anterior('repeticiones', 1) }}" required
                         class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-yellow-400/60">
                 </label>
             </div>
@@ -166,7 +166,7 @@
                 <span class="block text-xs font-semibold text-gray-400 mb-1.5">Notas</span>
                 <textarea name="notas" rows="3" maxlength="255"
                     class="w-full bg-black/60 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white outline-none focus:border-yellow-400/60 resize-none"
-                    placeholder="Ej: Buena técnica, con cinturón...">{{ old('notas') }}</textarea>
+                    placeholder="Ej: Buena técnica, con cinturón...">{{ \App\Support\Formulario::anterior('notas') }}</textarea>
             </label>
 
             <button type="submit" class="alpha-btn-primary w-full rounded-xl px-4 py-2.5 text-sm font-semibold inline-flex items-center justify-center gap-2 shadow-lg shadow-yellow-400/15">
@@ -219,12 +219,13 @@
                     <span class="text-xs font-semibold text-gray-500">{{ $records->total() }} registros{{ $ejercicioSeleccionadoObj ? ' para ' . $ejercicioSeleccionadoObj->nombre : '' }}</span>
                 </div>
 
-                <form method="GET" action="{{ route('progreso.index') }}" class="flex items-center gap-2">
-                    <select name="ejercicio_id" onchange="this.form.submit()" class="bg-black/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-yellow-400/60">
+                <form method="GET" action="{{ route('progreso.index') }}" class="flex flex-wrap items-center gap-2 min-w-0">
+                    <label for="filtrar-ejercicio-propio" class="sr-only">Filtrar historial por ejercicio</label>
+                    <select id="filtrar-ejercicio-propio" name="ejercicio_id" onchange="this.form.submit()" class="min-w-0 max-w-full bg-black/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-yellow-400/60">
                         <option value="">Todos los ejercicios</option>
-                        @foreach ($ejercicios as $ej)
+                        @foreach ($ejerciciosHistorial as $ej)
                             <option value="{{ $ej->id }}" @selected(($ejercicioFiltro ?? '') == $ej->id)>
-                                {{ $ej->nombre }}
+                                {{ $ej->nombre }}{{ $ej->activo ? '' : ' (inactivo)' }}
                             </option>
                         @endforeach
                     </select>

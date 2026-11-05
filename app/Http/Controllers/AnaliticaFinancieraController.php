@@ -26,14 +26,22 @@ class AnaliticaFinancieraController extends Controller
         $desdeInput = $request->query('desde');
         $hastaInput = $request->query('hasta');
 
-        $periodo = $this->analiticaService->resolverPeriodo($preset, $desdeInput, $hastaInput);
+        $periodo = $this->analiticaService->resolverPeriodo($preset, $desdeInput, $hastaInput, $request->query('mes'));
         $datos = $this->analiticaService->obtenerAnalitica($periodo['desde'], $periodo['hasta'], $periodo['dias']);
+        $desdeFormulario = $periodo['desde']->format('Y-m-d');
+        $hastaFormulario = $periodo['hasta']->format('Y-m-d');
+        if ($request->old('preset') === 'personalizado') {
+            $desdeAnterior = $request->old('desde');
+            $hastaAnterior = $request->old('hasta');
+            $desdeFormulario = is_string($desdeAnterior) ? $desdeAnterior : $desdeFormulario;
+            $hastaFormulario = is_string($hastaAnterior) ? $hastaAnterior : $hastaFormulario;
+        }
 
         return view('analitica.index', [
             'datos' => $datos,
             'presetActual' => $periodo['preset'],
-            'desdeInput' => $desdeInput ?: $periodo['desde']->format('Y-m-d'),
-            'hastaInput' => $hastaInput ?: $periodo['hasta']->format('Y-m-d'),
+            'desdeInput' => $desdeFormulario,
+            'hastaInput' => $hastaFormulario,
         ]);
     }
 
@@ -46,7 +54,7 @@ class AnaliticaFinancieraController extends Controller
         $desdeInput = $request->query('desde');
         $hastaInput = $request->query('hasta');
 
-        $periodo = $this->analiticaService->resolverPeriodo($preset, $desdeInput, $hastaInput);
+        $periodo = $this->analiticaService->resolverPeriodo($preset, $desdeInput, $hastaInput, $request->query('mes'));
         $datos = $this->analiticaService->obtenerAnalitica($periodo['desde'], $periodo['hasta'], $periodo['dias']);
 
         // Registrar auditoría de generación
@@ -75,7 +83,7 @@ class AnaliticaFinancieraController extends Controller
         $desdeInput = $request->query('desde');
         $hastaInput = $request->query('hasta');
 
-        $periodo = $this->analiticaService->resolverPeriodo($preset, $desdeInput, $hastaInput);
+        $periodo = $this->analiticaService->resolverPeriodo($preset, $desdeInput, $hastaInput, $request->query('mes'));
         $datos = $this->analiticaService->obtenerAnalitica($periodo['desde'], $periodo['hasta'], $periodo['dias']);
 
         // Registrar auditoría de generación
@@ -98,9 +106,10 @@ class AnaliticaFinancieraController extends Controller
     private function validarFiltros(Request $request): void
     {
         $request->validate([
-            'preset' => ['nullable', 'string', 'in:hoy,ayer,esta_semana,semana_anterior,este_mes,mes_anterior,personalizado'],
+            'preset' => ['nullable', 'string', 'in:hoy,ayer,esta_semana,semana_anterior,este_mes,mes_anterior,personalizado,mes'],
             'desde' => ['nullable', 'string', 'date_format:Y-m-d'],
             'hasta' => ['nullable', 'string', 'date_format:Y-m-d'],
+            'mes' => ['required_if:preset,mes', 'nullable', 'string', 'date_format:Y-m'],
         ]);
     }
 }

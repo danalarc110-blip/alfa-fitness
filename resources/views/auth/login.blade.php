@@ -58,7 +58,7 @@
             <div id="seccion-usuarios" role="tabpanel" aria-labelledby="tab-btn-usuarios" @class(['hidden' => $clientTab])>
                 <form id="form-usuario" method="POST" action="{{ route('login.submit') }}" class="alpha-login-form">
                     @csrf
-                    <label>Correo del personal<input type="email" name="email" value="{{ old('email') }}" placeholder="tu@correo.com" required autocomplete="username"></label>
+                    <label>Correo del personal<input type="email" name="email" value="{{ \App\Support\Formulario::anterior('email') }}" placeholder="tu@correo.com" required autocomplete="username"></label>
                     <label>Contraseña<span class="alpha-password block"><input id="password" type="password" name="password" required autocomplete="current-password" placeholder="Ingresa tu contraseña"><button type="button" data-password="password" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button></span></label>
                     <div class="flex justify-end -mt-1 mb-2"><a href="{{ route('password.request') }}" class="text-xs text-yellow-400/90 hover:text-yellow-300 transition-colors">¿Olvidaste tu contraseña?</a></div>
                     <button class="alpha-btn-primary px-4 py-3" type="submit">Iniciar Sesión como Usuario <span aria-hidden="true">→</span></button>
@@ -67,7 +67,7 @@
             <div id="seccion-clientes" role="tabpanel" aria-labelledby="tab-btn-clientes" @class(['hidden' => !$clientTab])>
                 <form id="form-cliente-login" method="POST" action="{{ route('cliente.login.submit') }}" @class(['alpha-login-form', 'hidden' => old('nombre')])>
                     @csrf
-                    <label>Correo del cliente<input type="email" name="correo" value="{{ old('correo') }}" placeholder="tu@correo.com" required autocomplete="username"></label>
+                    <label>Correo del cliente<input type="email" name="correo" value="{{ \App\Support\Formulario::anterior('correo') }}" placeholder="tu@correo.com" required autocomplete="username"></label>
                     <label>Contraseña<span class="alpha-password block"><input id="passwordCliente" type="password" name="password" required autocomplete="current-password" placeholder="Ingresa tu contraseña"><button type="button" data-password="passwordCliente" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button></span></label>
                     <div class="flex justify-end -mt-1 mb-2"><a href="{{ route('password.request') }}" class="text-xs text-yellow-400/90 hover:text-yellow-300 transition-colors">¿Olvidaste tu contraseña?</a></div>
                     <button class="alpha-btn-primary px-4 py-3" type="submit">Iniciar Sesión como Cliente <span aria-hidden="true">→</span></button>
@@ -76,8 +76,8 @@
                 <form id="form-cliente-registro" method="POST" action="{{ route('cliente.registro') }}" @class(['alpha-login-form', 'hidden' => !old('nombre')])>
                     @csrf
                     <h2 class="text-lg font-semibold">Registro de nuevo miembro</h2>
-                    <label>Nombre completo<input type="text" name="nombre" value="{{ old('nombre') }}" maxlength="100" required autocomplete="name"></label>
-                    <label>Correo del cliente<input type="email" name="correo" value="{{ old('correo') }}" required autocomplete="email"></label>
+                    <label>Nombre completo<input type="text" name="nombre" value="{{ \App\Support\Formulario::anterior('nombre') }}" maxlength="100" required autocomplete="name"></label>
+                    <label>Correo del cliente<input type="email" name="correo" value="{{ \App\Support\Formulario::anterior('correo') }}" required autocomplete="email"></label>
                     <label>Contraseña<span class="alpha-password block"><input id="passwordRegistro" type="password" name="password" required minlength="12" autocomplete="new-password"><button type="button" data-password="passwordRegistro" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button></span></label>
                     <label>Confirmar contraseña<span class="alpha-password block"><input id="passwordRegistroConfirm" type="password" name="password_confirmation" required minlength="12" autocomplete="new-password"><button type="button" data-password="passwordRegistroConfirm" aria-label="Mostrar contraseña" aria-pressed="false">Ver</button></span></label>
                     <p class="text-xs text-gray-400">Usa al menos 12 caracteres, mayúsculas, minúsculas, un número y un símbolo.</p>
